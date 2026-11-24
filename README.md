@@ -1,3 +1,5 @@
+<p align="center"><img src="public/icons/icon-192.png" width="128" height="128" alt="Mystira logo"></p>
+
 # mystira-player
 
 An open-source player for Mystira stories, lessons and assessments, for every Mystira age group. It runs on its own or inside a host app as a `<mystira-player>` element. Our Kiroween 2026 entry, "The Manor of Major Headaches", is built on it.
