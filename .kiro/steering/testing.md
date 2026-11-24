@@ -1,11 +1,10 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "e2e/**", "tests/**"]
+inclusion: always
 ---
 
 # Testing
 
-Loaded when a test file is open. Adapted from Retort's `test-generator` and `coverage-guard` agents; the stack is the one in `tech.md` (Vitest, React Testing Library, MSW, Playwright).
+Always loaded, so the approval rule applies before the first test of a file exists (a conditional match on test files would miss exactly that case). Adapted from Retort's `test-generator` and `coverage-guard` agents; the stack is the one in `tech.md` (Vitest, React Testing Library, MSW, Playwright).
 
 ## Plan first
 
@@ -21,7 +20,7 @@ Do not write test files until the plan is approved. This is the "tests are a sep
 
 ## Where untested code is
 
-Start with files changed in the current session: a `src/**/*.ts` or `*.tsx` file with no matching `*.test.ts(x)`.
+Start with files changed in the current session: a `src/**/*.ts` or `*.tsx` file with no matching `*.test.ts(x)` or `*.spec.ts(x)`.
 
 ## Conventions
 
