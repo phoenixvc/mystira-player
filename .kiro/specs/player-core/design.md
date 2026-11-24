@@ -592,11 +592,15 @@ export type ResultNode = z.infer<typeof ResultNodeSchema>;
 
 **Check node invariants** (Requirements 2.2, 2.3):
 
-The `CheckNodeSchema` already omits `task`. Additional refinements enforce:
+The `CheckNodeSchema` already omits `task`. Zod's `superRefine` returns a new schema and does not mutate the one it is called on, so the refinements below are written as one function, `checkInvariants`, that is applied to the completed node union (inside `NodeSchema`'s exported validators), never to `CheckNodeSchema` on its own:
 
 ```typescript
-// Requirement 2.2: check nodes reject local, task, and reveal
-CheckNodeSchema.superRefine((node, ctx) => {
+// Requirements 2.2 and 2.3, applied to the completed node union (see createNodeValidator).
+// Nodes that are not checks pass through untouched.
+export function checkInvariants(node: Node, ctx: z.RefinementCtx): void {
+  if (node.type !== "check") return;
+
+  // Requirement 2.2: check nodes reject local, task, and reveal
   // task is already omitted via .omit(), but double-check:
   // (The omit removes it from the type; if somehow present, reject.)
   // local is on the interaction, which check interactions must not carry:
@@ -620,10 +624,8 @@ CheckNodeSchema.superRefine((node, ctx) => {
       }
     }
   }
-});
 
-// Requirement 2.3: attempt 2 implies scored: false
-CheckNodeSchema.superRefine((node, ctx) => {
+  // Requirement 2.3: attempt 2 implies scored: false
   if (node.attempt === 2 && node.scored === true) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -631,7 +633,10 @@ CheckNodeSchema.superRefine((node, ctx) => {
       message: "A check at attempt 2 must not be scored",
     });
   }
-});
+}
+
+// The un-gated validator, for tests and tools that have no enabled-interaction list.
+export const validateNode = NodeSchema.superRefine(checkInvariants);
 ```
 
 **Enabled-interaction gating** (Requirement 2.5):
@@ -645,6 +650,7 @@ export function createNodeValidator(enabled: InteractionType[]) {
   const allowed = new Set([...alwaysAllowed, ...enabled]);
 
   return NodeSchema.superRefine((node, ctx) => {
+    checkInvariants(node, ctx);  // Requirements 2.2 and 2.3 live here, so every validated node is covered
     const type = node.interaction.type;
     if (!allowed.has(type)) {
       ctx.addIssue({
@@ -657,7 +663,7 @@ export function createNodeValidator(enabled: InteractionType[]) {
 }
 ```
 
-The engine calls `createNodeValidator(config.interactions.enabled)` once at startup and validates every node it produces.
+The engine calls `createNodeValidator(config.interactions.enabled)` once at startup and validates every node it produces. A test must feed it a check node with `local`, a hotspot `reveal`, and `attempt: 2, scored: true`, and expect each to be rejected, since a refinement attached to the wrong schema fails silently.
 
 **Character slot uniqueness** (Requirement 9.5):
 
@@ -1658,6 +1664,9 @@ The `Player` uses `useSession` to manage state:
 function useSession(engine: Engine, startRequest?: StartSessionRequest, sessionId?: string) {
   const [step, setStep] = useState<Step | null>(null);
   const [error, setError] = useState<EngineError | null>(null);
+  // One identifier per logical submission, kept across retries (Requirement 15.4).
+  // Keyed by node id and version: a new node, or a new version after a conflict, is a new submission.
+  const pending = useRef<{ key: string; answerRequestId: string } | null>(null);
 
   useEffect(() => {
     if (sessionId) {
@@ -1669,8 +1678,14 @@ function useSession(engine: Engine, startRequest?: StartSessionRequest, sessionI
 
   const respond = useCallback(async (answer: Answer, wrongTries?: number) => {
     if (!step) return;
+    // Reuse the identifier when the same step is submitted again after an error, so the engine can
+    // return its cached result instead of scoring twice. Only a new step creates a new identifier.
+    const key = `${step.node.id}:${step.version}`;
+    if (pending.current?.key !== key) {
+      pending.current = { key, answerRequestId: crypto.randomUUID() };
+    }
     const submission: AnswerSubmission = {
-      answerRequestId: crypto.randomUUID(),
+      answerRequestId: pending.current.answerRequestId,
       version: step.version,
       nodeId: step.node.id,
       answer,
@@ -1686,6 +1701,7 @@ function useSession(engine: Engine, startRequest?: StartSessionRequest, sessionI
       if (err.kind === "conflict" && err.currentStep) {
         // Stale version: re-render with the current step
         setStep(err.currentStep);
+        setError(null);  // otherwise the previous error keeps ErrorView on screen over the fresh step
       } else {
         setError(err);
       }
@@ -1782,7 +1798,17 @@ interface DialogueProps {
 function playLine(line: Line, speaker: Speaker | undefined) {
   if (line.audioUrl) {
     // Recorded audio (Requirement 10.2)
-    narrationPlayer.play(line.audioUrl, () => onLineFinished());
+    // On failure: fall back to speech if it is available, otherwise leave the line unfinished
+    // (text on screen, Next visible, no auto-advance) as in Requirement 10.4.
+    narrationPlayer.play(
+      line.audioUrl,
+      () => onLineFinished(),
+      () => {
+        if (speechSynthesisAvailable) {
+          speechVoice.speak(line.text, speaker?.voice, () => onLineFinished());
+        }
+      },
+    );
   } else if (speechSynthesisAvailable) {
     // Speech synthesis (Requirement 10.3)
     speechVoice.speak(line.text, speaker?.voice, () => onLineFinished());
@@ -1936,17 +1962,18 @@ interface CheckConfirmationProps {
   node: CheckNode;
   onSubmit: (answer: Answer) => void;
   inFlight: boolean;
-  retryAnswerRequestId?: string;  // for idempotent retry
+  // No retry identifier here: `onSubmit` carries only an Answer, so `useSession.respond`
+  // owns the answerRequestId and reuses it on retry.
 }
 ```
 
 - **Requirement 15.1**: When `attempt === 1`, shows an "Only the first try counts" banner.
 - **Requirement 15.2**: Requires the child to make a selection, then tap "That's my answer" before submitting. The submit button is disabled until a selection is made.
 - **Requirement 15.3**: While a submission is in flight (`inFlight === true`), the interaction is disabled.
-- **Requirement 15.4**: On retry after an error, the same `answerRequestId` is reused. The engine's idempotency check (Requirement 8.1) ensures the retry returns the original success result without re-scoring.
+- **Requirement 15.4**: On retry after an error, the same `answerRequestId` is reused (held by `useSession`, keyed by node id and version). The engine's idempotency check (Requirement 8.1) ensures the retry returns the original success result without re-scoring.
 
 ```typescript
-function CheckConfirmation({ node, onSubmit, inFlight, retryAnswerRequestId }: CheckConfirmationProps) {
+function CheckConfirmation({ node, onSubmit, inFlight }: CheckConfirmationProps) {
   const [selected, setSelected] = useState<string | null>(null);
 
   // Requirement 15.1: attempt 1 banner
@@ -2089,14 +2116,14 @@ The `Player` component creates an `AudioLifecycle` instance, calls `onNodeChange
 export class NarrationPlayer {
   private audio: HTMLAudioElement | null = null;
 
-  play(url: string, onEnded: () => void): void {
+  // `onEnded` fires only when the audio actually finished playing. A failure is reported through
+  // `onFailed` instead, so a scene with auto_advance never skips narration the child did not hear.
+  play(url: string, onEnded: () => void, onFailed: () => void): void {
     this.stop();
     this.audio = new Audio(url);
     this.audio.onended = onEnded;
-    this.audio.play().catch(() => {
-      // Autoplay blocked or error: text stays on screen (Requirement 10.4)
-      onEnded();  // treat as finished so the line advances
-    });
+    this.audio.onerror = onFailed;
+    this.audio.play().catch(onFailed);  // autoplay blocked or load error
   }
 
   stop(): void {
