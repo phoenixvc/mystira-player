@@ -1,40 +1,63 @@
 # How we used Kiro
 
-A running log, kept from the first day of the build. Each entry says what we did in Kiro and what it changed.
+A running log, kept from the first day of the build. Each entry says what we did in Kiro and what it changed. Update it in the same PR as any change to `.kiro/` (see `workflow.md`), and only record what actually happened: an empty "what it caught" cell is better than a guessed one.
 
 ## Steering
 
-Four steering files in `.kiro/steering/`, included in every request:
+Files in `.kiro/steering/`. Only the first group is paid for on every request; the rest load on demand, to keep the always-on context small.
 
-- `product.md`: what the player is, the Manor entry, the four core interactions and the cut order.
-- `tech.md`: the stack, the rule that the engine decides and the player only renders, the three modes, exact identifier names.
-- `structure.md`: folder layout and conventions.
-- `content.md`: the story YAML 2.1 rules and the command that validates every content file.
+| File | When it loads | What it holds |
+|---|---|---|
+| `product.md` | always | What the player is, the Manor entry, the four core interactions, the cut order. |
+| `tech.md` | always | The stack, the rule that the engine decides and the player only renders, exact identifier names. |
+| `structure.md` | always | Folder layout and conventions. |
+| `content.md` | always | The story YAML 2.1 rules and the command that validates every content file. |
+| `workflow.md` | always | Repo-specific git and validation notes; the general rules live in the user-level `~/.kiro/steering/workflow.md`. |
+| `testing.md` | always | Plan-first testing, where untested code is, coverage as advisory. |
+| `frontend.md` | UI files open | Accessibility, tokens, timeouts, the player/engine boundary. |
+| `security.md` | auto, by topic | Secrets, telemetry and data minimisation; an opt-in profile for audiences that include minors. |
+| `review.md` | `#review` | Review order and the BLOCK / WARN / NOTE pre-PR audit. |
+| `land.md` | `#land` | The merge checklist: read bot comments, name the proving check, never claim an unobserved merge. |
+| `decide.md` | `#decide` | A scorecard for choosing between options. |
+
+The manual, auto and file-matched files were ported from the Retort and Mystira agent configurations; the choice of what to port is recorded on the Retort baton ticket for instruction packs.
 
 ## Hooks
 
-| Hook | Trigger | What it prevented |
-|---|---|---|
-| Validate story content | `content/**/*.yaml` saved | _to fill in_ |
+Six hooks in `.kiro/hooks/`, all on `fileEdited`:
+
+| Hook | Runs on | Action | What it caught |
+|---|---|---|---|
+| Validate story content | `content/**/*.story.yaml` | validates every content file against the schema | _not yet observed_ |
+| Typecheck | `src/**/*.ts(x)` | `tsc --noEmit` | _not yet observed_ |
+| Tests for changed files | `src/**/*.ts(x)` | `vitest run --changed` | _not yet observed_ |
+| Engine answer leak | `src/engine/**` | engine tests | _not yet observed_ |
+| No `childId` | source, content, docs | asks the agent to check for the forbidden identifier | _not yet observed_ |
+| Secret guard | `.env*`, `public/config.json` | asks the agent to check for secrets | _not yet observed_ |
+
+Unverified: that Kiro lists all six (their file shape differs from the documented `.kiro/hooks/<id>.json` format). Review of the first version found two real problems that are worth showing: a `vitest related` command given no path, and a `${file}` placeholder that Kiro does not document.
 
 ## Specs
 
 | Spec | What the requirements or design caught |
 |---|---|
-| 1. Player core | _to fill in_ |
-| 2. Choices and hotspots | _to fill in_ |
-| 3. Sequence | _to fill in_ |
-| 4. Inspect | _to fill in_ |
+| Player core (`.kiro/specs/player-core/`) | _requirements written; design and tasks not started_ |
+
+Further specs (choices and hotspots, sequence, inspect) are planned and not yet written.
 
 ## MCP
 
-- **context7** (committed in `.kiro/settings/mcp.json`): current library documentation for React 19, Vite, Zod and TanStack while generating designs and code.
-- **[Baton](https://baton.celladoresystems.com)** by Celladore Systems (user-level settings, private): the shared task graph. Each spec's tasks were tracked in Baton, so work stayed visible across Kiro sessions and between the two of us. _Screenshot to add._
+- **context7** and **playwright** (committed in `.kiro/settings/mcp.json`, launched with `cmd /c npx` because Windows cannot run `npx` directly): current library documentation, and browser control so the agent can open and inspect the running player.
+- **[Baton](https://baton.celladoresystems.com)** by Celladore Systems (user-level settings, private): the shared task graph. Work stayed visible across Kiro sessions and between the two of us. _Screenshot to add._
 - **Mill** by Celladore Systems (user-level settings, runs locally): image conversion for the Manor art, for example PNG to WebP at web quality.
 - **Mystira workspace** (user-level settings, private): project context from the Mystira platform.
 
-The private servers live in user-level settings because their addresses are internal; only context7 is committed.
+The private servers live in user-level settings because their addresses are internal, and their tokens are read from environment variables; only context7 and playwright are committed.
 
 ## Notes for the video
 
-_Moments worth showing, added as they happen._
+Moments worth showing, added as they happen:
+
+- A stacked pull request silently lost a file: the child merged after its parent, into a branch that no longer mattered, and showed as merged while the file was missing from `dev`.
+- Automated review caught two hook commands that looked right and would have done nothing useful.
+- The same agent rules, ported from two other agent systems, became steering files with different load behaviour (always, by file, by topic, on request).
