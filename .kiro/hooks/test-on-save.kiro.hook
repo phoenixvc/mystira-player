@@ -1,8 +1,8 @@
 {
   "enabled": true,
   "name": "Related tests on save",
-  "description": "Run Vitest for tests related to the edited source file.",
+  "description": "Run Vitest for tests affected by uncommitted changes (git-based, so no file path is needed).",
   "version": "1",
   "when": { "type": "fileEdited", "patterns": ["src/**/*.ts", "src/**/*.tsx"] },
-  "then": { "type": "runCommand", "command": "pnpm exec vitest related --run" }
+  "then": { "type": "runCommand", "command": "pnpm exec vitest run --changed --passWithNoTests" }
 }
