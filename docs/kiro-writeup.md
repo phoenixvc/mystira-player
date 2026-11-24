@@ -50,7 +50,7 @@ Further specs (choices and hotspots, sequence, inspect) are planned and not yet 
 - **context7** and **playwright** (committed in `.kiro/settings/mcp.json`, launched with `cmd /c npx` because Windows cannot run `npx` directly): current library documentation, and browser control so the agent can open and inspect the running player.
 - **[Baton](https://baton.celladoresystems.com)** by Celladore Systems (user-level settings, private): the shared task graph. Work stayed visible across Kiro sessions and between the two of us. _Screenshot to add._
 - **Mill** by Celladore Systems (user-level settings, runs locally): image conversion for the Manor art, for example PNG to WebP at web quality.
-- **Serena** (user-level settings, launched with `uvx`): symbol-level code navigation. Added after the design was written; no code exists yet for it to index, and whether Kiro connects to it is not yet confirmed.
+- **Serena** (user-level settings): symbol-level code navigation. Added after the design was written; no code exists yet for it to index. Kiro's MCP log shows it connecting, but launched through `uvx` the cold start took about 58 of Kiro's 60 seconds, so it is installed once with `uv tool install` and launched from there. Whether it works end to end is not yet confirmed.
 - **Mystira workspace** (user-level settings, private): project context from the Mystira platform.
 
 The private servers live in user-level settings because their addresses are internal, and their tokens are read from environment variables; only context7 and playwright are committed.
