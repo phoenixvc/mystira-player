@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "name": "Validate story content",
+  "description": "Run check-content.py (JSON Schema plus cross-reference rules) when a story YAML changes.",
+  "version": "1",
+  "when": { "type": "fileEdited", "patterns": ["content/**/*.story.yaml"] },
+  "then": {
+    "type": "runCommand",
+    "command": "python scripts/check-content.py schema/story-schema-2.1.json ${file}"
+  }
+}

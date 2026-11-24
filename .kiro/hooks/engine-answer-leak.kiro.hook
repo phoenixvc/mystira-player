@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "name": "Engine answer-leak tests",
+  "description": "LocalEngine must strip every answer before building a node. Re-run engine tests when engine code changes.",
+  "version": "1",
+  "when": { "type": "fileEdited", "patterns": ["src/engine/**/*.ts"] },
+  "then": { "type": "runCommand", "command": "pnpm exec vitest run src/engine --passWithNoTests" }
+}
