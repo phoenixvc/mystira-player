@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "No childId",
+      "description": "The identifier childId is forbidden (use profileId, playerId, sessionId). Flag it as soon as it appears.",
+      "trigger": "PostFileSave",
+      "matcher": "(src/.*[^/]*\\.ts$|src/.*[^/]*\\.tsx$|content/.*[^/]*\\.yaml$|docs/.*[^/]*\\.md$)",
+      "action": {
+        "type": "agent",
+        "prompt": "Search the edited file for the identifier `childId` (any casing). If present, replace it with the correct identifier (profileId, playerId or sessionId, per .kiro/steering/tech.md). If absent, do nothing and say nothing."
+      },
+      "enabled": true
+    }
+  ]
+}

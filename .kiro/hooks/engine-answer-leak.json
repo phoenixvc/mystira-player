@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Engine answer-leak tests",
+      "description": "LocalEngine must strip every answer before building a node. Re-run engine tests when engine code changes.",
+      "trigger": "PostFileSave",
+      "matcher": "src/engine/.*[^/]*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "pnpm exec vitest run src/engine --passWithNoTests"
+      },
+      "enabled": true
+    }
+  ]
+}

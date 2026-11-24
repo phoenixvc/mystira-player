@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Validate story content",
+      "description": "Run check-content.py (JSON Schema plus cross-reference rules) over every story when one changes. Kiro does not document how a file path reaches a command, so no path is passed.",
+      "trigger": "PostFileSave",
+      "matcher": "content/.*[^/]*\\.story\\.yaml$",
+      "action": {
+        "type": "command",
+        "command": "python -c \"import glob,subprocess,sys; fs=glob.glob('content/**/*.story.yaml',recursive=True); sys.exit(max([subprocess.call(['python','scripts/check-content.py','schema/story-schema-2.1.json',f]) for f in fs] or [0]))\""
+      },
+      "enabled": true
+    }
+  ]
+}
