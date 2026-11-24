@@ -29,6 +29,12 @@ Start with files changed in the current session: a `src/**/*.ts` or `*.tsx` file
 - Element and interaction coverage runs through the Playwright harness with axe on every node and interaction type.
 - Engine changes must keep the answer-leak tests green: `LocalEngine` strips every answer before building a node.
 
+## Running tests and failures
+
+Adapted from Retort's `testing-agent`. Prefer scoped runs (the affected test file or `--changed`); run the full suite for cross-cutting changes and before a PR.
+
+When a test fails: read the whole error, not a truncated one. Decide whether it is a compile error, an assertion failure, or a test-infrastructure problem. For an assertion failure, decide whether the implementation changed or the test is stale. Propose the fix, and flag it if the fix means changing production code.
+
 ## Coverage
 
 Advisory, never a mechanical gate. If asked for a coverage check and no target is known, ask once ("Coverage target for this session? e.g. 80%, or skip") and remember the answer for the session.
