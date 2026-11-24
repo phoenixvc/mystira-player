@@ -28,7 +28,7 @@ All names and children in demo content are invented.
 ## Built with
 
 - [Kiro](https://kiro.dev): specs, steering and hooks (see [docs/kiro-writeup.md](docs/kiro-writeup.md)).
-- Baton and [Mill](https://mill.celladoresystems.com) by [Celladore Systems](https://celladoresystems.com), connected to Kiro over MCP: Baton for the shared task graph, Mill for image conversion.
+- [Baton](https://baton.celladoresystems.com) and [Mill](https://mill.celladoresystems.com) by [Celladore Systems](https://celladoresystems.com), connected to Kiro over MCP: Baton for the shared task graph, Mill for image conversion.
 
 ## Licence
 
