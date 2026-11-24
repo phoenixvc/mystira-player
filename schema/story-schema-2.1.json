@@ -1,0 +1,1446 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mystira story YAML 2.1 (player view)",
+  "description": "Player view of Mystira's story schema. Accepts every Mystira story; describes the fields the player uses and the 2.1 additions. Engine fields are accepted as opaque values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "description",
+    "image",
+    "tags",
+    "difficulty",
+    "session_length",
+    "age_group",
+    "minimum_age",
+    "core_axes",
+    "archetypes",
+    "characters",
+    "scenes"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Story schema version, e.g. '1.0' or '2.0'"
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Story schema version, e.g. '1.0' or '2.0'"
+    },
+    "requirement_catalogs": {
+      "description": "Engine field. Accepted and ignored by the player."
+    },
+    "skill_catalog": {
+      "description": "Engine field. Accepted and ignored by the player."
+    },
+    "character_skill_values": {
+      "description": "Engine field. Accepted and ignored by the player."
+    },
+    "initial_progress": {
+      "description": "Engine field. Accepted and ignored by the player."
+    },
+    "acts": {
+      "description": "Engine field. Accepted and ignored by the player."
+    },
+    "title": {
+      "type": "string",
+      "description": "The title of the story"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the story"
+    },
+    "image": {
+      "type": "string",
+      "description": "Cover image id for the story"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Story tags/categories"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "Easy",
+        "Medium",
+        "Hard"
+      ],
+      "description": "Overall story difficulty"
+    },
+    "session_length": {
+      "type": "string",
+      "enum": [
+        "Short",
+        "Medium",
+        "Long",
+        "Very Long"
+      ],
+      "description": "Approximate play session length. Short = 10-15 scenes on the longest path; Medium = 16-25; Long = 26-39; Very Long = 40-60. Longest path of 61 or more scenes is invalid and must be rejected."
+    },
+    "age_group": {
+      "type": "string",
+      "enum": [
+        "1-2",
+        "3-5",
+        "6-9",
+        "10-12",
+        "13-18",
+        "19+"
+      ],
+      "description": "Target age group"
+    },
+    "minimum_age": {
+      "type": "integer",
+      "description": "Minimum recommended age"
+    },
+    "core_axes": {
+      "description": "Engine field. Accepted and ignored by the player."
+    },
+    "archetypes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Character archetypes featured"
+    },
+    "music_palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tracks_by_profile"
+      ],
+      "description": "Story-level music palette. Maps each music profile to a list of candidate track IDs. A story only needs to define profiles it actually uses in its scenes.",
+      "properties": {
+        "tracks_by_profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Mapping of music profile name to candidate track IDs. Keys correspond to values in the music.profile enum.",
+          "properties": {
+            "none": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "neutral": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cozy": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "playful": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "wonder": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "mystery": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tense": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "action": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sad": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "victory": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "characters": {
+      "type": "array",
+      "description": "Story characters",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "image",
+          "audio",
+          "metadata"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique lowercase snake_case character ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Character name"
+          },
+          "image": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Image ID or path (null if unavailable)"
+          },
+          "audio": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Audio ID or path (null if unavailable)"
+          },
+          "metadata": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "voice": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pitch",
+              "rate"
+            ],
+            "properties": {
+              "pitch": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 2
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 2
+              }
+            },
+            "description": "2.1: speech-synthesis hints used when no recorded audio exists"
+          },
+          "colour": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "description": "2.1: dialogue colour"
+          }
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "description": "Story scenes sequence",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "type",
+          "active_character",
+          "description",
+          "next_scene",
+          "difficulty",
+          "media",
+          "branches",
+          "metadata"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique scene ID (snake_case)"
+          },
+          "act_id": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "scene_objects": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "objects": {
+            "type": "array",
+            "description": "Interactive scene objects present in this scene (v2)",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique object ID within the scene"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name of the scene object"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Accessible label or display name"
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Detailed description or narrative cue"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Object type classification"
+                },
+                "state": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "action_ids": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "position": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "geometry": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "anchor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Spatial anchor or socket"
+                    },
+                    "position_offset": {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 3,
+                      "maxItems": 3
+                    },
+                    "scale": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0.01,
+                      "maximum": 100
+                    },
+                    "facing": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "rotation_y_deg": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "bounds": {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "number"
+                      },
+                      "description": "2.1: with four numbers and no anchor, a 2D box [x, y, width, height] as fractions of the picture"
+                    }
+                  }
+                },
+                "interactions": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "reveal": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "text"
+                  ],
+                  "description": "2.1: shown in place when tapped (practice only)",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "title": {
+            "type": "string",
+            "description": "Scene title"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "narrative",
+              "choice",
+              "roll",
+              "special"
+            ],
+            "description": "Scene type"
+          },
+          "choice_structure": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "scored_axes": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "active_character": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Required per scene. May be null. Must be populated with a valid character in choice scenes."
+          },
+          "path_type": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "description": {
+            "type": "string",
+            "description": "Scene description or narration"
+          },
+          "next_scene": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Next scene ID (null if final/special)"
+          },
+          "difficulty": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "roll_routes": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "next_scene_rewind_policy": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "rewind_policy": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "narration_timestamps": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "word",
+                "startMs",
+                "endMs"
+              ],
+              "properties": {
+                "word": {
+                  "type": "string"
+                },
+                "startMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "endMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "charStart": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "charEnd": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "media": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "image",
+              "audio",
+              "video"
+            ],
+            "properties": {
+              "image": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Image ID or null"
+              },
+              "audio": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Audio ID or null"
+              },
+              "video": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Video ID or null"
+              },
+              "stage3d": {
+                "description": "Engine field. Accepted and ignored by the player."
+              },
+              "model3d": {
+                "description": "Engine field. Accepted and ignored by the player."
+              },
+              "timestamps": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "word",
+                    "startMs",
+                    "endMs"
+                  ],
+                  "properties": {
+                    "word": {
+                      "type": "string"
+                    },
+                    "startMs": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "endMs": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "charStart": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0
+                    },
+                    "charEnd": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "alignment": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "characters",
+                  "character_start_times_seconds",
+                  "character_end_times_seconds"
+                ],
+                "properties": {
+                  "characters": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "character_start_times_seconds": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "character_end_times_seconds": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Optional scene media; null fields if not used"
+          },
+          "music": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "profile",
+              "continuity"
+            ],
+            "description": "Optional scene-level music configuration. When present, 'profile' references a profile defined in the story-level music_palette. 'priority', 'energy', and 'ducking' are optional and emitted only when set in the editor UI.",
+            "properties": {
+              "profile": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "neutral",
+                  "cozy",
+                  "playful",
+                  "wonder",
+                  "mystery",
+                  "tense",
+                  "action",
+                  "sad",
+                  "victory"
+                ],
+                "description": "Music profile. Should match one of the profiles defined in the story's music_palette.tracks_by_profile."
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "background",
+                  "important"
+                ],
+                "description": "Music layer priority."
+              },
+              "continuity": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "prefer_continue",
+                  "allow_change",
+                  "force_change",
+                  "force_silence"
+                ],
+                "description": "How this scene's music relates to the previous scene's."
+              },
+              "transition_hint": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "auto",
+                  "keep",
+                  "crossfade_short",
+                  "crossfade_normal",
+                  "crossfade_long",
+                  "hard_cut"
+                ],
+                "description": "Transition style between scene music."
+              },
+              "energy": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Music energy level, 0.0 to 1.0. Optional; emitted only when set."
+              },
+              "ducking": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "narration",
+                  "dialogue"
+                ],
+                "description": "Music ducking level, what other audio causes the music to duck."
+              }
+            }
+          },
+          "sound_effects": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "branches": {
+            "type": "array",
+            "description": "Scene branches; set to empty if unused",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "choice",
+                "next_scene"
+              ],
+              "properties": {
+                "choice": {
+                  "type": "string",
+                  "description": "Choice label"
+                },
+                "next_scene": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Next scene ID"
+                },
+                "id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Unique branch / action ID"
+                },
+                "action_id": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "object_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Target scene object ID for this diegetic action"
+                },
+                "target_object_id": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "verb": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Diegetic verb associated with this branch/action (e.g., examine, unlock, speak, cast)"
+                },
+                "skill_tag": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "difficulty": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "risk": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "requirements": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "modifier_sources": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "modifier_preview": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "effects": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "success_next_scene": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "success_rewind_policy": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "success_effects": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "failure_next_scene": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "failure_rewind_policy": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "failure_effects": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "rewind_policy": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "echo_log": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "compass_change": {
+                  "description": "Engine field. Accepted and ignored by the player."
+                },
+                "image": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "2.1: picture on a choice"
+                }
+              }
+            }
+          },
+          "echo_reveals": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "metadata": {
+            "description": "Engine field. Accepted and ignored by the player."
+          },
+          "lines": {
+            "type": "array",
+            "description": "2.1: dialogue, played in order",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "speaker",
+                "text"
+              ],
+              "properties": {
+                "speaker": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "audio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "task": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "audio": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "description": "2.1: the instruction for the interaction; not on check scenes"
+          },
+          "cast": {
+            "type": "array",
+            "maxItems": 3,
+            "description": "2.1: 2D staging",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "character_id",
+                "slot"
+              ],
+              "properties": {
+                "character_id": {
+                  "type": "string"
+                },
+                "slot": {
+                  "enum": [
+                    "left",
+                    "center",
+                    "right"
+                  ]
+                },
+                "pose": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "reactions": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "jump",
+                      "startle",
+                      "wave"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "overlays": {
+            "type": "array",
+            "description": "2.1: text placed on the picture",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "text",
+                "x",
+                "y"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "align": {
+                  "enum": [
+                    "start",
+                    "center",
+                    "end"
+                  ]
+                },
+                "style": {
+                  "enum": [
+                    "caption",
+                    "callout",
+                    "label"
+                  ]
+                },
+                "max_width": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            }
+          },
+          "interaction": {
+            "description": "2.1: interactions that branches and objects cannot express",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "items"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "sequence"
+                  },
+                  "items": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 5,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "label"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "image": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "document"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "inspect"
+                  },
+                  "min_marks": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "document": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "title",
+                      "parts"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "message",
+                          "page",
+                          "sign"
+                        ]
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "parts": {
+                        "type": "array",
+                        "minItems": 3,
+                        "maxItems": 8,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "id",
+                            "role",
+                            "text"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "role": {
+                              "enum": [
+                                "sender",
+                                "heading",
+                                "text",
+                                "link",
+                                "button",
+                                "image",
+                                "price",
+                                "footer"
+                              ]
+                            },
+                            "text": {
+                              "type": "string"
+                            },
+                            "image": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "practice": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "answer"
+            ],
+            "description": "2.1: makes the scene a practice piece judged by the player",
+            "properties": {
+              "answer": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "maxProperties": 1,
+                "properties": {
+                  "branch": {
+                    "type": "string"
+                  },
+                  "object": {
+                    "type": "string"
+                  },
+                  "order": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 3,
+                    "maxItems": 5
+                  },
+                  "parts": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 0
+                  }
+                }
+              },
+              "hint": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "audio": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "on_wrong": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "text"
+                  ],
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "audio": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              },
+              "reveal_after": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              }
+            }
+          },
+          "research": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "step"
+            ],
+            "description": "2.1: a research step after a wrong check answer",
+            "properties": {
+              "step": {
+                "enum": [
+                  "where",
+                  "find",
+                  "verify",
+                  "use"
+                ]
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "label"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "character",
+                      "picture",
+                      "clip",
+                      "chart",
+                      "page"
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "exit_allowed": {
+            "type": "boolean",
+            "description": "2.1: whether the host may show an exit"
+          },
+          "host_slot": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "2.1: a slot the host may fill on this scene"
+          }
+        }
+      }
+    },
+    "lesson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "pieces"
+      ],
+      "description": "2.1: makes this story file a lesson",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "pieces": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "scenes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "versions": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "scenes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "scenes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1
+                    },
+                    "method": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "scenes"
+                ]
+              },
+              {
+                "required": [
+                  "versions"
+                ]
+              }
+            ]
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "questions"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "questions": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "scene",
+                    "answer"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "scene": {
+                      "type": "string"
+                    },
+                    "answer": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "minProperties": 1,
+                      "maxProperties": 1,
+                      "properties": {
+                        "branch": {
+                          "type": "string"
+                        },
+                        "object": {
+                          "type": "string"
+                        },
+                        "order": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "minItems": 3,
+                          "maxItems": 5
+                        },
+                        "parts": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "minItems": 0
+                        }
+                      }
+                    },
+                    "research": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scene"
+          ],
+          "properties": {
+            "scene": {
+              "type": "string"
+            },
+            "key": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "label"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "image": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "demo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profiles"
+      ],
+      "description": "2.1: public demo only; production engines ignore it and Admin must reject it",
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "display_name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "display_name": {
+                "type": "string"
+              },
+              "strengths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "versions": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "order": {
+                "enum": [
+                  "fixed",
+                  "child_chooses"
+                ]
+              },
+              "rationale": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

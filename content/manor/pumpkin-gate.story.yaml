@@ -1,0 +1,281 @@
+# The Pumpkin Gate: "How do you know something is true?"
+# Mystira story YAML 2.1. Skeleton for the Kiroween demo: every required field is present,
+# lines are placeholders for Yolandi to write. Invented characters and children only.
+schema_version: "2.1"
+title: The Pumpkin Gate
+description: One pumpkin always lies and one always tells the truth. Learn how to tell which is which.
+image: assets/pumpkin-gate-cover.webp
+tags: [halloween, media-literacy, lesson]
+difficulty: Easy
+session_length: Short
+age_group: "6-9"
+minimum_age: 6
+core_axes: []
+archetypes: [the_helper]
+
+characters:
+  - id: kai
+    name: Kai
+    image: assets/kai.webp
+    audio: null
+    voice: { pitch: 1.0, rate: 0.95 }
+    colour: "#A9C0DC"
+    metadata: { role: [protagonist], archetype: [the_helper], species: human, age: 9, traits: [curious], backstory: "Loves games and believes everything at first." }
+  - id: milo
+    name: Milo
+    image: assets/milo.webp
+    audio: null
+    voice: { pitch: 1.6, rate: 0.95 }
+    colour: "#FF8DB8"
+    metadata: { role: [friend], archetype: [the_helper], species: human, age: 9, traits: [cheerful], backstory: "Kai's best friend." }
+  - id: anna
+    name: Auntie Anna
+    image: assets/anna.webp
+    audio: null
+    voice: { pitch: 1.15, rate: 0.9 }
+    colour: "#9A7BF2"
+    metadata: { role: [mentor], archetype: [the_helper], species: human, age: 40, traits: [patient], backstory: "Knows where to look things up." }
+
+scenes:
+  # ---------- piece 1: who said it? (same for both children, practice) ----------
+  - id: who_said_it
+    title: Who said it?
+    type: choice
+    description: Kai has news about a game that gives free coins.
+    active_character: kai
+    lines:
+      - { speaker: kai,  text: "Milo! This game gives everyone free coins!" }
+      - { speaker: milo, text: "Who said that?" }
+    task: { text: "Who told Kai about the coins?" }
+    cast:
+      - { character_id: kai,  slot: left,  pose: excited, reactions: [jump] }
+      - { character_id: milo, slot: right, pose: thinking }
+    next_scene: null
+    difficulty: null
+    media: { image: assets/yard.webp, audio: null, video: null }
+    branches:
+      - { id: video,   choice: "A video",   next_scene: how_know_find }
+      - { id: friend,  choice: "A friend",  next_scene: how_know_find }
+      - { id: teacher, choice: "A teacher", next_scene: how_know_find }
+    practice:
+      answer: { branch: video }
+      hint: { text: "Listen to Kai again. Where did he hear it?" }
+      reveal_after: 3
+    metadata: { creative_instruction: null }
+
+  # ---------- piece 2, version A: find it in the picture (hotspots) ----------
+  - id: how_know_find
+    title: How do they know?
+    type: choice
+    description: Who in the yard actually saw it happen?
+    active_character: milo
+    task: { text: "Tap the one who really saw it happen." }
+    next_scene: null
+    difficulty: null
+    media: { image: assets/yard-crowd.webp, audio: null, video: null }
+    objects:
+      - { id: crow, label: The crow on the fence, geometry: { bounds: [0.70, 0.10, 0.15, 0.20] }, reveal: { text: "The crow was right there!" } }
+      - { id: dog,  label: The sleeping dog,       geometry: { bounds: [0.10, 0.60, 0.20, 0.25] } }
+    branches:
+      - { id: tap_crow, object_id: crow, verb: tap, choice: "The crow", next_scene: what_do_they_want }
+      - { id: tap_dog,  object_id: dog,  verb: tap, choice: "The dog",  next_scene: what_do_they_want }
+    practice: { answer: { object: crow }, hint: { text: "Who was close enough to see?" } }
+    metadata: { creative_instruction: null }
+
+  # ---------- piece 2, version B: teach it in order (sequence) ----------
+  - id: how_know_teach
+    title: How do they know?
+    type: narrative
+    description: Teach Milo the three ways of knowing, surest first.
+    active_character: milo
+    task: { text: "Put the three ways in order, the surest first." }
+    next_scene: what_do_they_want
+    difficulty: null
+    media: { image: assets/treehouse.webp, audio: null, video: null }
+    interaction:
+      kind: sequence
+      items:
+        - { id: eye,  label: "I saw it myself" }
+        - { id: book, label: "I learned it from a book" }
+        - { id: ear,  label: "Someone told me" }
+    practice: { answer: { order: [eye, book, ear] }, hint: { text: "Which one is the surest?" } }
+    branches: []
+    metadata: { creative_instruction: null }
+
+  # ---------- piece 3: what do they want? (inspect, same for both) ----------
+  - id: what_do_they_want
+    title: What do they want?
+    type: narrative
+    description: A message offers free coins. What gives it away?
+    active_character: kai
+    task: { text: "Tap everything that asks you to give something." }
+    next_scene: who_else_says_it
+    difficulty: null
+    media: { image: assets/phone.webp, audio: null, video: null }
+    interaction:
+      kind: inspect
+      document:
+        kind: message
+        title: "FREE COINS!!!"
+        parts:
+          - { id: sender, role: sender, text: "coinz4u.example" }
+          - { id: body,   role: text,   text: "Everyone gets 1000 coins today only!" }
+          - { id: link,   role: link,   text: "Tap here and type your password" }
+          - { id: price,  role: price,  text: "Just R9.99 to unlock" }
+      min_marks: 1
+    practice: { answer: { parts: [link, price] }, hint: { text: "What do they want you to give them?" } }
+    branches: []
+    metadata: { creative_instruction: null }
+
+  # ---------- piece 4: who else says it? ----------
+  - id: who_else_says_it
+    title: Who else says it?
+    type: choice
+    description: Does anyone else say the game gives free coins?
+    active_character: milo
+    task: { text: "Where could Kai check if it's true?" }
+    next_scene: null
+    difficulty: null
+    media: { image: assets/library.webp, audio: null, video: null }
+    branches:
+      - { id: maker,  choice: "The game maker's own page", next_scene: ask_a_grown_up }
+      - { id: rumour, choice: "Another video",              next_scene: ask_a_grown_up }
+    practice: { answer: { branch: maker } }
+    metadata: { creative_instruction: null }
+
+  # ---------- piece 5: ask a grown-up ----------
+  - id: ask_a_grown_up
+    title: Ask a grown-up
+    type: choice
+    description: Still not sure? Who can help?
+    active_character: anna
+    task: { text: "Who would you ask?" }
+    next_scene: null
+    difficulty: null
+    media: { image: assets/kitchen.webp, audio: null, video: null }
+    branches:
+      - { id: anna_branch, choice: "Auntie Anna", next_scene: null }
+      - { id: stranger,    choice: "Someone in the game chat", next_scene: null }
+    practice: { answer: { branch: anna_branch } }
+    metadata: { creative_instruction: null }
+
+  # ---------- Day 3 check, question 1 (no practice, no task) ----------
+  - id: q1_free_coins
+    title: Question 1
+    type: choice
+    description: A video says a game gives free coins. What should you check first?
+    active_character: null
+    next_scene: null
+    difficulty: null
+    media: { image: assets/q1.webp, audio: null, video: null }
+    branches:
+      - { id: who,    choice: "Who said it",        next_scene: null }
+      - { id: likes,  choice: "How many likes it has", next_scene: null }
+      - { id: colour, choice: "What colour it is",  next_scene: null }
+    metadata: { creative_instruction: null }
+
+  # ---------- research after a wrong answer to q1 ----------
+  - id: q1_where
+    title: Where to look
+    type: choice
+    description: Where could we find out who made the video?
+    active_character: anna
+    research: { step: where, source: { kind: character, label: Auntie Anna } }
+    next_scene: null
+    difficulty: null
+    media: { image: assets/kitchen.webp, audio: null, video: null }
+    branches:
+      - { id: channel, choice: "The channel's name", next_scene: q1_find }
+      - { id: music,   choice: "The music",          next_scene: q1_find }
+    metadata: { creative_instruction: null }
+  - id: q1_find
+    title: Find it
+    type: choice
+    description: Find who made the video.
+    active_character: anna
+    research: { step: find, source: { kind: picture, label: The video page } }
+    next_scene: null
+    difficulty: null
+    media: { image: assets/video-page.webp, audio: null, video: null }
+    objects:
+      - { id: channel_name, label: The channel name, geometry: { bounds: [0.05, 0.05, 0.40, 0.10] } }
+      - { id: thumbnail,    label: The picture,      geometry: { bounds: [0.05, 0.25, 0.60, 0.50] } }
+    branches:
+      - { id: tap_channel,   object_id: channel_name, verb: tap, choice: "The channel name", next_scene: q1_verify }
+      - { id: tap_thumbnail, object_id: thumbnail,    verb: tap, choice: "The picture",      next_scene: q1_verify }
+    metadata: { creative_instruction: null }
+  - id: q1_verify
+    title: Check it
+    type: narrative
+    description: It's a channel called coinz4u, not the game maker.
+    active_character: anna
+    research: { step: verify }
+    next_scene: q1_use
+    difficulty: null
+    media: { image: assets/video-page.webp, audio: null, video: null }
+    branches: []
+    metadata: { creative_instruction: null }
+  - id: q1_use
+    title: Use it
+    type: narrative
+    description: So the first thing to check is who said it.
+    active_character: anna
+    research: { step: use }
+    next_scene: null
+    difficulty: null
+    media: { image: assets/kitchen.webp, audio: null, video: null }
+    branches: []
+    metadata: { creative_instruction: null }
+
+  # ---------- result ----------
+  - id: gate_opens
+    title: The gate opens
+    type: narrative
+    description: The truthful pumpkin grins and the gate swings open.
+    active_character: null
+    next_scene: null
+    difficulty: null
+    media: { image: assets/gate-open.webp, audio: null, video: null }
+    branches: []
+    exit_allowed: true
+    host_slot: end-cta
+    metadata: { creative_instruction: null }
+
+lesson:
+  id: pumpkin_gate
+  title: How do you know something is true?
+  pieces:
+    - { id: who_said_it,       title: "Who said it?",       scenes: [who_said_it] }
+    - id: how_do_they_know
+      title: How do they know?
+      versions:
+        - { id: find_in_picture, scenes: [how_know_find] }
+        - { id: teach_in_order,  scenes: [how_know_teach] }
+    - { id: what_do_they_want, title: "What do they want?", scenes: [what_do_they_want] }
+    - { id: who_else_says_it,  title: "Who else says it?",  scenes: [who_else_says_it] }
+    - { id: ask_a_grown_up,    title: Ask a grown-up,     scenes: [ask_a_grown_up] }
+  checks:
+    - id: day3
+      title: Day 3 check
+      questions:
+        - { id: q1, scene: q1_free_coins, answer: { branch: who }, research: [q1_where, q1_find, q1_verify, q1_use] }
+  result:
+    scene: gate_opens
+    key: { label: The pumpkin key, image: assets/key-pumpkin.webp }
+
+demo:
+  profiles:
+    - id: demo_lerato
+      display_name: Lerato
+      strengths: ["Helping others", "Noticing details", "Trying things out"]
+      versions: { how_do_they_know: find_in_picture }
+      order: fixed
+      rationale:
+        how_do_they_know: "Lerato notices details, so she finds who really saw it in the picture."
+    - id: demo_daan
+      display_name: Daan
+      strengths: ["Helping others", "Explaining to others", "Making things"]
+      versions: { how_do_they_know: teach_in_order }
+      order: child_chooses
+      rationale:
+        how_do_they_know: "Daan likes explaining to others, so he puts the three ways of knowing in order."
