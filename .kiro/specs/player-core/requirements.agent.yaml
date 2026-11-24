@@ -1,0 +1,15 @@
+schema: md-agent/v1
+source: .kiro/specs/player-core/requirements.md
+title: "Requirements Document"
+purpose: "This spec builds the core of the Mystira Player: the project scaffold, the Zod schemas, the Engine interface, LocalEngine, the scene renderer, the Next button, and the shared mode machinery. The spec is the first of four; the spec ships no interaction type beyond continue (the Next button). The later specs add choices, hotspots, sequence and inspect on top of this core."
+audience: ["agent", "human"]
+facts:
+  - "Engine decides, player renders. The renderer sees only the Engine interface. Anything that chooses a version, order or correctness for a child belongs to an engine; LocalEngine gets those choices from the demo block. No component branches on a child's identity."
+  - "One content format. Content is Mystira story YAML 2.1. Nodes are the runtime shape LocalEngine compiles the YAML into; there is no JSON node format for content."
+  - "Identifiers are `profileId`, `playerId` and `sessionId`. There is no childId."
+  - "Required 2.0 fields stay required. This is the most likely content mistake; the schemas reject it."
+  - "Scope cap. Four core interactions total across all specs. This spec ships only continue."
+  - "Player: the Mystira Player application: the renderer and the Player's controls."
+  - "Scaffold: the project build setup (Vite, React 19, TypeScript strict, pnpm, Vitest) and the index.html entry."
+  - "Node Schema: the Zod schema for runtime nodes in src/schema/node.ts."
+last_synced: 2026-11-24

@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "name": "Typecheck on save",
+  "description": "Run tsc --noEmit when TypeScript source changes, so schemas and Engine types stay consistent.",
+  "version": "1",
+  "when": { "type": "fileEdited", "patterns": ["src/**/*.ts", "src/**/*.tsx"] },
+  "then": { "type": "runCommand", "command": "pnpm exec tsc --noEmit" }
+}
