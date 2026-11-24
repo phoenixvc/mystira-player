@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "name": "Related tests on save",
+  "description": "Run Vitest for tests related to the edited source file.",
+  "version": "1",
+  "when": { "type": "fileEdited", "patterns": ["src/**/*.ts", "src/**/*.tsx"] },
+  "then": { "type": "runCommand", "command": "pnpm exec vitest related --run" }
+}
