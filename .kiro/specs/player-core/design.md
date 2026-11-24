@@ -636,7 +636,10 @@ export function checkInvariants(node: Node, ctx: z.RefinementCtx): void {
 }
 
 // The un-gated validator, for tests and tools that have no enabled-interaction list.
-export const validateNode = NodeSchema.superRefine(checkInvariants);
+export const validateNode = NodeSchema.superRefine((node, ctx) => {
+  checkInvariants(node, ctx);
+  sceneInvariants(node, ctx);
+});
 ```
 
 **Enabled-interaction gating** (Requirement 2.5):
@@ -651,6 +654,7 @@ export function createNodeValidator(enabled: InteractionType[]) {
 
   return NodeSchema.superRefine((node, ctx) => {
     checkInvariants(node, ctx);  // Requirements 2.2 and 2.3 live here, so every validated node is covered
+    sceneInvariants(node, ctx);  // Requirement 9.5
     const type = node.interaction.type;
     if (!allowed.has(type)) {
       ctx.addIssue({
@@ -667,10 +671,12 @@ The engine calls `createNodeValidator(config.interactions.enabled)` once at star
 
 **Character slot uniqueness** (Requirement 9.5):
 
+Same rule as the check invariants: `superRefine` returns a new schema, so a refinement applied to `SceneBaseSchema` after it has been merged into the node schemas never runs. It is a function over the completed node, applied wherever `checkInvariants` is.
+
 ```typescript
-SceneBaseSchema.superRefine((base, ctx) => {
-  const slots = new Map<string, string>(); // slot → character id
-  for (const char of base.characters) {
+export function sceneInvariants(node: Node, ctx: z.RefinementCtx): void {
+  const slots = new Map<string, string>(); // slot -> character id
+  for (const char of node.characters) {
     if (slots.has(char.position)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -680,15 +686,17 @@ SceneBaseSchema.superRefine((base, ctx) => {
     }
     slots.set(char.position, char.id);
   }
-  if (base.characters.length > 3) {
+  if (node.characters.length > 3) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["characters"],
       message: "A scene may have at most 3 characters",
     });
   }
-});
+}
 ```
+
+`createNodeValidator` and `validateNode` call both `checkInvariants` and `sceneInvariants`. The same test that feeds the validator bad check nodes also feeds it two characters in one slot and four characters, and expects both rejected.
 
 #### `src/schema/story-yaml.ts` — Story YAML 2.1 schema
 
@@ -1791,7 +1799,10 @@ interface DialogueProps {
    - **Requirement 10.5**: When an interaction is tapped → cancel ongoing speech (`speechSynthesis.cancel()`).
    - **Requirement 10.6**: A replay control replays the current line.
    - **Requirement 10.7**: A visible Next control is always shown so a screen with no playing audio never appears stuck.
-2. When all lines have finished → calls `onAllLinesFinished`.
+2. When all lines have finished successfully → calls `onAllLinesFinished`.
+   If any line's audio fails to play (`onPlaybackFailed`), `allLinesFinished` stays false
+   and auto-advance does not fire (Requirement 21.6). The text stays on screen and
+   the child advances via the always-visible Next button.
 
 **Audio source selection**:
 ```typescript

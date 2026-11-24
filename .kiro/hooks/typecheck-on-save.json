@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Typecheck on save",
+      "description": "Run tsc --noEmit when TypeScript source changes, so schemas and Engine types stay consistent.",
+      "trigger": "PostFileSave",
+      "matcher": "(src/.*[^/]*\\.ts$|src/.*[^/]*\\.tsx$)",
+      "action": {
+        "type": "command",
+        "command": "pnpm exec tsc --noEmit"
+      },
+      "enabled": true
+    }
+  ]
+}
