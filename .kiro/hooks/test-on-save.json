@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Related tests on save",
+      "description": "Run Vitest for tests affected by uncommitted changes (git-based, so no file path is needed).",
+      "trigger": "PostFileSave",
+      "matcher": "(src/.*[^/]*\\.ts$|src/.*[^/]*\\.tsx$)",
+      "action": {
+        "type": "command",
+        "command": "pnpm exec vitest run --changed --passWithNoTests"
+      },
+      "enabled": true
+    }
+  ]
+}

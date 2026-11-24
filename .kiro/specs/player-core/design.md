@@ -385,7 +385,7 @@ export const CharacterSchema = z.object({
 **SceneBase** — common fields for all node types that have a scene:
 
 ```typescript
-export const SceneBaseSchema = z.object({
+const BaseSceneBaseSchema = z.object({
   id: z.string(),
   title: z.string().optional(),
   media: MediaSchema,
@@ -545,16 +545,16 @@ export type InteractionType = Interaction["type"];
 export const SceneNodeSchema = z.object({
   type: z.literal("scene"),
   interaction: InteractionSchema,
-}).merge(SceneBaseSchema);
+}).merge(BaseSceneBaseSchema);
 
-export const CheckNodeSchema = z.object({
+const BaseCheckNodeSchema = z.object({
   type: z.literal("check"),
   question: NarrationSchema,
   interaction: InteractionSchema,
   attempt: z.union([z.literal(1), z.literal(2)]),
   scored: z.boolean(),
 })
-  .merge(SceneBaseSchema)
+  .merge(BaseSceneBaseSchema)
   .omit({ task: true })           // checks never have a task
 
 export const ResearchNodeSchema = z.object({
@@ -566,7 +566,7 @@ export const ResearchNodeSchema = z.object({
   }).optional(),
   yourAnswer: z.string().optional(),
   interaction: InteractionSchema,
-}).merge(SceneBaseSchema);
+}).merge(BaseSceneBaseSchema);
 
 export const ResultNodeSchema = z.object({
   type: z.literal("result"),
@@ -574,7 +574,7 @@ export const ResultNodeSchema = z.object({
   total: z.number().int(),
   key: z.object({ label: z.string(), iconUrl: z.string() }).optional(),
   interaction: InteractionSchema,
-}).merge(SceneBaseSchema);
+}).merge(BaseSceneBaseSchema);
 
 export const NodeSchema = z.discriminatedUnion("type", [
   SceneNodeSchema,
@@ -595,43 +595,41 @@ export type ResultNode = z.infer<typeof ResultNodeSchema>;
 The `CheckNodeSchema` already omits `task`. Additional refinements enforce:
 
 ```typescript
-// Requirement 2.2: check nodes reject local, task, and reveal
-CheckNodeSchema.superRefine((node, ctx) => {
-  // task is already omitted via .omit(), but double-check:
-  // (The omit removes it from the type; if somehow present, reject.)
-  // local is on the interaction, which check interactions must not carry:
-  const interaction = node.interaction as Record<string, unknown>;
-  if ("local" in interaction && interaction.local !== undefined) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["interaction", "local"],
-      message: "Check nodes must not carry a local block",
-    });
-  }
-  // reveal lives on hotspot spots; check scenes must not have it:
-  if (interaction.type === "hotspots") {
-    for (const spot of (interaction as { spots: { reveal?: unknown }[] }).spots) {
-      if (spot.reveal !== undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["interaction", "spots"],
-          message: "Check nodes must not carry reveal",
-        });
+// .superRefine() returns a NEW schema, it does not mutate the original.
+// Chain both refinements and export the result.
+export const CheckNodeSchema = BaseCheckNodeSchema
+  .superRefine((node, ctx) => {
+    // Requirement 2.2: check nodes reject local, task, and reveal
+    const interaction = node.interaction as Record<string, unknown>;
+    if ("local" in interaction && interaction.local !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["interaction", "local"],
+        message: "Check nodes must not carry a local block",
+      });
+    }
+    if (interaction.type === "hotspots") {
+      for (const spot of (interaction as { spots: { reveal?: unknown }[] }).spots) {
+        if (spot.reveal !== undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["interaction", "spots"],
+            message: "Check nodes must not carry reveal",
+          });
+        }
       }
     }
-  }
-});
-
-// Requirement 2.3: attempt 2 implies scored: false
-CheckNodeSchema.superRefine((node, ctx) => {
-  if (node.attempt === 2 && node.scored === true) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["scored"],
-      message: "A check at attempt 2 must not be scored",
-    });
-  }
-});
+  })
+  .superRefine((node, ctx) => {
+    // Requirement 2.3: attempt 2 implies scored: false
+    if (node.attempt === 2 && node.scored === true) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["scored"],
+        message: "A check at attempt 2 must not be scored",
+      });
+    }
+  });
 ```
 
 **Enabled-interaction gating** (Requirement 2.5):
@@ -662,7 +660,8 @@ The engine calls `createNodeValidator(config.interactions.enabled)` once at star
 **Character slot uniqueness** (Requirement 9.5):
 
 ```typescript
-SceneBaseSchema.superRefine((base, ctx) => {
+// .superRefine() returns a NEW schema, it does not mutate the original.
+export const SceneBaseSchema = BaseSceneBaseSchema.superRefine((base, ctx) => {
   const slots = new Map<string, string>(); // slot → character id
   for (const char of base.characters) {
     if (slots.has(char.position)) {
@@ -1775,7 +1774,10 @@ interface DialogueProps {
    - **Requirement 10.5**: When an interaction is tapped → cancel ongoing speech (`speechSynthesis.cancel()`).
    - **Requirement 10.6**: A replay control replays the current line.
    - **Requirement 10.7**: A visible Next control is always shown so a screen with no playing audio never appears stuck.
-2. When all lines have finished → calls `onAllLinesFinished`.
+2. When all lines have finished successfully → calls `onAllLinesFinished`.
+   If any line's audio fails to play (`onPlaybackFailed`), `allLinesFinished` stays false
+   and auto-advance does not fire (Requirement 21.6). The text stays on screen and
+   the child advances via the always-visible Next button.
 
 **Audio source selection**:
 ```typescript
@@ -1936,7 +1938,7 @@ interface CheckConfirmationProps {
   node: CheckNode;
   onSubmit: (answer: Answer) => void;
   inFlight: boolean;
-  retryAnswerRequestId?: string;  // for idempotent retry
+  // Retry ID reuse is handled by useSession (lastSubmissionRef), not here.
 }
 ```
 
