@@ -35,7 +35,7 @@ Six hooks in `.kiro/hooks/`, all on `fileEdited`:
 | No `childId` | source, content, docs | asks the agent to check for the forbidden identifier | _not yet observed_ |
 | Secret guard | `.env*`, `public/config.json` | asks the agent to check for secrets | _not yet observed_ |
 
-Unverified: that Kiro lists all six (their file shape differs from the documented `.kiro/hooks/<id>.json` format). Review of the first version found two real problems that are worth showing: a `vitest related` command given no path, and a `${file}` placeholder that Kiro does not document.
+The first version used a file shape Kiro accepted but flagged as legacy, with a "Migrate legacy hooks" banner. Kiro migrated all six into the current `.kiro/hooks/<id>.json` format; the triggers and commands were compared with the originals and kept. Review of the first version found two real problems worth showing: a `vitest related` command given no path, and a `${file}` placeholder that Kiro does not document.
 
 ## Specs
 
@@ -50,6 +50,7 @@ Further specs (choices and hotspots, sequence, inspect) are planned and not yet 
 - **context7** and **playwright** (committed in `.kiro/settings/mcp.json`, launched with `cmd /c npx` because Windows cannot run `npx` directly): current library documentation, and browser control so the agent can open and inspect the running player.
 - **[Baton](https://baton.celladoresystems.com)** by Celladore Systems (user-level settings, private): the shared task graph. Work stayed visible across Kiro sessions and between the two of us. _Screenshot to add._
 - **Mill** by Celladore Systems (user-level settings, runs locally): image conversion for the Manor art, for example PNG to WebP at web quality.
+- **Serena** (user-level settings, launched with `uvx`): symbol-level code navigation. Added after the design was written; no code exists yet for it to index, and whether Kiro connects to it is not yet confirmed.
 - **Mystira workspace** (user-level settings, private): project context from the Mystira platform.
 
 The private servers live in user-level settings because their addresses are internal, and their tokens are read from environment variables; only context7 and playwright are committed.
