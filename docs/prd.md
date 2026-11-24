@@ -180,7 +180,7 @@ How the Pumpkin Gate uses the four interactions:
 
 No real child's name, record or answers appear anywhere in the demo, and the axis codes used in Mystira's internal prototypes stay out of the repository.
 
-All demo text, pictures and audio in this repository are public under the repository licence.
+All demo text, pictures and audio in this repository are public to read and run, but are not under the code licence: they are all rights reserved (see NOTICE) until open question 3 is settled.
 
 ### Design principles
 
@@ -243,7 +243,7 @@ Never cut: the Pumpkin Gate lesson for both children, the check with research, t
 ## Open questions
 
 1. **Eligibility.** Does a new player that can call pre-existing private services count as a new project? Asked on 24 Nov; the hackathon manager is away until 30 Nov, so the question also went to Devpost support. Building does not wait for the answer: local mode keeps the repo self-contained either way.
-2. **Licence.** Apache-2.0 (explicit patent grant) or MIT. Recommendation: Apache-2.0.
-3. **Assets.** Who owns the Manor art and puzzles, and may they be released publicly under the repository licence? Images generated with an AI tool need their terms checked.
+2. **Licence.** Decided 24 Nov: Apache-2.0 for code; `content/` all rights reserved; names excluded (NOTICE).
+3. **Assets.** Who owns the Manor art and puzzles, and may they be released publicly, and could `content/` later move to CC BY 4.0? Images generated with an AI tool need their terms checked.
 4. **Voices.** Speech synthesis only for the entry, or recorded voices for the main characters?
 5. **Locale.** English only, or also Afrikaans to show localisation?

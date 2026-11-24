@@ -59,7 +59,7 @@ flowchart LR
 | Styling | CSS custom properties (tokens) + CSS Modules, injected into the shadow root | No CSS-in-JS runtime. |
 | Bundle | Vite library mode: `mystira-player.js` (ES module, React included) and `react.js` (React as a peer) | Budget: element build under 140 kB gzipped, excluding media. |
 | Hosting (standalone) | Azure Static Web Apps | Cheap and easy to keep live until 29 January 2027. |
-| Licence | Apache-2.0 (pending decision) | MIT is simpler; Apache adds a patent grant. |
+| Licence | Apache-2.0 for code (decided 24 Nov); `content/` all rights reserved, see NOTICE | Apache adds a patent grant, a trademark clause and a NOTICE file over MIT. |
 
 ## 3. Identity and audience
 
@@ -110,7 +110,7 @@ mystira-player/
     voice/            NarrationPlayer (recorded), SpeechVoice (speechSynthesis), Tones (Web Audio)
     theme/            tokens, density, themes/manor, themes/mystira-{light,dark,bright}
   tests/e2e/          Playwright (standalone and element harness)
-  LICENSE, README.md
+  LICENSE, NOTICE, README.md
 ```
 
 ## 5. Engine interface

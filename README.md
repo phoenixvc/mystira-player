@@ -22,3 +22,7 @@ An open-source player for Mystira stories, lessons and assessments, for every My
   ```
 
 All names and children in demo content are invented.
+
+## Licence
+
+Code: [Apache-2.0](LICENSE). Story text, pictures and audio under `content/`: all rights reserved, included for running and judging. Names and trademarks are not licensed. See [NOTICE](NOTICE).
