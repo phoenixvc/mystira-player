@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "name": "Validate story content",
+  "description": "Run check-content.py (JSON Schema plus cross-reference rules) on the saved content file. If it reports problems, list each one and fix the content file so it passes. Never change the checker or the schema to make a file pass; if either looks wrong, stop and say so. Also warn if the file uses an interaction type not in interactions.enabled.",
+  "version": "2",
+  "when": { "type": "fileEdited", "patterns": ["content/**/*.yaml"] },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Run `python scripts/check-content.py schema/story-schema-2.1.json` on the file that was just saved. If it reports problems, list each one and fix the content file so it passes. Never change the checker or the schema to make a file pass; if either looks wrong, stop and say so. Also warn if the file uses an interaction type not listed in config.json interactions.enabled."
+  }
+}

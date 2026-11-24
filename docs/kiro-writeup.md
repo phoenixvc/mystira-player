@@ -24,24 +24,23 @@ The manual, auto and file-matched files were ported from the Retort and Mystira 
 
 ## Hooks
 
-Six hooks in `.kiro/hooks/`, all on `fileEdited`:
+Six hooks in `.kiro/hooks/`, all `.json` files on `fileEdited`, recreated through Kiro to match the documented `.kiro/hooks/<id>.json` format:
 
 | Hook | Runs on | Action | What it caught |
 |---|---|---|---|
-| Validate story content | `content/**/*.story.yaml` | validates every content file against the schema | _not yet observed_ |
+| Validate story content | `content/**/*.yaml` | asks the agent to run check-content.py, fix the content, and warn on unsupported interaction types | _not yet observed_ |
 | Typecheck | `src/**/*.ts(x)` | `tsc --noEmit` | _not yet observed_ |
 | Tests for changed files | `src/**/*.ts(x)` | `vitest run --changed` | _not yet observed_ |
 | Engine answer leak | `src/engine/**` | engine tests | _not yet observed_ |
 | No `childId` | source, content, docs | asks the agent to check for the forbidden identifier | _not yet observed_ |
 | Secret guard | `.env*`, `public/config.json` | asks the agent to check for secrets | _not yet observed_ |
 
-Unverified: that Kiro lists all six (their file shape differs from the documented `.kiro/hooks/<id>.json` format). Review of the first version found two real problems that are worth showing: a `vitest related` command given no path, and a `${file}` placeholder that Kiro does not document.
-
+Migrated from `.kiro.hook` to `.json` to match the documented format. The validate-content hook was also converted from a `runCommand` Python one-liner to `askAgent` per the handover spec, so it can fix the content file in place and warn on interaction types not in `interactions.enabled`. The previous undocumented file-path workaround is no longer needed.
 ## Specs
 
 | Spec | What the requirements or design caught |
 |---|---|
-| Player core (`.kiro/specs/player-core/`) | _requirements written; design and tasks not started_ |
+| Player core (`.kiro/specs/player-core/`) | _requirements merged (PR #6); design written (PR #11, open); tasks not started_ |
 
 Further specs (choices and hotspots, sequence, inspect) are planned and not yet written.
 
@@ -61,3 +60,4 @@ Moments worth showing, added as they happen:
 - A stacked pull request silently lost a file: the child merged after its parent, into a branch that no longer mattered, and showed as merged while the file was missing from `dev`.
 - Automated review caught two hook commands that looked right and would have done nothing useful.
 - The same agent rules, ported from two other agent systems, became steering files with different load behaviour (always, by file, by topic, on request).
+- Hooks were pasted as .kiro.hook files outside Kiro; recreated as .json through Kiro to match the documented format and count for the judging criteria.
