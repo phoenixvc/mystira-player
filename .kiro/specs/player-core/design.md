@@ -555,7 +555,9 @@ export const CheckNodeSchema = z.object({
   scored: z.boolean(),
 })
   .merge(SceneBaseSchema)
-  .omit({ task: true })           // checks never have a task
+  // Checks never have a task. `.omit()` would turn `task` into an unknown key that Zod silently strips,
+  // so a check carrying one would still validate; `z.never().optional()` rejects any value (Requirement 2.2).
+  .extend({ task: z.never().optional() });
 
 export const ResearchNodeSchema = z.object({
   type: z.literal("research"),
@@ -592,7 +594,7 @@ export type ResultNode = z.infer<typeof ResultNodeSchema>;
 
 **Check node invariants** (Requirements 2.2, 2.3):
 
-The `CheckNodeSchema` already omits `task`. Zod's `superRefine` returns a new schema and does not mutate the one it is called on, so the refinements below are written as one function, `checkInvariants`, that is applied to the completed node union (inside `NodeSchema`'s exported validators), never to `CheckNodeSchema` on its own:
+The `CheckNodeSchema` rejects `task` itself (`z.never().optional()`, not `.omit()`, which would strip it silently). Zod's `superRefine` returns a new schema and does not mutate the one it is called on, so the refinements below are written as one function, `checkInvariants`, that is applied to the completed node union (inside `NodeSchema`'s exported validators), never to `CheckNodeSchema` on its own:
 
 ```typescript
 // Requirements 2.2 and 2.3, applied to the completed node union (see createNodeValidator).
@@ -601,8 +603,7 @@ export function checkInvariants(node: Node, ctx: z.RefinementCtx): void {
   if (node.type !== "check") return;
 
   // Requirement 2.2: check nodes reject local, task, and reveal
-  // task is already omitted via .omit(), but double-check:
-  // (The omit removes it from the type; if somehow present, reject.)
+  // task is rejected by the schema itself (z.never().optional()).
   // local is on the interaction, which check interactions must not carry:
   const interaction = node.interaction as Record<string, unknown>;
   if ("local" in interaction && interaction.local !== undefined) {
@@ -705,33 +706,6 @@ This Zod schema mirrors `schema/story-schema-2.1.json`. Engine fields are accept
 **Design principle**: every field the JSON schema accepts is accepted here. Required 2.0 fields stay required. 2.1 additions are optional. The `auto_advance` field (Requirement 21) is added.
 
 ```typescript
-// Story-level
-export const StoryYamlSchema = z.object({
-  schema_version: z.string().optional(),
-  version: z.string().optional(),
-
-  // Required 2.0 fields (stay required):
-  title: z.string(),
-  description: z.string(),
-  image: z.string(),
-  tags: z.array(z.string()),
-  difficulty: z.enum(["Easy", "Medium", "Hard"]),
-  session_length: z.enum(["Short", "Medium", "Long", "Very Long"]),
-  age_group: z.enum(["1-2", "3-5", "6-9", "10-12", "13-18", "19+"]),
-  minimum_age: z.number().int(),
-  core_axes: z.unknown(),          // engine field, opaque
-  archetypes: z.array(z.string()),
-  characters: z.array(CharacterYamlSchema),
-  scenes: z.array(SceneYamlSchema),
-
-  // Optional fields:
-  music_palette: z.unknown().optional(),   // engine/host field
-
-  // 2.1 additions:
-  lesson: LessonYamlSchema.optional(),
-  demo: DemoYamlSchema.optional(),
-});
-
 // Character
 export const CharacterYamlSchema = z.object({
   id: z.string(),
@@ -987,6 +961,35 @@ export const DemoYamlSchema = z.object({
   })).min(1),
 });
 
+// Declared last: a `const` is not initialised until its line runs, so it must come after the
+// character, scene, lesson and demo schemas it reads.
+// Story-level
+export const StoryYamlSchema = z.object({
+  schema_version: z.string().optional(),
+  version: z.string().optional(),
+
+  // Required 2.0 fields (stay required):
+  title: z.string(),
+  description: z.string(),
+  image: z.string(),
+  tags: z.array(z.string()),
+  difficulty: z.enum(["Easy", "Medium", "Hard"]),
+  session_length: z.enum(["Short", "Medium", "Long", "Very Long"]),
+  age_group: z.enum(["1-2", "3-5", "6-9", "10-12", "13-18", "19+"]),
+  minimum_age: z.number().int(),
+  core_axes: z.unknown(),          // engine field, opaque
+  archetypes: z.array(z.string()),
+  characters: z.array(CharacterYamlSchema),
+  scenes: z.array(SceneYamlSchema),
+
+  // Optional fields:
+  music_palette: z.unknown().optional(),   // engine/host field
+
+  // 2.1 additions:
+  lesson: LessonYamlSchema.optional(),
+  demo: DemoYamlSchema.optional(),
+});
+
 export type StoryYaml = z.infer<typeof StoryYamlSchema>;
 export type SceneYaml = z.infer<typeof SceneYamlSchema>;
 export type LessonYaml = z.infer<typeof LessonYamlSchema>;
@@ -1187,11 +1190,16 @@ export class LocalEngine implements Engine {
     const profile = req.players.find(p => p.type === "Profile");
     const sessionId = crypto.randomUUID();
     const compiled = compileStory(this.story, profile?.profileId, this.checkAnswers, this.nodeValidator);
+    // A day switch asks for a check entry point; honour it when the node exists, never fall back silently.
+    const startId = req.startNodeId ?? compiled.entryNodeId;
+    if (!compiled.nodes.has(startId)) {
+      throw { kind: "notFound", message: `Start node not found: ${startId}` } as EngineError;
+    }
     const session: Session = {
       sessionId,
       version: "0",
       compiled,       // node graph + navigation
-      current: compiled.entryNode,
+      current: startId,
       history: [],
       processedRequests: new Map(),  // answerRequestId → Step (idempotency)
     };
@@ -1224,12 +1232,14 @@ export class LocalEngine implements Engine {
 
     // Requirement 8.3/8.4: back navigation
     if (r.answer.kind === "back") {
-      if (!session.canGoBack) throw { kind: "conflict", currentStep: this.buildStep(session) } as EngineError;
+      if (!canGoBack(session)) throw { kind: "conflict", currentStep: this.buildStep(session) } as EngineError;
       session.current = session.history.pop()!;
     } else {
-      // Advance to next node
+      // Resolve the next node first: `next` throws for an unsupported scene, and history must not
+      // gain an entry for a move that never happened.
+      const nextId = session.compiled.next(session.current, r.answer);
       session.history.push(session.current);
-      session.current = session.compiled.next(session.current, r.answer);
+      session.current = nextId;
     }
 
     session.version = String(Number(session.version) + 1);
@@ -1572,8 +1582,13 @@ interface Session {
   compiled: CompiledStory;
   current: string;              // current node id
   history: string[];            // node ids for back navigation
-  canGoBack: boolean;           // computed from current node type
   processedRequests: Map<string, Step>;  // answerRequestId → Step
+}
+
+// Derived on demand so it cannot drift from the history or the current node (Requirements 8.3 to 8.5).
+function canGoBack(session: Session): boolean {
+  const current = session.compiled.nodes.get(session.current);
+  return session.history.length > 0 && current?.type !== "check";
 }
 ```
 
@@ -1581,7 +1596,7 @@ interface Session {
 
 **Requirement 8.2 (stale version)**: Compare `r.version` with `session.version`. If they differ, throw `EngineError { kind: "conflict", currentStep: this.buildStep(session) }`.
 
-**Requirement 8.3/8.4 (canGoBack)**: `canGoBack` is true when `session.history.length > 0` and the current node is not a check. `back` answers are rejected (throw conflict) when `canGoBack` is false.
+**Requirement 8.3/8.4 (canGoBack)**: `canGoBack(session)` is true when `session.history.length > 0` and the current node is not a check. `back` answers are rejected (throw conflict) when `canGoBack` is false.
 
 **Requirement 8.5**: `canGoBack` is always false on check nodes.
 
@@ -1676,16 +1691,25 @@ function useSession(engine: Engine, startRequest?: StartSessionRequest, sessionI
   // Keyed by node id and version: a new node, or a new version after a conflict, is a new submission.
   const pending = useRef<{ key: string; answerRequestId: string } | null>(null);
 
+  const [inFlight, setInFlight] = useState(false);   // Requirement 15.3: the check disables itself while true
+
   useEffect(() => {
-    if (sessionId) {
-      engine.resumeSession(sessionId).then(setStep).catch(handleError);
-    } else if (startRequest) {
-      engine.startSession(startRequest).then(setStep).catch(handleError);
-    }
+    // If the profile changes twice, the first request may resolve last. Cleanup marks it stale
+    // so it cannot overwrite the newer session.
+    let stale = false;
+    const request = sessionId
+      ? engine.resumeSession(sessionId)
+      : startRequest
+        ? engine.startSession(startRequest)
+        : null;
+    request
+      ?.then(s => { if (!stale) setStep(s); })
+      .catch(e => { if (!stale) handleError(e); });
+    return () => { stale = true; };
   }, [engine, startRequest, sessionId]);
 
   const respond = useCallback(async (answer: Answer, wrongTries?: number) => {
-    if (!step) return;
+    if (!step || inFlight) return;
     // Reuse the identifier when the same step is submitted again after an error, so the engine can
     // return its cached result instead of scoring twice. Only a new step creates a new identifier.
     const key = `${step.node.id}:${step.version}`;
@@ -1700,6 +1724,7 @@ function useSession(engine: Engine, startRequest?: StartSessionRequest, sessionI
       wrongTries,
       playerId: step.activePlayerId,
     };
+    setInFlight(true);
     try {
       const nextStep = await engine.respond(step.sessionId, submission);
       setStep(nextStep);
@@ -1713,12 +1738,16 @@ function useSession(engine: Engine, startRequest?: StartSessionRequest, sessionI
       } else {
         setError(err);
       }
+    } finally {
+      setInFlight(false);
     }
-  }, [step, engine]);
+  }, [step, engine, inFlight]);
 
-  return { step, error, respond };
+  return { step, error, inFlight, respond };
 }
 ```
+
+`Player` passes `inFlight` to `CheckConfirmation`.
 
 The `Player` renders:
 - `ErrorView` if `error` is set
@@ -1799,8 +1828,8 @@ interface DialogueProps {
    - **Requirement 10.5**: When an interaction is tapped → cancel ongoing speech (`speechSynthesis.cancel()`).
    - **Requirement 10.6**: A replay control replays the current line.
    - **Requirement 10.7**: A visible Next control is always shown so a screen with no playing audio never appears stuck.
-2. When all lines have finished successfully → calls `onAllLinesFinished`.
-   If any line's audio fails to play (`onPlaybackFailed`), `allLinesFinished` stays false
+2. When all lines have finished successfully → calls `onAllLinesFinished(node.id)`.
+   If any line's audio fails to play (`onPlaybackFailed`), no node id is reported
    and auto-advance does not fire (Requirement 21.6). The text stays on screen and
    the child advances via the always-visible Next button.
 
@@ -2126,18 +2155,23 @@ The `Player` component creates an `AudioLifecycle` instance, calls `onNodeChange
 ```typescript
 export class NarrationPlayer {
   private audio: HTMLAudioElement | null = null;
+  private playId = 0;   // bumped by stop(); a callback from an older playback is ignored
 
   // `onEnded` fires only when the audio actually finished playing. A failure is reported through
   // `onFailed` instead, so a scene with auto_advance never skips narration the child did not hear.
   play(url: string, onEnded: () => void, onFailed: () => void): void {
     this.stop();
-    this.audio = new Audio(url);
-    this.audio.onended = onEnded;
-    this.audio.onerror = onFailed;
-    this.audio.play().catch(onFailed);  // autoplay blocked or load error
+    const id = this.playId;
+    const live = (cb: () => void) => () => { if (id === this.playId) cb(); };
+    const audio = new Audio(url);
+    this.audio = audio;
+    audio.onended = live(onEnded);
+    audio.onerror = live(onFailed);
+    audio.play().catch(live(onFailed));  // autoplay blocked or load error; ignored if stopped meanwhile
   }
 
   stop(): void {
+    this.playId++;
     if (this.audio) {
       this.audio.pause();
       this.audio = null;
@@ -2349,7 +2383,7 @@ Story YAML (scene.auto_advance: true)
   → LocalEngine compiler maps scene.auto_advance → node.autoAdvance
   → Node schema validates (autoAdvance: z.boolean().optional() on SceneBase)
   → Scene renderer checks node.autoAdvance && node.interaction.type === "continue"
-  → Dialogue plays lines; when all lines finish, useAutoAdvance fires onAnswer({ kind: "continue" })
+  → Dialogue plays lines; when all lines finish it reports that node's id, and useAutoAdvance fires onAnswer({ kind: "continue" })
 ```
 
 #### `useAutoAdvance.ts` hook
@@ -2357,7 +2391,7 @@ Story YAML (scene.auto_advance: true)
 ```typescript
 function useAutoAdvance(
   node: Node,
-  allLinesFinished: boolean,
+  finishedNodeId: string | null,   // set by Dialogue to the node whose lines all finished
   onAnswer: (answer: Answer) => void,
 ) {
   useEffect(() => {
@@ -2366,15 +2400,15 @@ function useAutoAdvance(
     if (node.type === "scene" &&
         node.interaction.type === "continue" &&
         node.autoAdvance === true &&
-        allLinesFinished) {
+        finishedNodeId === node.id) {   // a finish from the previous scene must not advance this one
       onAnswer({ kind: "continue" });
     }
-  }, [node, allLinesFinished, onAnswer]);
+  }, [node, finishedNodeId, onAnswer]);
 }
 ```
 
 **Key design points**:
-- `allLinesFinished` is `true` only when the `Dialogue` component reports that every line's audio (recorded or speech) has finished playing. If no audio/speech is available (Requirement 21.6), `allLinesFinished` never becomes `true` for that line, so auto-advance never fires.
+- `finishedNodeId` is the id of a node whose lines the `Dialogue` component has reported as fully played (recorded or speech). Because it names the node, a completion left over from the previous scene cannot advance the next one. If no audio/speech is available, or playback fails (Requirement 21.6), no id is reported and auto-advance never fires.
 - The Next button is always rendered, independent of `useAutoAdvance`. The child can tap Next at any time, even before audio finishes.
 - Auto-advance fires once per node (the effect dependency on `node` resets it when the node changes).
 
@@ -2452,7 +2486,6 @@ interface Session {
   compiled: CompiledStory;
   current: string;
   history: string[];
-  canGoBack: boolean;
   processedRequests: Map<string, Step>;
 }
 ```
@@ -2608,7 +2641,7 @@ Tag format: `// Feature: player-core, Property N: <property text>`
 | Engine interface | `src/engine/types.test-d.ts` | Type-level checks: Answer includes continue and back; AnswerSubmission has required fields; EngineError has all 6 kinds; Step has required fields; identifiers are profileId/playerId/sessionId |
 | LocalEngine compilation | `src/engine/local/compiler.test.ts` | Narrative + next_scene → continue; no lines → narrator line; field mapping (lines/task/cast/overlays/media/music); roll/special/stage3d → unsupported; check scene → check node attempt 1; research scene → research node; lesson.result → result node; practice → local block built; check answer not on node |
 | LocalEngine per-child | `src/engine/local/compiler.test.ts` | Lerato gets find_in_picture; Daan gets teach_in_order; fixed order → lesson order; child_chooses flag stored; rationale attached to node; no childId in any component |
-| LocalEngine session | `src/engine/local/LocalEngine.test.ts` | Start session returns first node; stale version → conflict with current step; back rejected when canGoBack false; back accepted when canGoBack true; canGoBack false on checks; attempt 2 unscored |
+| LocalEngine session | `src/engine/local/LocalEngine.test.ts` | Start session returns first node; `startNodeId` is honoured and an unknown one is `notFound`; a failed `next` leaves history unchanged; check node carrying `task` rejected; stale version → conflict with current step; back rejected when canGoBack false; back accepted when canGoBack true; canGoBack false on checks; attempt 2 unscored |
 | Mode classification | `src/interactions/shared/modes.test.ts` | Scene without local → open; scene with local → practice; check → check; check takes precedence over local; research → open; result → open |
 | Feedback ladder | `src/interactions/shared/feedbackLadder.test.ts` | onWrong[0] played on try 1; hint played when onWrong exhausted; built-in message when no hint; revealAfter triggers at threshold; revealAfter default 3 |
 | Density | `src/theme/density.test.ts` | 6-9 → 48px, large, on; 1-2/3-5 → 64px, short, autoplay; 10-12/13-18/19+ → 44px, standard, off; toggle persists in sessionStorage |
