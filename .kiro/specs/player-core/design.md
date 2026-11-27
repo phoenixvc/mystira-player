@@ -2,17 +2,16 @@
 
 ## Overview
 
-This spec builds the foundation of the Mystira Player. It is the first of four specs; the later three add the four core interaction types (choices, hotspots, sequence, inspect) on top of this core. This spec ships no interaction type beyond `continue` (the Next button), but it builds the full shared mode machinery (open, practice, check), the feedback ladder, `revealAfter`, and the check confirmation flow as infrastructure that later specs exercise.
+This spec builds the foundation of the Mystira Player. It defines shared player infrastructure and ships the `continue` interaction (the Next button). The choices-hotspots spec adds choice and hotspot interactions and owns shared practice/check behavior; sequence and inspect interactions are specified separately.
 
 ### What this spec delivers
 
 - **Project scaffold**: Vite + React 19 + TypeScript strict + pnpm + Vitest, booting into the existing `index.html`.
 - **Zod schemas**: runtime node schema (`src/schema/node.ts`) and story YAML 2.1 schema (`src/schema/story-yaml.ts`), mirroring `schema/story-schema-2.1.json`.
 - **Engine interface**: `src/engine/types.ts`, exactly as in tech-spec section 5.
-- **LocalEngine**: compiles `content/manor/pumpkin-gate.story.yaml` into nodes per tech-spec section 7, reads the `demo` block for per-child versions and order, strips every `answer`, and enforces session control rules.
+- **LocalEngine**: compiles supported narrative scenes into continue nodes, reads profile versions and order from the demo block, preserves raw-answer privacy and enforces generic session rules.
 - **Scene renderer**: media stage (16:9 box, video), characters (3 slots, reactions), dialogue (recorded audio or speech synthesis fallback, replay), overlays (backing plate, WCAG AA), task line, cross-fade transitions.
 - **Next button and Back control**: `continue` interaction, keyboard-operable, density-compliant.
-- **Shared mode machinery**: open/practice/check classification, feedback ladder, `revealAfter`, check confirmation ("That's my answer").
 - **Notes panel**, **density**, **audio lifecycle**, **demo controls**, **Manor theme**.
 - **Configurable auto-advance** (Requirement 21): a new per-scene content field that lets a `continue` scene advance automatically after dialogue audio finishes.
 
@@ -28,7 +27,7 @@ This spec builds the foundation of the Mystira Player. It is the first of four s
 
 | Spec | Adds |
 |---|---|
-| player-core (this one) | scaffold, schemas, engine, renderer, mode machinery, `continue` |
+| player-core (this one) | scaffold, shared node/Engine contracts, renderer, continue navigation |
 | choices-hotspots | `choices` and `hotspots` interaction types |
 | sequence | `sequence` interaction type |
 | inspect | `inspect` interaction type |
@@ -63,9 +62,7 @@ flowchart TD
   end
 
   subgraph InteractionLayer["Interaction layer (src/interactions/shared/)"]
-    Modes["modes.ts — open/practice/check"]
-    Feedback["feedbackLadder.ts — practice feedback, revealAfter"]
-    CheckConf["CheckConfirmation — That's my answer"]
+    SharedModes["Defined in choices-hotspots spec"]
   end
 
   subgraph VoiceLayer["Voice layer (src/voice/)"]
@@ -82,7 +79,7 @@ flowchart TD
 
   subgraph AppLayer["App layer (src/app/)"]
     Shell["Standalone shell — providers, routing"]
-    Demo["DemoControls — child/day/notes switches"]
+    Demo["DemoControls — child/entry-point/notes switches"]
   end
 
   YAML --> StorySchema
@@ -93,7 +90,7 @@ flowchart TD
   EngineInt -.used by.-> Player
   Player --> SceneView
   SceneView --> Sub components
-  SceneView --> InteractionLayer
+  SceneView -.uses shared interaction contracts from.-> InteractionLayer
   SceneView --> VoiceLayer
   SceneView -.styled by.-> ThemeLayer
   Shell --> Player
@@ -115,7 +112,7 @@ sequenceDiagram
   App->>Engine: startSession(req)
   Engine->>Engine: Compile story YAML → nodes for this profile
   Engine->>Engine: Select versions from demo block
-  Engine->>Engine: Strip every answer
+  Engine->>Engine: Keep raw content answers out of renderer nodes
   Engine-->>App: Step (first node)
 
   App->>Player: render Step
@@ -134,42 +131,10 @@ sequenceDiagram
 
 ### Node compilation flow
 
-```mermaid
-flowchart LR
-  subgraph StoryYAML["Story YAML 2.1"]
-    S1["scene type=narrative\nnext_scene set\nno interaction"]
-    S2["scene type=choice\nbranches no object_id"]
-    S3["scene type=choice\nbranches with object_id"]
-    S4["scene interaction.kind=sequence/inspect"]
-    S5["scene with practice"]
-    S6["question in lesson.checks"]
-    S7["scene with research field"]
-    S8["lesson.result"]
-    S9["scene type=roll/special\nor stage3d only"]
-  end
-
-  subgraph Nodes["Runtime nodes"]
-    N1["scene + continue"]
-    N2["scene + choices"]
-    N3["scene + hotspots"]
-    N4["scene + sequence/inspect"]
-    N5["scene + interaction with local block"]
-    N6["check node\nattempt:1, scored:true"]
-    N7["research node"]
-    N8["result node"]
-    N9["EngineError unsupported"]
-  end
-
-  S1 --> N1
-  S2 --> N2
-  S3 --> N3
-  S4 --> N4
-  S5 --> N5
-  S6 --> N6
-  S7 --> N7
-  S8 --> N8
-  S9 --> N9
-```
+- Supported narrative scene with next_scene and no interaction block → scene node with continue navigation.
+- Roll, special or stage3d-only scene → unsupported Engine outcome.
+- Choices, hotspots, practice-local data, assessment, research and result compilation are specified in choices-hotspots.
+- Sequence and inspect compilation belong to their own specs.
 
 ## Components and Interfaces
 
@@ -184,7 +149,7 @@ src/
     App.tsx                   Standalone shell root
     providers.tsx             Engine, Config, Theme context providers
     routes.tsx               TanStack Router route definitions
-    DemoControls.tsx          Child/day/notes switches (local demo only)
+    DemoControls.tsx          Child/entry-point/notes switches (local demo only)
     config.ts                 Loads and validates public/config.json
   element/
     mystira-player.ts         <mystira-player> custom element (stub for this spec)
@@ -212,12 +177,6 @@ src/
     ErrorView.tsx             Error/unsupported screens
     useSession.ts             Session state hook
     useAutoAdvance.ts         Auto-advance hook
-  interactions/
-    shared/
-      modes.ts                open/practice/check classification
-      feedbackLadder.ts       Practice feedback selection
-      CheckConfirmation.tsx   "That's my answer" flow
-      usePracticeMode.ts       Practice state hook (wrong tries, reveal)
   voice/
     NarrationPlayer.ts        Recorded audio playback
     SpeechVoice.ts            speechSynthesis wrapper
@@ -392,7 +351,7 @@ export const SceneBaseSchema = z.object({
   characters: z.array(CharacterSchema),     // max 3, enforced by refine
   speakers: z.array(SpeakerSchema),
   lines: z.array(LineSchema),
-  task: NarrationSchema.optional(),          // not on check nodes
+  task: NarrationSchema.optional(),          // check-specific restrictions belong to Spec 2
   overlays: z.array(OverlaySchema),
   music: z.object({ profile: z.string() }).optional(),
   exitAllowed: z.boolean().optional(),
@@ -555,9 +514,6 @@ export const CheckNodeSchema = z.object({
   scored: z.boolean(),
 })
   .merge(SceneBaseSchema)
-  // Checks never have a task. `.omit()` would turn `task` into an unknown key that Zod silently strips,
-  // so a check carrying one would still validate; `z.never().optional()` rejects any value (Requirement 2.2).
-  .extend({ task: z.never().optional() });
 
 export const ResearchNodeSchema = z.object({
   type: z.literal("research"),
@@ -592,87 +548,11 @@ export type ResearchNode = z.infer<typeof ResearchNodeSchema>;
 export type ResultNode = z.infer<typeof ResultNodeSchema>;
 ```
 
-**Check node invariants** (Requirements 2.2, 2.3):
-
-The `CheckNodeSchema` rejects `task` itself (`z.never().optional()`, not `.omit()`, which would strip it silently). Zod's `superRefine` returns a new schema and does not mutate the one it is called on, so the refinements below are written as one function, `checkInvariants`, that is applied to the completed node union (inside `NodeSchema`'s exported validators), never to `CheckNodeSchema` on its own:
-
-```typescript
-// Requirements 2.2 and 2.3, applied to the completed node union (see createNodeValidator).
-// Nodes that are not checks pass through untouched.
-export function checkInvariants(node: Node, ctx: z.RefinementCtx): void {
-  if (node.type !== "check") return;
-
-  // Requirement 2.2: check nodes reject local, task, and reveal
-  // task is rejected by the schema itself (z.never().optional()).
-  // local is on the interaction, which check interactions must not carry:
-  const interaction = node.interaction as Record<string, unknown>;
-  if ("local" in interaction && interaction.local !== undefined) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["interaction", "local"],
-      message: "Check nodes must not carry a local block",
-    });
-  }
-  // reveal lives on hotspot spots; check scenes must not have it:
-  if (interaction.type === "hotspots") {
-    for (const spot of (interaction as { spots: { reveal?: unknown }[] }).spots) {
-      if (spot.reveal !== undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["interaction", "spots"],
-          message: "Check nodes must not carry reveal",
-        });
-      }
-    }
-  }
-
-  // Requirement 2.3: attempt 2 implies scored: false
-  if (node.attempt === 2 && node.scored === true) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["scored"],
-      message: "A check at attempt 2 must not be scored",
-    });
-  }
-}
-
-// The un-gated validator, for tests and tools that have no enabled-interaction list.
-export const validateNode = NodeSchema.superRefine((node, ctx) => {
-  checkInvariants(node, ctx);
-  sceneInvariants(node, ctx);
-});
-```
-
-**Enabled-interaction gating** (Requirement 2.5):
-
-The node schema is parameterized by the enabled interaction list. A factory function creates a schema that rejects disabled types:
-
-```typescript
-// src/schema/node.ts
-export function createNodeValidator(enabled: InteractionType[]) {
-  const alwaysAllowed = new Set(["continue"]); // navigation, not an interaction
-  const allowed = new Set([...alwaysAllowed, ...enabled]);
-
-  return NodeSchema.superRefine((node, ctx) => {
-    checkInvariants(node, ctx);  // Requirements 2.2 and 2.3 live here, so every validated node is covered
-    sceneInvariants(node, ctx);  // Requirement 9.5
-    const type = node.interaction.type;
-    if (!allowed.has(type)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["interaction", "type"],
-        message: `unsupported`,  // the engine maps this to EngineError kind: unsupported
-      });
-    }
-  });
-}
-```
-
-The engine calls `createNodeValidator(config.interactions.enabled)` once at startup and validates every node it produces. A test must feed it a check node with `local`, a hotspot `reveal`, and `attempt: 2, scored: true`, and expect each to be rejected, since a refinement attached to the wrong schema fails silently.
+**Check-node refinements** are owned by choices-hotspots; the core schema defines the shared discriminated node shapes.
 
 **Character slot uniqueness** (Requirement 9.5):
 
-Same rule as the check invariants: `superRefine` returns a new schema, so a refinement applied to `SceneBaseSchema` after it has been merged into the node schemas never runs. It is a function over the completed node, applied wherever `checkInvariants` is.
+Apply this refinement to the completed node, because `superRefine` returns a new schema and refinements added to `SceneBaseSchema` after merging do not run.
 
 ```typescript
 export function sceneInvariants(node: Node, ctx: z.RefinementCtx): void {
@@ -697,7 +577,7 @@ export function sceneInvariants(node: Node, ctx: z.RefinementCtx): void {
 }
 ```
 
-`createNodeValidator` and `validateNode` call both `checkInvariants` and `sceneInvariants`. The same test that feeds the validator bad check nodes also feeds it two characters in one slot and four characters, and expects both rejected.
+`createNodeValidator` and `validateNode` call `sceneInvariants` for core scene character constraints. The choices-hotspots spec adds its check-specific refinements separately.
 
 #### `src/schema/story-yaml.ts` — Story YAML 2.1 schema
 
@@ -1149,520 +1029,35 @@ export interface Engine {
 
 **Design note**: The `Node` type is inferred from the Zod schema in `src/schema/node.ts` and imported here. This avoids a parallel type definition. The engine types reference `Node` but do not re-define it.
 
-### 4. LocalEngine (Requirements 5, 6, 7, 8)
+### 4. LocalEngine (core path; Requirements 5–8)
 
-**Files**: `src/engine/local/LocalEngine.ts`, `compiler.ts`, `session.ts`, `demo-block.ts`
+LocalEngine implements the core Engine contract and compiles supported narrative scenes for the active profile. It reads profile version and piece-order decisions from the story demo block. Renderer code does not branch on profile identity.
 
-#### `LocalEngine.ts` — Engine implementation
+#### Continue-only compilation (Requirement 5)
 
-Implements the `Engine` interface. In local mode, it:
-1. Loads and validates the story YAML at construction time.
-2. On `startSession`, compiles the story into a node graph for the requested profile.
-3. On `respond`, advances through the node graph, enforcing session rules.
-
-```typescript
-export class LocalEngine implements Engine {
-  private story: StoryYaml;
-  private sessions: Map<string, Session> = new Map();
-  private nodeValidator: ReturnType<typeof createNodeValidator>;
-  private checkAnswers: Map<string, CheckAnswer>; // sceneId → answer (engine-only)
-
-  constructor(storyYaml: unknown, config: { interactions: { enabled: InteractionType[] } }) {
-    this.story = StoryYamlSchema.parse(storyYaml);
-    this.nodeValidator = createNodeValidator(config.interactions.enabled);
-    this.checkAnswers = extractCheckAnswers(this.story); // see below
-  }
-
-  async listProfiles(): Promise<Profile[]> {
-    // Returns demo profiles as Profile objects
-    return (this.story.demo?.profiles ?? []).map(p => ({
-      profileId: p.id,
-      displayName: p.display_name,
-    }));
-  }
-
-  async getHome(profileId: string): Promise<Home> {
-    // Builds activity cards from the story + demo data
-    // (Stub for this spec — the hub comes in a later task; returns activities list)
-  }
-
-  async startSession(req: StartSessionRequest): Promise<Step> {
-    const profile = req.players.find(p => p.type === "Profile");
-    const sessionId = crypto.randomUUID();
-    const compiled = compileStory(this.story, profile?.profileId, this.checkAnswers, this.nodeValidator);
-    // A day switch asks for a check entry point; honour it when the node exists, never fall back silently.
-    const startId = req.startNodeId ?? compiled.entryNodeId;
-    if (!compiled.nodes.has(startId)) {
-      throw { kind: "notFound", message: `Start node not found: ${startId}` } as EngineError;
-    }
-    const session: Session = {
-      sessionId,
-      version: "0",
-      compiled,       // node graph + navigation
-      current: startId,
-      history: [],
-      processedRequests: new Map(),  // answerRequestId → Step (idempotency)
-    };
-    this.sessions.set(sessionId, session);
-    return this.buildStep(session);
-  }
-
-  async resumeSession(sessionId: string): Promise<Step> {
-    const session = this.sessions.get(sessionId);
-    if (!session) throw { kind: "notFound", message: "Session not found" } as EngineError;
-    return this.buildStep(session);
-  }
-
-  async respond(sessionId: string, r: AnswerSubmission): Promise<Step> {
-    const session = this.sessions.get(sessionId);
-    if (!session) throw { kind: "notFound" } as EngineError;
-
-    // Requirement 8.1: idempotency — repeated answerRequestId returns same Step
-    if (session.processedRequests.has(r.answerRequestId)) {
-      return session.processedRequests.get(r.answerRequestId)!;
-    }
-
-    // Requirement 8.2: stale version → conflict
-    if (r.version !== session.version) {
-      throw {
-        kind: "conflict",
-        currentStep: this.buildStep(session),
-      } as EngineError;
-    }
-
-    // Requirement 8.3/8.4: back navigation
-    if (r.answer.kind === "back") {
-      if (!canGoBack(session)) throw { kind: "conflict", currentStep: this.buildStep(session) } as EngineError;
-      session.current = session.history.pop()!;
-    } else {
-      // Resolve the next node first: `next` throws for an unsupported scene, and history must not
-      // gain an entry for a move that never happened.
-      const nextId = session.compiled.next(session.current, r.answer);
-      session.history.push(session.current);
-      session.current = nextId;
-    }
-
-    session.version = String(Number(session.version) + 1);
-    const step = this.buildStep(session);
-    session.processedRequests.set(r.answerRequestId, step);
-    return step;
-  }
-}
-```
-
-#### `compiler.ts` — Story YAML → node compilation
-
-This is the core of Requirement 5. It transforms story YAML scenes into runtime nodes.
-
-**Key compilation rules**:
-
-| Story YAML scene | Compiled node |
+| Story YAML scene | Core result |
 |---|---|
-| `type: narrative`, `next_scene` set, no `interaction` block | `scene` + `continue` interaction |
-| `type: choice`, branches without `object_id` | `scene` + `choices` interaction |
-| `type: choice`, branches with `object_id` | `scene` + `hotspots` interaction |
-| `interaction.kind: sequence` | `scene` + `sequence` interaction |
-| `interaction.kind: inspect` | `scene` + `inspect` interaction |
-| `practice` block present | interaction gets `local` block (built from `practice`) |
-| Scene listed in `lesson.checks` | `check` node, `attempt: 1`, `scored: true` |
-| Scene with `research` field | `research` node |
-| `lesson.result` | `result` node |
-| `type: roll` or `special` | `EngineError { kind: "unsupported" }` |
-| `stage3d` only (no image, no video, has stage3d) | `EngineError { kind: "unsupported" }` |
-| No `lines` | `description` becomes single narrator line |
+| Narrative scene with next_scene and no interaction block | Scene node with continue navigation |
+| Scene with no lines | One narrator line from description |
+| Supported scene with lines, task, cast, overlays, media and music | Mapped scene-node fields |
+| roll, special, or stage3d-only scene | Unsupported Engine outcome |
 
-```typescript
-// compiler.ts
+Choices, hotspots, sequence, inspect, practice-local data, assessment checks, research and result compilation are specified in their owning interaction specs. Spec 2 owns assessment and check-specific answer/scoring rules.
 
-interface CompiledStory {
-  entryNodeId: string;
-  nodes: Map<string, Node>;           // nodeId → Node
-  next: (currentNodeId: string, answer: Answer) => string;  // → next nodeId
-}
+#### Per-profile selection (Requirement 6)
 
-function compileStory(
-  story: StoryYaml,
-  profileId: string | undefined,
-  checkAnswers: Map<string, CheckAnswer>,
-  nodeValidator: ReturnType<typeof createNodeValidator>,
-): CompiledStory {
-  // 1. Determine piece order and version selection from demo block
-  const demoSelection = selectFromDemoBlock(story, profileId);
+The engine reads the active profile's named version for each piece. Fixed order follows lesson order; child_chooses order is exposed as an engine-controlled choice. Per-piece rationale comes from demo and is attached to the node. Profile-specific decisions remain inside the engine.
 
-  // 2. Build scene id → scene lookup
-  const scenesById = new Map(story.scenes.map(s => [s.id, s]));
+#### Generic session control (Requirement 8)
 
-  // 3. Identify check scenes (from lesson.checks)
-  const checkSceneIds = new Set(
-    story.lesson?.checks?.flatMap(c => c.questions.map(q => q.scene)) ?? []
-  );
+- Repeated answerRequestId values return the originally processed Step without advancing twice.
+- A stale version fails with conflict and carries the current Step.
+- Back is accepted only when canGoBack is true; otherwise the engine returns a conflict.
+- Check-specific back restrictions and retry scoring are defined in Spec 2.
 
-  // 4. Compile each scene into a node
-  const nodes = new Map<string, Node>();
-  for (const scene of story.scenes) {
-    if (scene.type === "roll" || scene.type === "special") {
-      // Requirement 5.4: raise unsupported
-      // The node is not added; the engine handles this at navigation time
-      continue; // marked as unsupported in the navigation map
-    }
-    if (isStage3dOnly(scene)) {
-      continue; // unsupported
-    }
+#### Answer privacy (Requirement 7)
 
-    const node = checkSceneIds.has(scene.id)
-      ? compileCheckScene(scene, story, checkAnswers)
-      : scene.research
-        ? compileResearchScene(scene, story)
-        : compileScene(scene, story);
-
-    // Requirement 7.1: strip every answer before building the node
-    // (compileScene/compileCheckScene already exclude answer fields)
-    // Requirement 7.2: validate the node carries no answer
-    assertNoAnswerOnNode(node);
-
-    // Requirement 2.5: validate against enabled interactions
-    const result = nodeValidator.safeParse(node);
-    if (!result.success) {
-      // If the issue is "unsupported", mark this scene as unsupported
-      // Otherwise, throw (content is invalid)
-    }
-
-    nodes.set(scene.id, node);
-  }
-
-  // 5. Compile result node (if lesson.result exists)
-  if (story.lesson?.result) {
-    const resultScene = scenesById.get(story.lesson.result.scene);
-    if (resultScene) {
-      const resultNode = compileResultScene(resultScene, story.lesson.result);
-      nodes.set(resultScene.id, resultNode);
-    }
-  }
-
-  // 6. Build navigation function
-  const next = buildNavigation(story, demoSelection, checkAnswers);
-
-  // 7. Determine entry node (first scene of first piece, or first scene)
-  const entryNode = demoSelection.order[0] ?? story.scenes[0]?.id;
-
-  return { entryNodeId: entryNode, nodes, next };
-}
-```
-
-**Scene compilation** (`compileScene`):
-
-```typescript
-function compileScene(scene: SceneYaml, story: StoryYaml): Node {
-  const characters = buildCharacters(scene, story);
-  const speakers = buildSpeakers(scene, story);
-  const lines = buildLines(scene);  // Requirement 5.2: no lines → description as narrator line
-  const interaction = buildInteraction(scene);
-  const media = buildMedia(scene);
-  const overlays = buildOverlays(scene);
-  const music = scene.music ? { profile: scene.music.profile } : undefined;
-
-  return {
-    type: "scene",
-    id: scene.id,
-    title: scene.title,
-    media,
-    characters,
-    speakers,
-    lines,
-    task: scene.task ? buildNarration(scene.task) : undefined,
-    overlays,
-    music,
-    exitAllowed: scene.exit_allowed,
-    rationale: undefined,  // attached by demo-block selection
-    slot: scene.host_slot ?? undefined,
-    autoAdvance: scene.auto_advance ?? false,  // Requirement 21
-    interaction,
-  };
-}
-```
-
-**Requirement 5.2 — no `lines` → description as narrator line**:
-
-```typescript
-function buildLines(scene: SceneYaml): Line[] {
-  if (scene.lines && scene.lines.length > 0) {
-    // Requirement 5.3: map lines, task, cast, overlays, media, music
-    return scene.lines.map(l => ({
-      speakerId: l.speaker,
-      text: l.text,
-      audioUrl: l.audio ?? undefined,
-    }));
-  }
-  // Requirement 5.2: no lines → description as single narrator line
-  return [{ speakerId: "narrator", text: scene.description }];
-}
-```
-
-**Requirement 5.1 — narrative scene with `next_scene` and no interaction → `continue`**:
-
-```typescript
-function buildInteraction(scene: SceneYaml): Interaction {
-  if (scene.interaction) {
-    // Sequence or inspect interaction block
-    return buildInteractionBlock(scene.interaction, scene.practice);
-  }
-  if (scene.type === "choice") {
-    const hasObjectId = scene.branches.some(b => b.object_id);
-    if (hasObjectId) {
-      return buildHotspots(scene);  // later spec
-    }
-    return buildChoices(scene);     // later spec
-  }
-  // narrative with next_scene → continue (Requirement 5.1)
-  return { type: "continue" };
-}
-```
-
-**Requirement 5.5 — check scene → check node**:
-
-```typescript
-function compileCheckScene(
-  scene: SceneYaml,
-  story: StoryYaml,
-  checkAnswers: Map<string, CheckAnswer>,
-): Node {
-  // Check answers are kept in the engine, never on the node (Requirement 7.1)
-  const interaction = buildInteraction(scene);
-  // Requirement 2.2: check nodes must not carry local, task, or reveal
-  // The interaction must not have a local block:
-  if ("local" in interaction) {
-    delete (interaction as any).local;
-  }
-
-  return {
-    type: "check",
-    id: scene.id,
-    title: scene.title,
-    question: buildNarration({ text: scene.description }),
-    interaction,
-    attempt: 1,         // Requirement 5.5
-    scored: true,
-    media: buildMedia(scene),
-    characters: buildCharacters(scene, story),
-    speakers: buildSpeakers(scene, story),
-    lines: buildLines(scene),
-    overlays: buildOverlays(scene),
-    // task is omitted (check nodes never have task)
-    music: scene.music ? { profile: scene.music.profile } : undefined,
-    rationale: undefined,
-    autoAdvance: scene.auto_advance ?? false,
-  };
-}
-```
-
-**Requirement 5.6 — research scene → research node**:
-
-```typescript
-function compileResearchScene(scene: SceneYaml, story: StoryYaml): Node {
-  return {
-    type: "research",
-    step: scene.research!.step,
-    source: scene.research!.source,
-    yourAnswer: undefined,  // filled in by engine after a wrong check answer
-    interaction: buildInteraction(scene),
-    // ... SceneBase fields (same as compileScene)
-  };
-}
-```
-
-**Requirement 5.7 — `lesson.result` → result node**:
-
-```typescript
-function compileResultScene(scene: SceneYaml, result: LessonYaml["result"]): Node {
-  return {
-    type: "result",
-    correctFirstTry: 0,  // filled by engine from check results
-    total: 0,            // filled by engine
-    key: result?.key ? {
-      label: result.key.label,
-      iconUrl: result.key.image ?? "",
-    } : undefined,
-    interaction: { type: "continue" },
-    // ... SceneBase fields
-  };
-}
-```
-
-#### `demo-block.ts` — Per-child version selection (Requirement 6)
-
-```typescript
-interface DemoSelection {
-  profileId: string;
-  // pieceId → versionId (for versioned pieces)
-  versions: Map<string, string>;
-  // ordered list of entry scene ids (one per piece, in the chosen order)
-  order: string[];
-  // pieceId → rationale (from demo block)
-  rationales: Map<string, Rationale>;
-}
-
-function selectFromDemoBlock(story: StoryYaml, profileId?: string): DemoSelection {
-  const demo = story.demo;
-  const lesson = story.lesson;
-  if (!demo || !lesson || !profileId) {
-    // No demo block: all pieces in lesson order, no per-child versions
-    return defaultSelection(story);
-  }
-
-  const profile = demo.profiles.find(p => p.id === profileId);
-  if (!profile) return defaultSelection(story);
-
-  // Requirement 6.1: read demo block for version and order
-  const versions = new Map<string, string>(Object.entries(profile.versions ?? {}));
-
-  // Requirement 6.3/6.4: order
-  const pieces = lesson.pieces;
-  let orderedPieceIds: string[];
-  if (profile.order === "child_chooses") {
-    // Requirement 6.4: child chooses order
-    // The engine presents pieces in lesson order; the child's choices
-    // determine the actual order at runtime (via choices interaction).
-    // For this spec (continue only), we present in lesson order and
-    // the child_chooses flag is stored for later specs.
-    orderedPieceIds = pieces.map(p => p.id);
-  } else {
-    // Requirement 6.3: fixed → lesson order
-    orderedPieceIds = pieces.map(p => p.id);
-  }
-
-  // Build entry scene for each piece (using the selected version)
-  const order: string[] = [];
-  const rationales = new Map<string, Rationale>();
-  for (const pieceId of orderedPieceIds) {
-    const piece = pieces.find(p => p.id === pieceId)!;
-    let sceneId: string;
-    if (piece.versions) {
-      // Requirement 6.2: compile the version named for this profile
-      const versionId = versions.get(pieceId);
-      const version = piece.versions.find(v => v.id === versionId)
-        ?? piece.versions[0];
-      sceneId = version.scenes[0];
-    } else {
-      sceneId = piece.scenes![0];
-    }
-    order.push(sceneId);
-
-    // Requirement 6.5: take rationale from demo block
-    const rationaleText = profile.rationale?.[pieceId];
-    if (rationaleText) {
-      rationales.set(sceneId, {
-        differs: piece.versions !== undefined,
-        text: rationaleText,
-      });
-    }
-  }
-
-  return { profileId, versions, order, rationales };
-}
-```
-
-The compiler attaches the rationale to each compiled node:
-
-```typescript
-// In compileStory, after compiling each scene:
-const rationale = demoSelection.rationales.get(scene.id);
-if (rationale) {
-  node.rationale = rationale;
-}
-```
-
-**Requirement 6.6**: No component branches on child identity. The `DemoSelection` is resolved entirely within `LocalEngine`. The renderer only sees the `Node` (with its `rationale` field) and the `Step`. There is no `childId` or profile reference in any component.
-
-#### `session.ts` — Session state and control (Requirement 8)
-
-```typescript
-interface Session {
-  sessionId: string;
-  version: string;
-  compiled: CompiledStory;
-  current: string;              // current node id
-  history: string[];            // node ids for back navigation
-  processedRequests: Map<string, Step>;  // answerRequestId → Step
-}
-
-// Derived on demand so it cannot drift from the history or the current node (Requirements 8.3 to 8.5).
-function canGoBack(session: Session): boolean {
-  const current = session.compiled.nodes.get(session.current);
-  return session.history.length > 0 && current?.type !== "check";
-}
-```
-
-**Requirement 8.1 (idempotency)**: Before processing a `respond` call, check if `answerRequestId` is in `processedRequests`. If so, return the stored `Step` without re-processing.
-
-**Requirement 8.2 (stale version)**: Compare `r.version` with `session.version`. If they differ, throw `EngineError { kind: "conflict", currentStep: this.buildStep(session) }`.
-
-**Requirement 8.3/8.4 (canGoBack)**: `canGoBack(session)` is true when `session.history.length > 0` and the current node is not a check. `back` answers are rejected (throw conflict) when `canGoBack` is false.
-
-**Requirement 8.5**: `canGoBack` is always false on check nodes.
-
-**Requirement 8.6**: When a check is at `attempt: 2`, the engine produces a check node with `scored: false`. The `attempt` field on the node tells the renderer to show "This try does not count for the score".
-
-#### Answer extraction and stripping (Requirement 7)
-
-```typescript
-// Extract check answers from lesson block (engine-only, never on nodes)
-function extractCheckAnswers(story: StoryYaml): Map<string, CheckAnswer> {
-  const answers = new Map<string, CheckAnswer>();
-  for (const check of story.lesson?.checks ?? []) {
-    for (const q of check.questions) {
-      answers.set(q.scene, {
-        answer: q.answer,
-        research: q.research ?? [],
-      });
-    }
-  }
-  return answers;
-}
-
-// Requirement 7.3: build local block from practice
-function buildLocalBlock(practice: PracticeYaml): object | undefined {
-  if (!practice) return undefined;
-  // Transform practice.answer into the interaction's local block
-  // The content 'answer' field is NOT copied; it is transformed:
-  //   answer.branch → correctId
-  //   answer.object → correctId
-  //   answer.order  → order
-  //   answer.parts  → flagged
-  return {
-    correctId: practice.answer.branch ?? practice.answer.object,
-    order: practice.answer.order,
-    flagged: practice.answer.parts,
-    feedback: {
-      hint: buildNarration(practice.hint),
-      onWrong: practice.on_wrong?.map(buildNarration),
-      revealAfter: practice.reveal_after ?? 3,
-    },
-  };
-}
-
-// Requirement 7.1: strip every answer
-// The compileScene/compileCheckScene functions never copy the raw
-// 'answer' field from practice or lesson.checks onto the node.
-// The local block is a transformed representation (correctId, order, flagged),
-// not the raw answer object.
-
-// Requirement 7.2: invariant assertion
-function assertNoAnswerOnNode(node: Node): void {
-  // Check that no field named 'answer' exists on the node or its interaction
-  const nodeAny = node as unknown as Record<string, unknown>;
-  if ("answer" in nodeAny) {
-    throw new Error(`Node ${node.id} carries an answer field`);
-  }
-  const interaction = nodeAny.interaction as Record<string, unknown> | undefined;
-  if (interaction && "answer" in interaction) {
-    throw new Error(`Node ${node.id} interaction carries an answer field`);
-  }
-  // Check nodes must not have local blocks:
-  if (node.type === "check" && interaction && "local" in interaction) {
-    throw new Error(`Check node ${node.id} carries a local block`);
-  }
-}
-```
+The engine never copies raw story-content answer fields onto a renderer node. Spec 2 defines transformed practice-local data and engine-private check answers. Core tests assert raw answer values never appear on emitted nodes.
 
 ### 5. Scene renderer (Requirements 9, 10, 11, 12)
 
@@ -1687,11 +1082,11 @@ The `Player` uses `useSession` to manage state:
 function useSession(engine: Engine, startRequest?: StartSessionRequest, sessionId?: string) {
   const [step, setStep] = useState<Step | null>(null);
   const [error, setError] = useState<EngineError | null>(null);
-  // One identifier per logical submission, kept across retries (Requirement 15.4).
+  // One identifier per logical submission, kept across retries (Requirement 8.1).
   // Keyed by node id and version: a new node, or a new version after a conflict, is a new submission.
   const pending = useRef<{ key: string; answerRequestId: string } | null>(null);
 
-  const [inFlight, setInFlight] = useState(false);   // Requirement 15.3: the check disables itself while true
+  const [inFlight, setInFlight] = useState(false);   // Generic pending submission state
 
   useEffect(() => {
     // If the profile changes twice, the first request may resolve last. Cleanup marks it stale
@@ -1747,7 +1142,7 @@ function useSession(engine: Engine, startRequest?: StartSessionRequest, sessionI
 }
 ```
 
-`Player` passes `inFlight` to `CheckConfirmation`.
+`Player` exposes the session `inFlight` state to the active interaction controls; the choices-hotspots spec defines how check confirmation uses it.
 
 The `Player` renders:
 - `ErrorView` if `error` is set
@@ -1770,7 +1165,7 @@ interface SceneViewProps {
 - `Characters` — up to 3 in slots, with reactions
 - `Dialogue` — lines in order, audio/speech
 - `Overlay` (one per overlay) — positioned text
-- `TaskLine` — instruction line (omitted on checks)
+- `TaskLine` — instruction line when present on a core scene node
 - Next button / Back control (from `step.canGoBack` and `node.interaction.type`)
 - `NotesPanel` (if rationale present and notes enabled)
 
@@ -1869,7 +1264,6 @@ function playLine(line: Line, speaker: Speaker | undefined) {
 #### `TaskLine.tsx` — Instruction (Requirement 11.2, 11.3)
 
 - **Requirement 11.2**: When a node has a `task`, renders the task line (typically below the scene box, in a distinct style).
-- **Requirement 11.3**: When a node is a `check`, the task line is omitted (check nodes have `question` instead, rendered by the check confirmation flow).
 
 #### Next button and Back control (Requirement 12)
 
@@ -1905,141 +1299,9 @@ The Next button is rendered by `SceneView` when `node.interaction.type === "cont
 - **Requirement 12.4**: Back submits `{ kind: "back" }`.
 - **Requirement 12.5**: Both are keyboard-operable (native `<button>` elements, focusable, operable with Enter/Space) and meet the density minimum tap target (via `min-height` CSS from the density module).
 
-### 6. Shared mode machinery (Requirements 13, 14, 15)
+### 6. Shared interaction behavior
 
-#### `modes.ts` — Classification (Requirement 13)
-
-```typescript
-export type Mode = "open" | "practice" | "check";
-
-export function classifyMode(node: Node): Mode {
-  // Requirement 13.3: check takes precedence
-  if (node.type === "check") return "check";
-
-  // Scene nodes:
-  if (node.type === "scene") {
-    const interaction = node.interaction as Record<string, unknown>;
-    // Requirement 13.2: has local block → practice
-    if ("local" in interaction && interaction.local !== undefined) {
-      return "practice";
-    }
-    // Requirement 13.1: no local block → open
-    return "open";
-  }
-
-  // Research and result nodes are always open
-  return "open";
-}
-```
-
-**Requirement 13.4 (totality)**: The function returns exactly one of `"open"`, `"practice"`, `"check"` for every node. The discriminated union on `node.type` and the `if/else` chain ensure totality.
-
-#### `feedbackLadder.ts` — Practice feedback (Requirement 14)
-
-```typescript
-export interface FeedbackResult {
-  message: Narration;     // the feedback message to play/show
-  revealTarget: boolean;  // whether to reveal the correct answer
-}
-
-export function getFeedback(
-  wrongTryNumber: number,        // 1-based
-  wrongTryCount: number,          // total wrong tries so far (including this one)
-  feedback: Feedback | undefined,
-): FeedbackResult {
-  // Requirement 14.1: onWrong[n-1] → hint → built-in "Not yet. Try again."
-  let message: Narration;
-  if (feedback?.onWrong && wrongTryNumber - 1 < feedback.onWrong.length) {
-    message = feedback.onWrong[wrongTryNumber - 1];
-  } else if (feedback?.hint) {
-    message = feedback.hint;
-  } else {
-    message = { text: "Not yet. Try again." };
-  }
-
-  // Requirement 14.3: revealAfter wrong tries → reveal correct target
-  const revealAfter = feedback?.revealAfter ?? 3;
-  const revealTarget = wrongTryCount >= revealAfter;
-
-  return { message, revealTarget };
-}
-```
-
-- **Requirement 14.2**: The feedback is accompanied by a gentle shake (CSS animation) and a low tone (from `Tones`), never a red cross or failure sound.
-- **Requirement 14.3**: When `revealAfter` wrong tries have occurred, the correct target pulses (CSS animation), and the child still makes the final tap.
-- **Requirement 14.4**: When the child gives the correct answer, the mode logic accepts it and submits the final answer with `wrongTries` set to the count of wrong tries.
-
-#### `usePracticeMode.ts` — Practice state hook
-
-```typescript
-function usePracticeMode(local: LocalBlock | undefined, mode: Mode) {
-  const [wrongTries, setWrongTries] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-
-  const judge = useCallback((answer: Answer): { correct: boolean; feedback: FeedbackResult } => {
-    if (mode !== "practice" || !local) {
-      return { correct: true, feedback: { message: { text: "" }, revealTarget: false } };
-    }
-    const correct = checkAnswer(answer, local);
-    if (correct) {
-      return { correct: true, feedback: { message: { text: "" }, revealTarget: false } };
-    }
-    const newWrongTries = wrongTries + 1;
-    setWrongTries(newWrongTries);
-    const feedback = getFeedback(newWrongTries, newWrongTries, local.feedback);
-    if (feedback.revealTarget) setRevealed(true);
-    return { correct: false, feedback };
-  }, [local, mode, wrongTries]);
-
-  return { wrongTries, revealed, judge };
-}
-```
-
-#### `CheckConfirmation.tsx` — "That's my answer" (Requirement 15)
-
-```typescript
-interface CheckConfirmationProps {
-  node: CheckNode;
-  onSubmit: (answer: Answer) => void;
-  inFlight: boolean;
-  // No retry identifier here: `onSubmit` carries only an Answer, so `useSession.respond`
-  // owns the answerRequestId and reuses it on retry.
-}
-```
-
-- **Requirement 15.1**: When `attempt === 1`, shows an "Only the first try counts" banner.
-- **Requirement 15.2**: Requires the child to make a selection, then tap "That's my answer" before submitting. The submit button is disabled until a selection is made.
-- **Requirement 15.3**: While a submission is in flight (`inFlight === true`), the interaction is disabled.
-- **Requirement 15.4**: On retry after an error, the same `answerRequestId` is reused (held by `useSession`, keyed by node id and version). The engine's idempotency check (Requirement 8.1) ensures the retry returns the original success result without re-scoring.
-
-```typescript
-function CheckConfirmation({ node, onSubmit, inFlight }: CheckConfirmationProps) {
-  const [selected, setSelected] = useState<string | null>(null);
-
-  // Requirement 15.1: attempt 1 banner
-  {node.attempt === 1 && (
-    <div className={styles.banner} role="status">
-      Only the first try counts
-    </div>
-  )}
-  {node.attempt === 2 && (
-    <div className={styles.banner} role="status">
-      This try does not count for the score
-    </div>
-  )}
-
-  // Interaction rendering (choices, hotspots, etc.) — later specs
-  // For this spec, check nodes with continue interaction are not expected.
-
-  // Requirement 15.2: selection + "That's my answer"
-  <button
-    disabled={!selected || inFlight}   // Requirement 15.3
-    onClick={() => onSubmit(buildAnswer(selected))}
-  >
-    That's my answer
-  </button>
-}
-```
+Open/practice/check classification, feedback, revealAfter and check confirmation are specified and implemented in choices-hotspots. Specs 3 and 4 reuse those contracts.
 
 ### 7. Notes panel (Requirement 16)
 
@@ -2222,20 +1484,6 @@ export class Tones {
     return this.ctx;
   }
 
-  // Low tone for wrong try (Requirement 14.2)
-  playLowTone(): void {
-    const ctx = this.getContext();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = 220;  // low A
-    osc.type = "sine";
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.3);
-  }
 
   // Tone for character reaction tap (Requirement 9.6)
   playReactionTone(): void {
@@ -2263,9 +1511,9 @@ interface DemoControlsProps {
   profiles: Profile[];          // demo children
   currentProfileId: string;
   onSwitchProfile: (profileId: string) => void;
-  days: { id: string; label: string }[];  // lesson, day3, day5
-  currentDay: string;
-  onSwitchDay: (dayId: string) => void;
+  entryPoints: { id: string; label: string }[];  // lesson, assessment, follow-up assessment
+  currentEntryPoint: string;
+  onSwitchEntryPoint: (entryPointId: string) => void;
   notesOpen: boolean;
   onToggleNotes: () => void;
 }
@@ -2273,7 +1521,7 @@ interface DemoControlsProps {
 
 - **Requirement 19.1**: Shown only when `config.json` has `mode: "local"` and `demo: true`. The `Player` component checks config and conditionally renders `DemoControls`.
 - **Requirement 19.2**: Child switch jumps to the same piece for the other demo child. This calls `onSwitchProfile`, which starts a new session for the other profile, attempting to land on the same piece (the engine preserves the current piece position across profile switches).
-- **Requirement 19.3**: Day switch jumps to the lesson, Day 3 check, or Day 5 check. This calls `onSwitchDay`, which starts a session at the appropriate entry point (lesson start, first check question, or second check).
+- **Requirement 19.3**: The entry-point switch starts a session at the selected lesson, assessment or follow-up assessment entry point.
 - **Requirement 19.4**: Rendered outside the player root (in the standalone shell, not inside `<mystira-player>`), so it never appears in an embedded player.
 
 ### 11. Styling and the Manor theme (Requirement 20)
@@ -2556,9 +1804,9 @@ Loaded at startup by `src/app/config.ts`, validated with a Zod schema, and provi
 
 **Validates: Requirements 6.2**
 
-### Property 4: Answer-stripping invariant
+### Property 4: Raw answer exclusion
 
-*For any* story YAML with practice blocks and check answers, and for any demo profile, every node the LocalEngine produces shall carry no answer value from a `practice` or `lesson.checks` block. The node may carry a `local` block (a transformed representation for practice mode), but never the raw content `answer` field. Check nodes shall carry no `local` block at all.
+*For any* supported story and demo profile, every runtime node the LocalEngine produces shall exclude raw answer values from source content.
 
 **Validates: Requirements 7.1, 7.2**
 
@@ -2566,13 +1814,7 @@ Loaded at startup by `src/app/config.ts`, validated with a Zod schema, and provi
 
 *For any* session and any `answerRequestId`, calling `respond` twice with the same `answerRequestId` shall return the same Step without re-processing the answer or advancing the session a second time.
 
-**Validates: Requirements 8.1, 15.4**
-
-### Property 6: Mode totality
-
-*For any* valid Node, the Mode Logic shall classify the node into exactly one of `"open"`, `"practice"`, or `"check"`, and the classification shall be deterministic: the same node always yields the same mode.
-
-**Validates: Requirements 13.4**
+**Validates: Requirement 8.1**
 
 ## Error Handling
 
@@ -2601,7 +1843,7 @@ When the node validator (parameterized by `interactions.enabled`) rejects an int
 
 ### Schema validation errors
 
-Content validation runs through Zod schemas. If a story YAML file fails validation (missing required field, wrong type, check node with `local`/`task`/`reveal`), `LocalEngine` throws at construction time. The standalone shell catches this and shows an `ErrorView` with the Zod error message (which includes the path to the invalid field). This is a content authoring error, not a runtime error.
+Content validation runs through Zod schemas. If a story YAML file fails validation (missing required field or wrong type), `LocalEngine` throws at construction time. Check-specific constraints are defined in the choices-hotspots spec. The standalone shell catches this and shows an `ErrorView` with the Zod error message (which includes the path to the invalid field). This is a content authoring error, not a runtime error.
 
 The content checker (`scripts/check-content.py`) catches these errors earlier, in a Kiro hook and CI, before the content reaches the engine.
 
@@ -2617,16 +1859,15 @@ The testing strategy uses unit tests (specific examples, edge cases, error condi
 
 ### Property-based tests (Vitest + fast-check)
 
-Six properties, each running a minimum of 100 iterations. Each test is tagged with a comment referencing the design property.
+Five properties, each running a minimum of 100 iterations. Each test is tagged with a comment referencing the design property.
 
 | # | Property | Test file | Generator |
 |---|---|---|---|
-| 1 | Node round-trip | `src/schema/node.test.ts` | Random Node: pick type (scene/check/research/result), random interaction type, random optional fields, random characters/lines/overlays |
+| 1 | Node round-trip | `src/schema/node.test.ts` | Random core Node, random supported fields, random characters/lines/overlays |
 | 2 | Story YAML round-trip | `src/schema/story-yaml.test.ts` | Random StoryYaml: random required fields, random optional 2.1 additions, random engine fields (opaque), random scene types |
 | 3 | Per-child version selection | `src/engine/local/compiler.test.ts` | Random demo block with random version assignments, compile for each profile, assert selected version |
-| 4 | Answer-stripping invariant | `src/engine/local/compiler.test.ts` | Random stories with practice blocks and check answers, compile, assert no answer field on any node |
+| 4 | Answer-stripping invariant | `src/engine/local/compiler.test.ts` | Random supported stories with answer fields, compile core nodes, assert no raw answer values on runtime nodes |
 | 5 | Respond idempotency | `src/engine/local/LocalEngine.test.ts` | Random answerRequestId, random answers, call respond twice, assert identical Steps |
-| 6 | Mode totality | `src/interactions/shared/modes.test.ts` | Random nodes (all types, with/without local blocks), classify, assert result ∈ {open, practice, check} |
 
 Tag format: `// Feature: player-core, Property N: <property text>`
 
@@ -2636,14 +1877,12 @@ Tag format: `// Feature: player-core, Property N: <property text>`
 
 | Area | File | Tests |
 |---|---|---|
-| Node schema | `src/schema/node.test.ts` | Valid nodes of each type parse; check with local/task/reveal rejected (3 tests); check attempt 2 + scored true rejected; disabled interaction type raises unsupported; character slot uniqueness enforced; character max 3 enforced |
+| Node schema | `src/schema/node.test.ts` | Shared node shapes parse; disabled interaction type raises unsupported; character slot uniqueness and maximum are enforced |
 | Story YAML schema | `src/schema/story-yaml.test.ts` | Pumpkin-gate story parses; minimal 2.0 story parses; missing each required field rejected with field name in error; auto_advance field accepted; engine fields accepted as opaque |
 | Engine interface | `src/engine/types.test-d.ts` | Type-level checks: Answer includes continue and back; AnswerSubmission has required fields; EngineError has all 6 kinds; Step has required fields; identifiers are profileId/playerId/sessionId |
-| LocalEngine compilation | `src/engine/local/compiler.test.ts` | Narrative + next_scene → continue; no lines → narrator line; field mapping (lines/task/cast/overlays/media/music); roll/special/stage3d → unsupported; check scene → check node attempt 1; research scene → research node; lesson.result → result node; practice → local block built; check answer not on node |
+| LocalEngine compilation | compiler tests | Continue compilation, narrator fallback, core field mapping, unsupported content, raw answer exclusion |
 | LocalEngine per-child | `src/engine/local/compiler.test.ts` | Lerato gets find_in_picture; Daan gets teach_in_order; fixed order → lesson order; child_chooses flag stored; rationale attached to node; no childId in any component |
-| LocalEngine session | `src/engine/local/LocalEngine.test.ts` | Start session returns first node; `startNodeId` is honoured and an unknown one is `notFound`; a failed `next` leaves history unchanged; check node carrying `task` rejected; stale version → conflict with current step; back rejected when canGoBack false; back accepted when canGoBack true; canGoBack false on checks; attempt 2 unscored |
-| Mode classification | `src/interactions/shared/modes.test.ts` | Scene without local → open; scene with local → practice; check → check; check takes precedence over local; research → open; result → open |
-| Feedback ladder | `src/interactions/shared/feedbackLadder.test.ts` | onWrong[0] played on try 1; hint played when onWrong exhausted; built-in message when no hint; revealAfter triggers at threshold; revealAfter default 3 |
+| LocalEngine session | session tests | Session start, start-node selection, failed-answer history, version conflict, back navigation and idempotency |
 | Density | `src/theme/density.test.ts` | 6-9 → 48px, large, on; 1-2/3-5 → 64px, short, autoplay; 10-12/13-18/19+ → 44px, standard, off; toggle persists in sessionStorage |
 | Audio lifecycle | `src/voice/AudioLifecycle.test.ts` | Node change cancels speech; unmount stops all + aborts |
 | Contrast | `src/theme/themes/manor.test.ts` | Every text-on-background pair: normal text ≥ 4.5:1; large text/UI ≥ 3:1 |
@@ -2657,18 +1896,17 @@ Tag format: `// Feature: player-core, Property N: <property text>`
 | Characters | `src/player/Characters.test.tsx` | 1-3 characters in slots; duplicate slot reassigned; reaction on tap (no answer/advance); reduced motion → bounce |
 | Dialogue | `src/player/Dialogue.test.tsx` | Lines in order with speaker info; recorded audio plays; speech synthesis with pitch/rate; no audio → text stays + Next visible; interaction tap cancels speech; replay control; Next always visible |
 | Overlay | `src/player/Overlay.test.tsx` | Positioned at anchor; backing plate present; clamped to safe area |
-| TaskLine | `src/player/SceneView.test.tsx` | Task shown when present; task omitted on check nodes |
+| TaskLine | `src/player/SceneView.test.tsx` | Task shown when present on core scene nodes |
 | Next/Back | `src/player/SceneView.test.tsx` | Next shown with label; Next submits continue; Back shown when canGoBack; Back submits back; keyboard operable; min target size met |
-| CheckConfirmation | `src/interactions/shared/CheckConfirmation.test.tsx` | Attempt 1 banner; selection required before submit; in-flight disables interaction; retry with same answerRequestId is idempotent |
 | NotesPanel | `src/player/NotesPanel.test.tsx` | Shows title + tag + text; hidden when no rationale; hidden when child alone; visible in demo mode |
 | ErrorView | `src/player/ErrorView.test.tsx` | Conflict re-renders step; unsupported shows message; network/server show retry button |
 | Auto-advance | `src/player/useAutoAdvance.test.ts` | Auto-advance on continue when lines finished; no auto-advance on non-continue; no auto-advance when disabled; no auto-advance when no audio/speech; Next always visible |
-| DemoControls | `src/app/DemoControls.test.tsx` | Shows switches when local+demo; child switch calls onSwitchProfile; day switch calls onSwitchDay; rendered outside player root |
+| DemoControls | `src/app/DemoControls.test.tsx` | Shows switches when local+demo; child switch calls onSwitchProfile; entry-point switch calls onSwitchEntryPoint; rendered outside player root |
 | Cross-fade | `src/player/SceneView.test.tsx` | Cross-fade on node change; no decorative motion under reduced motion |
 
 ### PBT applicability assessment
 
-PBT is appropriate for this feature because the core logic (schema validation, LocalEngine compilation, session control, mode classification) consists of pure functions and stateful-but-deterministic operations with clear input/output behaviour and universal properties that hold across a wide input space.
+PBT is appropriate for this feature because the core logic (schema validation, LocalEngine compilation, session control) consists of pure functions and stateful-but-deterministic operations with clear input/output behaviour and universal properties that hold across a wide input space.
 
 PBT is not appropriate for:
 - **UI rendering and layout** (Requirements 9, 10, 11, 12, 16, 19, 20) — snapshot and component tests instead.
@@ -2690,4 +1928,4 @@ PBT is not appropriate for:
 
 ### Coverage target
 
-All 21 requirements have at least one test. The six properties cover the formal correctness guarantees. Unit and component tests cover the specific behaviours. The scaffold smoke test (Requirement 1) runs as a CI build step rather than a Vitest test.
+Every core requirement has at least one test. The five core properties cover the formal correctness guarantees. Unit and component tests cover the specific behaviours. The scaffold smoke test (Requirement 1) runs as a CI build step rather than a Vitest test.

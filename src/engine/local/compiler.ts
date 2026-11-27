@@ -1,0 +1,92 @@
+import { createNodeValidator, type Node } from '../../schema/node';
+import type { InteractionType } from '../../schema/interactions';
+import type { SceneYaml, StoryYaml } from '../../schema/story-yaml';
+import { EngineError } from '../types';
+
+const FALLBACK_COLOUR = '#A9C0DC';
+
+export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: InteractionType[] = [], profileId?: string): Node {
+  if (scene.type === 'roll' || scene.type === 'special' || (scene.media.stage3d != null && scene.media.image == null && scene.media.video == null)) {
+    throw new EngineError('unsupported', `Scene '${scene.id}' uses an unsupported 3D or special presentation.`);
+  }
+  if (scene.interaction?.kind !== undefined) {
+    throw new EngineError('unsupported', `Scene '${scene.id}' interaction '${String(scene.interaction.kind)}' is not implemented yet.`);
+  }
+
+  const cast = (scene.cast ?? []).flatMap((member) => {
+    const character = story.characters.find((entry) => entry.id === member.character_id);
+    if (!character || !character.image) return [];
+    return [{ id: character.id, imageUrl: character.image, alt: character.name, position: member.slot, ...(member.pose ? { pose: member.pose } : {}), ...(member.reactions ? { reactions: member.reactions } : {}) }];
+  });
+  const speakers = story.characters.map((character) => ({
+    id: character.id, name: character.name, colour: character.colour ?? FALLBACK_COLOUR,
+    ...(character.image ? { avatarUrl: character.image } : {}), ...(character.voice ? { voice: character.voice } : {}),
+  }));
+  const lines = scene.lines?.length
+    ? scene.lines.map((line) => ({ speakerId: line.speaker, text: line.text, ...(line.audio ? { audioUrl: line.audio } : {}) }))
+    : [{ speakerId: 'narrator' as const, text: scene.description }];
+  const task = scene.task ? { text: scene.task.text, ...(scene.task.audio ? { audioUrl: scene.task.audio } : {}) } : undefined;
+  const overlays = (scene.overlays ?? []).map((overlay) => ({
+    id: overlay.id, text: overlay.text, anchor: { x: overlay.x, y: overlay.y },
+    align: overlay.align ?? 'center', style: overlay.style ?? 'caption',
+    ...(overlay.max_width === undefined ? {} : { maxWidth: overlay.max_width }),
+  }));
+  const profile = story.demo?.profiles.find((candidate) => candidate.id === profileId);
+  const piece = story.lesson?.pieces.find((candidate) => candidate.scenes?.includes(scene.id) || candidate.versions?.some((version) => version.scenes.includes(scene.id)));
+  const differsByProfile = piece !== undefined && new Set((story.demo?.profiles ?? []).map((candidate) => candidate.versions?.[piece.id] ?? piece.versions?.[0]?.id ?? '')).size > 1;
+  const rationaleText = piece ? profile?.rationale?.[piece.id] : undefined;
+  const interaction = buildInteraction(scene);
+  const node = {
+    type: 'scene' as const, id: scene.id, title: scene.title,
+    media: { ...(scene.media.image ? { imageUrl: scene.media.image, alt: scene.title } : {}) },
+    characters: cast, speakers, lines, ...(task ? { task } : {}), overlays,
+    ...(scene.exit_allowed === undefined ? {} : { exitAllowed: scene.exit_allowed }),
+    ...(rationaleText ? { rationale: { differs: differsByProfile, text: rationaleText } } : {}),
+    ...(scene.host_slot ? { slot: scene.host_slot } : {}), ...(scene.auto_advance === undefined ? {} : { autoAdvance: scene.auto_advance }),
+    interaction,
+  };
+  const parsed = createNodeValidator(enabled).safeParse(node);
+  if (!parsed.success) {
+    const unsupported = parsed.error.issues.find((issue) => issue.path.join('.') === 'interaction.type' && issue.message.startsWith('Unsupported'));
+    if (unsupported) throw new EngineError('unsupported', unsupported.message);
+    throw new EngineError('server', `Invalid node compiled from '${scene.id}': ${parsed.error.message}`);
+  }
+  return parsed.data;
+}
+
+function buildInteraction(scene: SceneYaml) {
+  const branches = scene.branches;
+  if (branches.length) {
+    const answer = scene.practice?.answer;
+    if (branches.some((branch) => branch.object_id != null)) {
+      const objects = new Map((scene.objects ?? []).map((object) => [object.id, object]));
+      const spots = branches.map((branch) => {
+        if (!branch.object_id) throw new EngineError('server', `Scene '${scene.id}' mixes object and choice branches.`);
+        const object = objects.get(branch.object_id);
+        const bounds = object?.geometry?.bounds;
+        if (!bounds || bounds.length < 4) throw new EngineError('server', `Scene '${scene.id}' object '${branch.object_id}' has no rectangular bounds.`);
+        const [x, y, w, h] = bounds;
+        if (x === undefined || y === undefined || w === undefined || h === undefined) throw new EngineError('server', `Scene '${scene.id}' has invalid bounds.`);
+        return { id: branch.object_id, label: object.label ?? branch.choice, region: { shape: 'rect' as const, x, y, w, h }, ...(object.reveal ? { reveal: { text: object.reveal.text, ...(object.reveal.image ? { imageUrl: object.reveal.image } : {}) } } : {}) };
+      });
+      const local = answer?.object ? { correctId: answer.object, ...(scene.practice?.hint ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+      return { type: 'hotspots' as const, spots, ...(local ? { local } : {}) };
+    }
+    const options = branches.map((branch, index) => ({ id: branch.id ?? `choice-${index + 1}`, label: branch.choice }));
+    const correctId = answer?.branch ? options.find((option) => option.id === answer.branch)?.id : undefined;
+    if (answer?.branch && !correctId) throw new EngineError('server', `Scene '${scene.id}' practice answer refers to missing branch '${answer.branch}'.`);
+    const local = correctId ? { correctId, ...(scene.practice?.hint ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+    return { type: 'choices' as const, options, ...(local ? { local } : {}) };
+  }
+  return { type: 'continue' as const };
+}
+
+function feedbackFor(scene: SceneYaml) {
+  const practice = scene.practice;
+  if (!practice?.hint) return undefined;
+  return {
+    hint: { text: practice.hint.text, ...(practice.hint.audio ? { audioUrl: practice.hint.audio } : {}) },
+    ...(practice.on_wrong ? { onWrong: practice.on_wrong.map((item) => ({ text: item.text, ...(item.audio ? { audioUrl: item.audio } : {}) })) } : {}),
+    ...(practice.reveal_after === undefined ? {} : { revealAfter: practice.reveal_after }),
+  };
+}

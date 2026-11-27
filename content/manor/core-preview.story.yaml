@@ -1,0 +1,41 @@
+schema_version: "2.1"
+title: The Pumpkin Gate core preview
+description: A short continue-only path for building the player shell.
+image: assets/pumpkin-gate-cover.webp
+tags: [halloween, preview]
+difficulty: Easy
+session_length: Short
+age_group: "6-9"
+minimum_age: 6
+core_axes: []
+archetypes: [the_helper]
+characters:
+  - id: kai
+    name: Kai
+    image: assets/kai.webp
+    audio: null
+    metadata: { role: [protagonist], archetype: [the_helper], species: human, age: 9, traits: [curious], backstory: "A curious visitor to the manor." }
+scenes:
+  - id: arrive
+    title: At the gate
+    type: narrative
+    active_character: null
+    description: Two pumpkins guard the manor gate.
+    next_scene: remember
+    difficulty: null
+    media: { image: null, audio: null, video: null }
+    branches: []
+    metadata: { creative_instruction: null }
+  - id: remember
+    title: Look closely
+    type: narrative
+    active_character: null
+    description: Soon you will choose whom to trust. For now, remember to look for evidence.
+    next_scene: null
+    difficulty: null
+    media: { image: null, audio: null, video: null }
+    branches: []
+    metadata: { creative_instruction: null }
+demo:
+  profiles:
+    - { id: preview, display_name: Preview }

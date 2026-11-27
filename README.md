@@ -2,7 +2,7 @@
 
 # mystira-player
 
-An open-source player for Mystira stories, lessons and assessments, for every Mystira age group. It runs on its own or inside a host app as a `<mystira-player>` element. Our Kiroween 2026 entry, "The Manor of Major Headaches", is built on it.
+An open-source player for Mystira stories, lessons and assessments, designed for every Mystira age group. The planned delivery includes a standalone app and an embeddable `<mystira-player>` element. The current foundation branch has a continue-only local preview; the full renderer, interactions, and element are still in the [Kiro task plans](.kiro/specs/README.md). Our Kiroween 2026 entry, "The Manor of Major Headaches", is being built on it.
 
 ## Docs
 

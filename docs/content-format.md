@@ -217,14 +217,15 @@ lesson:
       title: What do they want?
       scenes: [what_do_they_want]
   checks:
-    - id: day3
-      title: Day 3 check
+    - id: assessment
+      title: Assessment
       questions:
         - id: q1
           scene: q1_free_coins            # a scene in scenes[]
           answer: { branch: who }         # branch | object | order | parts
           research: [q1_where, q1_find, q1_verify, q1_use]
-    - id: day5
+    - id: follow_up_assessment
+      title: Follow-up assessment
       questions: [...]                    # choices, plus one inspect question
   result:
     scene: gate_opens

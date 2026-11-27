@@ -384,7 +384,7 @@ Content is Mystira's own story YAML, schema version `2.1`. The format, with a wo
 Demo controls exist only when `config.json` sets `mode: "local"` and `demo: true`:
 
 - **Child switch:** jumps to the same piece for the other demo child, so the two versions can be compared directly.
-- **Day switch:** lesson, Day 3 check, Day 5 check.
+- **Entry-point switch:** lesson, assessment, follow-up assessment.
 - **Notes toggle:** opens the notes panel.
 
 They are rendered by the standalone shell, outside the player root, so they never appear in an embedded player.
@@ -459,7 +459,7 @@ Events (`CustomEvent`, `bubbles` and `composed`):
 |---|---|
 | `mp-ready` | `{}` |
 | `mp-node-enter` | `{ sessionId, nodeId, nodeType, music?, exitAllowed }` |
-| `mp-answer` | `{ sessionId, nodeId, answerKind, playerId? }` (no answer values) |
+| `mp-answer` | `{ sessionId, nodeId, answerKind }` (no answer values or participant identity; the host reads its authoritative session) |
 | `mp-complete` | `{ sessionId }` |
 | `mp-unsupported-node` | `{ sessionId, nodeId, rawType }` |
 | `mp-error` | `{ kind, retryable }` |
@@ -472,6 +472,12 @@ Events (`CustomEvent`, `bubbles` and `composed`):
 - Own any story state the child sees (scores, awards, progress rails); the player has no place for it.
 - Keep `theme` in step with the host's light, dark or bright mode.
 - Size the element; the player fills its box.
+
+### Integration profiles
+
+**Mystira Blazor (Spec 5).** The `/game` host keeps the authorized session, character assignments, AI turns, header, rails, settings, navigation lock, exit confirmation, music/audio orchestration and awards. Its wrapper provides an `Engine` through a JS-interop bridge to `GameSessionService` and `GameFlowService`. The bridge normalizes old scene DTOs into validated steps, resolves protected media, preserves branch identity/choice index/compass metadata, and resumes from the host session on remount. The element renders the center scene and sends actions only through the engine. Roll, special and 3D support and old/new signed-in playback are gated by [Spec 5](../.kiro/specs/legacy-story-compatibility/requirements.md). The current Blazor Rewind handler is a no-op, so the adapter reports `canGoBack=false` until a host checkpoint operation exists.
+
+**Third-party hosts (Spec 6).** A host can adapt its own content to versioned runtime `Step` values without Mystira YAML or Identity. It supplies participant authority, session persistence, transport, media resolution and any stage extension. The element needs an optional host update subscription for another participant's turn, vote resolution or facilitator action; `resumeSession` remains the refresh/reconnect path. Ordered revisions prevent older pushed steps replacing newer ones. The host decides quorum, deadlines, ties and branches. The element displays turn, waiting, vote and resolved states and submits idempotent actions. Unknown required capabilities produce a typed unsupported state. See [Spec 6](../.kiro/specs/third-party-scenarios/requirements.md) for the release gate; this section describes a proposed extension, not a shipped interface.
 
 ### Guarantees to hosts
 
@@ -493,7 +499,7 @@ Events (`CustomEvent`, `bubbles` and `composed`):
 | Kiro feature | Use |
 |---|---|
 | Steering | `product.md` (PRD), `tech.md` (section 2), `structure.md` (section 4), `content.md` (from content-format.md: Mystira story YAML 2.1, no real children's data, invented names and `*.example` domains only). |
-| Specs | Generated in Kiro from these docs, four in all: the core (schema, engine, renderer, modes and feedback ladder), choices and hotspots, sequence, and inspect. A stretch type gets its own spec only if it is started. Implemented task by task. |
+| Specs | Four Kiroween specs: core, choices/hotspots, sequence and inspect. Spec 5 covers legacy Blazor compatibility; Spec 6 covers portable third-party scenarios. A stretch type gets its own spec only if it is started. Implemented task by task. |
 | Hooks | `src/schema/**` saved: check it still matches `schema/story-schema-2.1.json`, run schema tests. `content/**/*.yaml` saved: run content validation (section 7), and warn on any interaction type not in `interactions.enabled`. `src/theme/**` saved: contrast and density tests. `src/interactions/**` saved: that interaction's tests. |
 | Write-up | `docs/kiro-writeup.md`. |
 
@@ -505,7 +511,7 @@ Events (`CustomEvent`, `bubbles` and `composed`):
 | Component | Vitest + Testing Library | Each core interaction in open, practice and check mode; the feedback ladder and reveal; "Nothing here" on a hotspot miss; "That's my answer"; Undo and Done; inspect with `minMarks: 0`; keyboard operation; dialogue with speech mocked and stopped by a tap; research flow; notes panel visibility rules; error screens. |
 | Contract | Vitest + MSW | `RemoteEngine` against recorded responses including 401, 409 and network failure. |
 | Element | Playwright, plain HTML harness page | Mount, unmount, remount; events and their `detail`; slot content; no style leakage; host-assigned engine used; no network requests from the element; speech cancelled on unmount. |
-| E2E | Playwright | Local demo: hub, Pumpkin Gate for both children (including the inspect piece), Day 3 check with a deliberate wrong answer, research, unscored retry, result and key. Axe on each node and interaction type. |
+| E2E | Playwright | Local demo: hub, Pumpkin Gate for both children (including the inspect piece), assessment with a deliberate wrong answer, research, unscored retry, result and key. Axe on each node and interaction type. |
 
 ## 16. CI/CD
 
