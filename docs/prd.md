@@ -37,7 +37,7 @@ Mystira's current child-facing app is built in Blazor, and the lesson prototypes
 3. Produce a player that other apps can host without changes to the player: as a React component, or as a custom element inside a non-React app. A second host only supplies an engine, a theme and its own page chrome.
 4. Make the player the first child-facing Mystira surface that is not built in Blazor.
 5. Keep the player content-agnostic: lessons and stories are data for the player, with no lesson-specific code.
-6. One content format: the player reads Mystira's own story YAML, extended to version 2.1 for lessons in a backwards-compatible way, so every existing Mystira story plays unchanged and lesson content can later be loaded into Mystira as it is.
+6. One authored content format: the player uses Mystira story YAML, extended to version 2.1 for lessons. The Kiroween build supports the scene and interaction subset in Specs 1–4. Playback of every story the existing Blazor app can play is a separate Spec 5 compatibility gate, including legacy roll, special and 3D scenes; it is not established by YAML parsing alone. Lesson content can later be loaded into Mystira through the same authored format.
 
 ### Scope rule
 
@@ -50,7 +50,7 @@ The number of demo children and the length of the lesson cost little. Each kind 
 - Any administrative or content-configuration UI.
 - Calls to any service other than the Mystira API and Mystira Identity.
 - Accounts or sign-up flows of its own.
-- A lesson catalogue, schedule, journey timeline or progress history. (The demo's day switcher is a judging aid, not a schedule.)
+- A lesson catalogue, schedule, journey timeline or progress history. (Demo entry-point controls are review aids, not scheduling or history.)
 - Content for the Teen and Adult age groups in the contest entry.
 - Native mobile apps. The player is a responsive web app.
 
@@ -127,7 +127,7 @@ Priorities: **P0** required for submission, **P1** strongly wanted, **P2** only 
 | ID | Requirement | Priority |
 |---|---|---|
 | PR-27 | A notes panel, off by default, shows for the current step whether it is "the same for every child" or "different for each child", and the engine's plain-language reason. The reason may describe the child, so the panel is available only in demo mode or to the signed-in grown-up, never to a child playing alone. The player never computes or invents reasons. | P0 |
-| PR-28 | In demo mode only, a control switches between the two demo children and between lesson, Day 3 check and Day 5 check, keeping the current step where possible. | P0 |
+| PR-28 | In demo mode only, a control switches between the two demo children and between the lesson, assessment and follow-up assessment, keeping the current step where possible. | P0 |
 
 ### Themes and presentation
 
@@ -154,7 +154,7 @@ Priorities: **P0** required for submission, **P1** strongly wanted, **P2** only 
 2. The manor's front hall: a picture with five doors. One door is open (the Pumpkin Gate); a second may be open (the Fire Door); the rest are locked with "coming soon" plaques.
 3. The child enters the Pumpkin Gate. The lesson plays: five pieces, each taught in the way set for this child, with characters speaking their lines.
 4. The judge switches to the other child and sees the same pieces taught differently. The notes panel explains each difference.
-5. The Day 3 check: the same questions for both children. A wrong first answer leads into research, then a second, unscored try.
+5. The assessment presents the same questions to both children. A wrong first answer leads into research, then a second, unscored try.
 6. The door is solved and the key is added to the ring.
 
 ### Demo content
@@ -176,7 +176,7 @@ How the Pumpkin Gate uses the four interactions:
 | How do they know? | hotspots: tap who actually saw it | sequence: teach the three ways of knowing in order |
 | What do they want? | inspect: a "free coins" message (same for both) | inspect (same for both) |
 | Who else says it? / Ask a grown-up | choices, set per child in the content | choices, set per child in the content |
-| Day 3 and Day 5 checks | choices, plus one inspect question on Day 5 | the same questions |
+| Assessment and follow-up assessment | choices, plus one inspect question in the follow-up assessment | the same questions |
 
 No real child's name, record or answers appear anywhere in the demo, and the axis codes used in Mystira's internal prototypes stay out of the repository.
 

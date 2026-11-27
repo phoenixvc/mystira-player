@@ -159,7 +159,7 @@ scenes:
     practice: { answer: { branch: anna_branch } }
     metadata: { creative_instruction: null }
 
-  # ---------- Day 3 check, question 1 (no practice, no task) ----------
+  # ---------- Assessment check, question 1 (no practice, no task) ----------
   - id: q1_free_coins
     title: Question 1
     type: choice
@@ -255,8 +255,8 @@ lesson:
     - { id: who_else_says_it,  title: "Who else says it?",  scenes: [who_else_says_it] }
     - { id: ask_a_grown_up,    title: Ask a grown-up,     scenes: [ask_a_grown_up] }
   checks:
-    - id: day3
-      title: Day 3 check
+    - id: assessment
+      title: Assessment check
       questions:
         - { id: q1, scene: q1_free_coins, answer: { branch: who }, research: [q1_where, q1_find, q1_verify, q1_use] }
   result:

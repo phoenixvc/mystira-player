@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This spec builds the **core of the Mystira Player**: the project scaffold, the Zod schemas, the `Engine` interface, `LocalEngine`, the scene renderer, the Next button, and the shared mode machinery. The spec is the first of four; the spec ships no interaction type beyond `continue` (the Next button). The later specs add choices, hotspots, sequence and inspect on top of this core.
+This spec builds the **core of the Mystira Player**: the project scaffold, shared node and Engine contracts, `LocalEngine`, the scene renderer, the Next button, and shared presentation capabilities. The spec is the first of four and ships no interaction type beyond `continue` (the Next button). Spec 2 defines choices, hotspots and shared practice/check behavior; Specs 3 and 4 add sequence and inspect.
 
 The authoritative sources are `docs/tech-spec.md` (sections 1 to 8, 10, 11 and 15) and `docs/content-format.md`. The content is `content/manor/pumpkin-gate.story.yaml`; the JSON schema to mirror is `schema/story-schema-2.1.json`.
 
@@ -12,7 +12,7 @@ Mental model enforced by this spec:
 - **One content format.** Content is Mystira story YAML 2.1. Nodes are the runtime shape `LocalEngine` compiles the YAML into; there is no JSON node format for content.
 - **Identifiers are `profileId`, `playerId` and `sessionId`.** There is no `childId`.
 - **Required 2.0 fields stay required.** This is the most likely content mistake; the schemas reject it.
-- **Scope cap.** Four core interactions total across all specs. This spec ships only `continue`.
+- **Scope boundary.** Four core interaction families are planned across the four specs. This spec ships only `continue`.
 
 ## Glossary
 
@@ -26,20 +26,16 @@ Mental model enforced by this spec:
 - **Next Button**: the `continue` interaction control.
 - **Auto-advance**: a content setting that, when enabled on a `continue` scene node, advances the player to the next node automatically after the dialogue audio finishes, without requiring a tap on the Next Button.
 - **Back control**: the navigation control the Scene Renderer shows when `canGoBack` is true.
-- **Mode Logic**: the shared machinery that classifies a node as open, practice or check.
-- **Feedback Ladder**: the practice per-try feedback logic, including `revealAfter`.
-- **Check Confirmation**: the "That's my answer" confirmation flow for check nodes.
 - **Notes Panel**: the panel that shows a node's rationale to the grown-up.
 - **Audio Lifecycle**: the controller that cancels and stops audio, speech and video.
 - **Density**: the module that sets tap target size, text size and narration default by age group.
-- **Demo Controls**: the standalone-shell controls (child switch, day switch, notes toggle) shown only in local demo mode.
+- **Demo Controls**: standalone-shell profile and entry-point controls plus notes toggle, shown only in local demo mode.
 - **Manor theme**: the friendly-spooky theme for the Kiroween entry.
 - **config.json**: the runtime configuration file, which is not secret.
 - **interactions.enabled**: the `config.json` list of interaction types the build supports.
 - **Node**: a scene plus at most one interaction.
 - **Scene**: a unit with media, characters, dialogue, overlays and an optional task.
 - **Interaction**: the actionable part of a node. In this spec, only `continue` is rendered.
-- **Mode**: open, practice or check.
 - **Step**: the runtime unit an engine returns on each turn.
 - **Session**: one play-through of an activity.
 - **Engine**: an implementation of the Engine Interface.
@@ -47,7 +43,6 @@ Mental model enforced by this spec:
 - **Line**: one unit of dialogue with a speaker and text.
 - **Narration**: the text or audio for the task instruction.
 - **Rationale**: the grown-up note explaining why a piece differs per child.
-- **revealAfter**: the number of wrong tries after which the answer is shown in practice mode.
 - **profileId**: a child's persistent profile. **playerId**: a seat in one session. **sessionId**: one play-through. **accountId**: the signed-in grown-up's account; the Player never sends `accountId`.
 
 ## Requirements
@@ -68,12 +63,9 @@ Mental model enforced by this spec:
 **User Story:** As a developer, I want a Zod schema for runtime nodes, so that every node handed to the renderer is validated and typed.
 
 #### Acceptance Criteria
-
-1. THE Node Schema SHALL define Zod schemas for scene, check, research and result nodes mirroring tech-spec section 6.
-2. WHEN a check node carries a `local` block, a `task` or a `reveal`, THE Node Schema SHALL reject the node.
-3. WHEN a check node has `attempt: 2` and `scored: true`, THE Node Schema SHALL reject the node.
-4. FOR ALL valid Node objects, parsing a Node, then serializing the Node, then parsing the result SHALL produce an equivalent Node (round-trip property).
-5. WHEN a node or interaction type is not in `interactions.enabled`, THE Node Schema SHALL raise an `unsupported` outcome.
+1. THE Node Schema SHALL define schemas for the shared scene, check, research and result node shapes.
+2. FOR ALL valid Node objects, parsing, serializing and parsing again SHALL produce an equivalent Node.
+3. WHEN a node or interaction type is not enabled in config, THE Node Schema SHALL raise an unsupported outcome.
 
 ### Requirement 3: Story YAML 2.1 schema
 
@@ -104,14 +96,10 @@ Mental model enforced by this spec:
 **User Story:** As a developer, I want LocalEngine to compile the demo story YAML into nodes, so that the player runs the Kiroween demo without a server.
 
 #### Acceptance Criteria
-
-1. WHEN a narrative scene has `next_scene` set and no interaction block, THE LocalEngine SHALL produce a scene node with a `continue` interaction.
-2. WHEN a scene has no `lines`, THE LocalEngine SHALL emit the scene `description` as a single narrator line.
-3. WHEN a scene has `lines`, `task`, `cast`, `overlays`, `media` and `music`, THE LocalEngine SHALL map the fields to the node's `lines`, `task`, `characters`, `overlays`, `media` and `music`.
-4. WHEN a scene is `type: roll` or `special`, or uses `stage3d` only, THE LocalEngine SHALL raise `unsupported`.
-5. WHEN a scene is listed as a question in `lesson.checks`, THE LocalEngine SHALL produce a check node with `attempt: 1` and keep the answer in the engine.
-6. WHEN a scene carries a `research` field, THE LocalEngine SHALL produce a research node.
-7. WHEN `lesson.result` is present, THE LocalEngine SHALL produce a result node.
+1. WHEN a supported narrative scene has next_scene and no interaction block, THE LocalEngine SHALL produce a scene node with continue navigation.
+2. WHEN a scene has no lines, THE LocalEngine SHALL emit the description as a narrator line.
+3. WHEN a supported scene has lines, task, cast, overlays, media and music, THE LocalEngine SHALL map those fields to the corresponding scene-node fields.
+4. WHEN a scene is roll or special, or uses stage3d only, THE LocalEngine SHALL raise unsupported.
 
 ### Requirement 6: LocalEngine per-child versions from the demo block
 
@@ -126,15 +114,15 @@ Mental model enforced by this spec:
 5. THE LocalEngine SHALL take each piece's `rationale` from the `demo` block and attach the rationale to the rendered node.
 6. THE LocalEngine SHALL keep all per-child logic inside itself; THE Scene Renderer SHALL branch on no child identity.
 
-### Requirement 7: LocalEngine answer stripping
+### Requirement 7: Runtime answer privacy
 
-**User Story:** As a child-safety reviewer, I want check and practice answers kept out of the renderer, so that a child can never see a stored answer.
+**User Story:** As a child-safety reviewer, I want raw content answers kept out of renderer nodes, so stored answers cannot be exposed by the player.
 
 #### Acceptance Criteria
 
-1. THE LocalEngine SHALL strip every `answer` from content before building a node.
-2. FOR ALL nodes the LocalEngine produces, the node SHALL carry no answer value from a `practice` or `lesson.checks` block (invariant property).
-3. THE LocalEngine SHALL build a `local` block from each scene's `practice` block, holding the correct answer and feedback for the player to judge each try.
+1. THE LocalEngine SHALL NOT copy raw answer fields from story content onto runtime nodes.
+2. FOR ALL nodes the LocalEngine produces, no raw answer value from content SHALL be present on the node or its interaction.
+
 
 ### Requirement 8: LocalEngine session control
 
@@ -146,8 +134,6 @@ Mental model enforced by this spec:
 2. WHEN `respond` is called with a stale `version`, THE LocalEngine SHALL fail with an `EngineError` of kind `conflict` carrying the current Step.
 3. WHERE `canGoBack` is false on a node, THE LocalEngine SHALL reject a `back` answer.
 4. WHERE `canGoBack` is true on a node, THE LocalEngine SHALL accept a `back` answer.
-5. THE LocalEngine SHALL set `canGoBack` to false on check nodes.
-6. WHEN a check is at `attempt: 2`, THE LocalEngine SHALL mark the check unscored.
 
 ### Requirement 9: Scene renderer media, characters and transitions
 
@@ -186,7 +172,6 @@ Mental model enforced by this spec:
 
 1. THE Scene Renderer SHALL render each overlay at the overlay's anchor, on a backing plate, clamped to a safe area, with contrast meeting WCAG 2.2 AA.
 2. WHEN a node has a `task`, THE Scene Renderer SHALL render the task line.
-3. WHEN a node is a check, THE Scene Renderer SHALL omit the task line.
 
 ### Requirement 12: Continue and back navigation
 
@@ -199,39 +184,6 @@ Mental model enforced by this spec:
 3. WHERE `canGoBack` is true on a node, THE Scene Renderer SHALL show a Back control.
 4. WHEN the Back control is activated, THE Player SHALL submit an answer of kind `back`.
 5. THE Next Button and the Back control SHALL be operable by keyboard and SHALL meet the Density minimum tap target for the node's age group.
-
-### Requirement 13: Interaction mode machinery
-
-**User Story:** As a developer, I want one shared way to decide a node's mode, so that every interaction uses the same open, practice and check rules.
-
-#### Acceptance Criteria
-
-1. WHERE a scene interaction has no `local` block, THE Mode Logic SHALL classify the node as open.
-2. WHERE a scene interaction has a `local` block, THE Mode Logic SHALL classify the node as practice and judge each try from `local`.
-3. WHERE the node is a check, THE Mode Logic SHALL classify the node as check, the check mode SHALL take precedence over any `local` block so that a check node remains check regardless of whether a `local` block is present, and the engine, not the local block, SHALL judge every try.
-4. FOR ALL scene nodes, THE Mode Logic SHALL classify the node into exactly one of open, practice or check (totality property).
-
-### Requirement 14: Practice feedback ladder and revealAfter
-
-**User Story:** As a child, I want gentle feedback when I am wrong, so that a wrong answer feels like a nudge rather than a failure.
-
-#### Acceptance Criteria
-
-1. WHEN a wrong try `n` occurs in practice mode, THE Feedback Ladder SHALL play `onWrong[n-1]` when present, else `hint`, else the built-in message "Not yet. Try again."
-2. THE Feedback Ladder SHALL accompany a wrong try with a gentle shake and a low tone, in place of a red cross or a failure sound.
-3. WHEN `revealAfter` wrong tries have occurred, THE Feedback Ladder SHALL reveal the correct target, and the child SHALL still make the final tap.
-4. WHEN the child gives the correct answer in practice mode, THE Mode Logic SHALL accept the answer and submit the final answer with `wrongTries` set to the count of wrong tries.
-
-### Requirement 15: Check confirmation
-
-**User Story:** As a child taking a check, I want to confirm my answer, so that an accidental tap costs no score.
-
-#### Acceptance Criteria
-
-1. WHEN a check node is at `attempt: 1`, THE Check Confirmation SHALL show an "Only the first try counts" banner.
-2. THE Check Confirmation SHALL require the child to make a selection and then tap "That's my answer" before submitting a check answer.
-3. WHILE a submission is in flight, THE Check Confirmation SHALL disable the interaction.
-4. WHEN a retry follows an error and the Check Confirmation reuses the same `answerRequestId`, AND the engine has already processed the original request successfully, THE engine SHALL treat the retry as an idempotent no-op that returns the original success result without re-scoring, so that the child sees a seamless success.
 
 ### Requirement 16: Notes panel
 
@@ -270,9 +222,9 @@ Mental model enforced by this spec:
 
 #### Acceptance Criteria
 
-1. WHERE `config.json` sets `mode: local` and `demo: true`, THE Demo Controls SHALL show a child switch, a day switch and a notes toggle.
+1. WHERE `config.json` sets `mode: local` and `demo: true`, THE Demo Controls SHALL show a child switch, an entry-point switch and a notes toggle.
 2. WHEN the child switch is used, THE Demo Controls SHALL jump to the same piece for the other demo child.
-3. WHEN the day switch is used, THE Demo Controls SHALL jump to the lesson, the Day 3 check or the Day 5 check.
+3. WHEN the entry-point switch is used, THE Demo Controls SHALL jump to the lesson, assessment or follow-up assessment.
 4. THE Demo Controls SHALL render outside the player root, so the controls appear in no embedded player.
 
 ### Requirement 20: Styling and the Manor theme

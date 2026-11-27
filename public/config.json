@@ -1,0 +1,7 @@
+{
+  "mode": "local",
+  "demo": true,
+  "interactions": { "enabled": [] },
+  "assetOrigins": [],
+  "api": { "baseUrl": "" }
+}

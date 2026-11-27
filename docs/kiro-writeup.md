@@ -41,16 +41,19 @@ The first version used a file shape Kiro accepted but flagged as legacy, with a 
 
 | Spec | What the requirements or design caught |
 |---|---|
-| Player core (`.kiro/specs/player-core/`) | _requirements written; design and tasks not started_ |
+| Player core | Requirements, design and tasks describe the continue-only core boundary. The first implementation slice covers scaffold, runtime contracts/node validation and basic LocalEngine scene/profile/session paths. |
+| Choices and hotspots | Spec 2 owns choices/hotspots, shared modes/feedback/check confirmation and assessment/research behavior. Requirements, design and tasks are documented. |
+| Sequence | Spec 3 requirements, design and tasks are authored; it reuses Spec 2 shared mode machinery and leaves item ordering to the Engine. |
+| Inspect | Spec 4 requirements, design and tasks are authored; it reuses Spec 2 shared modes and uses fictional content on reserved .example domains. |
 
-Further specs (choices and hotspots, sequence, inspect) are planned and not yet written.
+The four rows above are the core interaction specs. Separate support specs are maintained for [legacy story compatibility](../.kiro/specs/legacy-story-compatibility/requirements.md) and [third-party scenarios](../.kiro/specs/third-party-scenarios/requirements.md). This branch implements only the first continue-only foundation slice. Renderer, media, audio, theme, accessibility harness, the remaining core Engine behavior, Specs 2–4 interactions, and the Spec 5–6 integrations remain open in the task plans and Baton.
 
 ## MCP
 
 - **context7** and **playwright** (committed in `.kiro/settings/mcp.json`, launched with `cmd /c npx` because Windows cannot run `npx` directly): current library documentation, and browser control so the agent can open and inspect the running player.
-- **[Baton](https://baton.celladoresystems.com)** by Celladore Systems (user-level settings, private): the shared task graph. Work stayed visible across Kiro sessions and between the two of us. _Screenshot to add._
+- **[Baton](https://baton.celladoresystems.com)** by Celladore Systems (user-level settings, private): the shared task graph. The four core spec epics and their work tasks, plus separate legacy compatibility and third-party embedding epics, track the remaining delivery work.
 - **Mill** by Celladore Systems (user-level settings, runs locally): image conversion for the Manor art, for example PNG to WebP at web quality.
-- **Serena** (user-level settings): symbol-level code navigation. Added after the design was written; no code exists yet for it to index. Kiro's MCP log shows it connecting, but launched through `uvx` the cold start took about 58 of Kiro's 60 seconds, so it is installed once with `uv tool install` and launched from there. Whether it works end to end is not yet confirmed.
+- **Serena** (user-level settings): symbol-level code navigation. Added before this foundation implementation. Kiro's MCP log showed it connecting, but launched through `uvx` the cold start took about 58 of Kiro's 60 seconds, so it was installed once with `uv tool install` and launched from there. Whether it works end to end is not yet confirmed.
 - **Mystira workspace** (user-level settings, private): project context from the Mystira platform.
 
 The private servers live in user-level settings because their addresses are internal, and their tokens are read from environment variables; only context7 and playwright are committed.

@@ -16,7 +16,7 @@ It ships as a standalone SPA and as an embeddable `<mystira-player>` custom elem
 
 "The Manor of Major Headaches": a friendly-spooky front hall with five doors. Each door is a lesson; solving it earns a key.
 
-- **The Pumpkin Gate** (built in full): "How do you know something is true?" Five pieces: who said it, how do they know, what do they want, who else says it, ask a grown-up. Then a Day 3 check with research after a wrong answer.
+- **The Pumpkin Gate** (built in full): "How do you know something is true?" Five pieces: who said it, how do they know, what do they want, who else says it, ask a grown-up. The lesson concludes with an assessment; a wrong first answer leads into research before an unscored retry.
 - **The Fire Door**: stretch, only if the Pumpkin Gate is complete.
 - The other doors stay locked with "coming soon".
 - Audience: ages 6 to 9, written for nine-year-olds.
