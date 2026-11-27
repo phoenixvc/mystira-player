@@ -24,13 +24,13 @@ describe('core preview', () => {
       resumeSession: vi.fn().mockResolvedValue(step),
       respond,
     };
-    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo' });
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true });
 
     render(React.createElement(App));
     const startButton = screen.getByRole('button', { name: 'Start preview' });
     await waitFor(() => expect(startButton.hasAttribute('disabled')).toBe(false));
     fireEvent.click(startButton);
-    expect((await screen.findByRole('status')).textContent).toContain('not available in the core preview');
+    await waitFor(() => expect(screen.getByText('This interaction is not available in the core preview yet.')).toBeTruthy());
     expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
     expect(respond).not.toHaveBeenCalled();
   });
