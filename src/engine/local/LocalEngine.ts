@@ -36,9 +36,11 @@ export class LocalEngine implements Engine {
     if (this.story.demo && !profile) throw new EngineError('notFound', `Demo profile '${profileId}' was not found.`);
     const sceneIds = this.getSceneIds(profileId);
     if (sceneIds.length === 0) throw new EngineError('unsupported', 'This story has no playable lesson scenes yet.');
+    const startIndex = request.startNodeId === undefined ? 0 : sceneIds.indexOf(request.startNodeId);
+    if (startIndex < 0) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
     const players = request.players.length > 0 ? request.players : [{ type: 'Guest' as const, displayName: profile?.display_name ?? 'Guest' }];
     const session: Session = {
-      id: crypto.randomUUID(), sceneIds, index: 0, history: [], version: 1,
+      id: crypto.randomUUID(), sceneIds, index: startIndex, history: [], version: 1,
       profileId,
       ageGroupId: this.story.age_group,
       players: players.map((seat) => this.toSessionPlayer(seat)),

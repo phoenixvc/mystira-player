@@ -121,7 +121,7 @@ Mental model enforced by this spec:
 #### Acceptance Criteria
 
 1. THE LocalEngine SHALL NOT copy raw answer fields from story content onto runtime nodes.
-2. FOR ALL nodes the LocalEngine produces, no raw answer value from content SHALL be present on the node or its interaction.
+2. THE LocalEngine SHALL keep assessment answers and raw content answer fields out of nodes and interactions. Public choice and object IDs MAY coincide with an answer value; practice feedback MAY use the transformed practice-local runtime contract.
 
 
 ### Requirement 8: LocalEngine session control

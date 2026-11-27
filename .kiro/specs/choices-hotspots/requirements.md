@@ -16,7 +16,7 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 
 1. The Node Schema SHALL accept choices with stable choice IDs and labels from the Story YAML contract.
 2. WHEN choices are enabled in config, THE Player SHALL render each choice as an accessible, keyboard-operable control.
-3. WHEN a choice is selected, THE Player SHALL submit its stable choice ID through the Engine interface.
+3. WHEN a choice answer is submitted under the shared mode and check-confirmation rules, THE Player SHALL send its stable choice ID through the Engine interface.
 4. WHERE a choice carries a practice-local block, THE Player SHALL apply the shared practice rules in CH4.
 5. WHERE a choice has no local block, THE Player SHALL accept selection as open mode and leave correctness to the Engine.
 
@@ -28,7 +28,7 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 
 1. The Node Schema SHALL accept hotspots with stable object IDs, labels and authored positions.
 2. WHEN hotspots are enabled in config, THE Player SHALL render accessible hit targets at their authored positions.
-3. WHEN a hotspot is selected, THE Player SHALL submit its stable object ID through the Engine interface.
+3. WHEN a hotspot answer is submitted under the shared mode and check-confirmation rules, THE Player SHALL send its stable object ID through the Engine interface.
 4. WHERE a hotspot carries a practice-local block, THE Player SHALL apply the shared practice rules in CH4.
 5. WHERE a hotspot has no local block, THE Player SHALL accept selection as open mode and leave correctness to the Engine.
 6. A wrong hotspot answer in practice mode SHALL use shared feedback; the Player SHALL NOT display a miss marker that reveals whether a location was incorrect.
@@ -87,7 +87,7 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 #### Acceptance Criteria
 
 1. WHEN a check node is at attempt 1, THE Check Confirmation SHALL show an “Only the first try counts” banner.
-2. THE Check Confirmation SHALL require a selection followed by activation of “That’s my answer” before submitting.
+2. THE Check Confirmation SHALL require an answer selection followed by activation of “That’s my answer” before submitting; a permitted empty inspect selection counts as an answer.
 3. WHILE submission is in flight, THE Check Confirmation SHALL disable the interaction.
 4. WHEN a retry follows an error, THE Player SHALL reuse the same answerRequestId; core Engine idempotency SHALL return an already-processed result without re-scoring.
 5. WHEN attempt is 2, THE Check Confirmation SHALL explain that the try does not count for the score.

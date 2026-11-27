@@ -48,6 +48,8 @@ The first version used a file shape Kiro accepted but flagged as legacy, with a 
 
 The four rows above are the core interaction specs. Separate support specs are maintained for [legacy story compatibility](../.kiro/specs/legacy-story-compatibility/requirements.md) and [third-party scenarios](../.kiro/specs/third-party-scenarios/requirements.md). This branch implements only the first continue-only foundation slice. Renderer, media, audio, theme, accessibility harness, the remaining core Engine behavior, Specs 2–4 interactions, and the Spec 5–6 integrations remain open in the task plans and Baton.
 
+Review of the foundation PR found a session transition that mutated history before checking whether the destination could compile. The implementation now compiles a prospective step first, and a regression test verifies resume and retry after rejection. Review also exposed a missing `startNodeId` path and contradictions in the later interaction specs: check answers require confirmation, including a valid empty inspect answer. The requirements and design were reconciled in the foundation PR; those interaction implementations remain open in their task plans.
+
 ## MCP
 
 - **context7** and **playwright** (committed in `.kiro/settings/mcp.json`, launched with `cmd /c npx` because Windows cannot run `npx` directly): current library documentation, and browser control so the agent can open and inspect the running player.

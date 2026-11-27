@@ -279,19 +279,10 @@ export function classifyMode(node: Node): Mode {
   // Requirement 13.3: check takes precedence
   if (node.type === "check") return "check";
 
-  // Scene nodes:
-  if (node.type === "scene") {
-    const interaction = node.interaction as Record<string, unknown>;
-    // Requirement 13.2: has local block → practice
-    if ("local" in interaction && interaction.local !== undefined) {
-      return "practice";
-    }
-    // Requirement 13.1: no local block → open
-    return "open";
-  }
-
-  // Research and result nodes are always open
-  return "open";
+  // Every non-check interaction follows the same local-block rule.
+  // The Node Schema keeps raw check answers out of this block.
+  const interaction = node.interaction as Record<string, unknown>;
+  return "local" in interaction && interaction.local !== undefined ? "practice" : "open";
 }
 ```
 
@@ -371,13 +362,15 @@ interface CheckConfirmationProps {
 ```
 
 - **Requirement 15.1**: When `attempt === 1`, shows an "Only the first try counts" banner.
-- **Requirement 15.2**: Requires the child to make a selection, then tap "That's my answer" before submitting. The submit button is disabled until a selection is made.
+- **Requirement 15.2**: Requires the child to choose an answer, then tap "That's my answer" before submitting. An empty inspect selection is a valid answer when `minMarks` is zero; it is distinct from no answer yet.
 - **Requirement 15.3**: While a submission is in flight (`inFlight === true`), the interaction is disabled.
 - **Requirement 15.4**: On retry after an error, the same `answerRequestId` is reused (held by `useSession`, keyed by node id and version). The engine's idempotency check (Requirement 8.1) ensures the retry returns the original success result without re-scoring.
 
 ```typescript
 function CheckConfirmation({ node, onSubmit, inFlight }: CheckConfirmationProps) {
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Answer | null>(null);
+  // Interaction components call setSelected with a complete typed answer.
+  // For inspect, { kind: 'inspect', partIds: [] } is a valid selection.
 
   // Requirement 15.1: attempt 1 banner
   {node.attempt === 1 && (
@@ -396,8 +389,8 @@ function CheckConfirmation({ node, onSubmit, inFlight }: CheckConfirmationProps)
 
   // Requirement 15.2: selection + "That's my answer"
   <button
-    disabled={!selected || inFlight}   // Requirement 15.3
-    onClick={() => onSubmit(buildAnswer(selected))}
+    disabled={selected === null || inFlight}   // Requirement 15.3
+    onClick={() => { if (selected !== null) onSubmit(selected); }}
   >
     That's my answer
   </button>

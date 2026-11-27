@@ -31,6 +31,15 @@ describe('LocalEngine', () => {
     expect(step.node.lines[0]?.text).toBe('Alternate');
   });
 
+  it('starts at a requested scene only when it belongs to the selected profile path', async () => {
+    const engine = new LocalEngine(story, ['choices']);
+    const selected = await engine.startSession({ activityId: 'lesson', players: [{ type: 'Profile', profileId: 'base-profile' }], startNodeId: 'choice' });
+    expect(selected.node.id).toBe('choice');
+    expect(selected.canGoBack).toBe(false);
+    await expect(engine.startSession({ activityId: 'lesson', players: [{ type: 'Profile', profileId: 'base-profile' }], startNodeId: 'alternate' }))
+      .rejects.toMatchObject({ kind: 'notFound' });
+  });
+
   it('accepts supported answers and replays an idempotent request', async () => {
     const engine = new LocalEngine(story, ['choices']);
     const first = await start(engine, 'base-profile');

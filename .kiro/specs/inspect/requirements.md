@@ -28,7 +28,7 @@ Spec 4 of the four core interaction specs. It defines an interaction in which a 
 2. WHEN a part is activated, THE Inspect Renderer SHALL toggle that part's selected state without advancing or submitting the node.
 3. THE Inspect Renderer SHALL show selected parts clearly and expose selected state to assistive technology.
 4. THE Inspect Renderer SHALL provide keyboard-operable part controls with visible focus and meaningful accessible names.
-5. WHEN `minMarks` is zero, THE Inspect Renderer SHALL show a “Nothing is wrong” action that submits an empty selection.
+5. WHEN `minMarks` is zero, THE Inspect Renderer SHALL show a “Nothing is wrong” action that selects an empty answer; in check mode, shared confirmation SHALL occur before submission.
 
 ### Requirement 3: Submission
 
@@ -37,7 +37,7 @@ Spec 4 of the four core interaction specs. It defines an interaction in which a 
 #### Acceptance Criteria
 
 1. THE Inspect Renderer SHALL provide an explicit Done action and SHALL NOT submit on part selection.
-2. THE Done action SHALL remain disabled until the selected count meets `minMarks`, except that “Nothing is wrong” submits the permitted empty selection.
+2. THE Done action SHALL remain disabled until the selected count meets `minMarks`, except that “Nothing is wrong” permits the empty answer and follows the active mode's submission flow.
 3. WHEN Done is activated, THE Player SHALL submit an answer of kind `inspect` with the selected stable part IDs in document order.
 4. Check-mode submissions SHALL use the shared confirmation flow defined in Spec 2.
 
