@@ -90,6 +90,16 @@ describe('LocalEngine', () => {
     expect((await engine.resumeSession(first.sessionId)).node.id).toBe('opening');
   });
 
+  it('keeps the current scene and version when the next interaction is unavailable', async () => {
+    const engine = new LocalEngine(story);
+    const first = await start(engine, 'base-profile');
+    const submission = { answerRequestId: 'unsupported-next', version: first.version, nodeId: first.node.id, answer: { kind: 'continue' as const } };
+    await expect(engine.respond(first.sessionId, submission)).rejects.toMatchObject({ kind: 'unsupported' });
+    expect(await engine.resumeSession(first.sessionId)).toEqual(first);
+    await expect(engine.respond(first.sessionId, submission)).rejects.toMatchObject({ kind: 'unsupported' });
+    expect(await engine.resumeSession(first.sessionId)).toEqual(first);
+  });
+
   it('does not advance from lesson pieces to a result while a check is unimplemented', async () => {
     const withCheck: StoryYaml = { ...story, lesson: { ...story.lesson!, checks: [{ id: 'assessment', questions: [{ id: 'q1', scene: 'alternate', answer: { branch: 'yes' } }] }], result: { scene: 'alternate' } } };
     const engine = new LocalEngine(withCheck, ['choices']);

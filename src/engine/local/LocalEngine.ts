@@ -44,8 +44,9 @@ export class LocalEngine implements Engine {
       players: players.map((seat) => this.toSessionPlayer(seat)),
       responses: new Map(),
     };
+    const first = this.toStep(session);
     this.sessions.set(session.id, session);
-    return this.toStep(session);
+    return first;
   }
 
   async resumeSession(sessionId: string): Promise<Step> {
@@ -61,21 +62,26 @@ export class LocalEngine implements Engine {
     if (submission.version !== current.version) throw new EngineError('conflict', 'The answer was given for an older scene.', current);
     if (submission.nodeId !== current.node.id) throw new EngineError('conflict', 'The answer refers to a different scene.', current);
 
+    let nextIndex: number;
+    let nextHistory: number[];
     if (submission.answer.kind === 'back') {
       if (!current.canGoBack) throw new EngineError('conflict', 'Back navigation is not allowed from this scene.', current);
-      session.index = session.history.pop()!;
+      nextIndex = session.history[session.history.length - 1]!;
+      nextHistory = session.history.slice(0, -1);
     } else {
       if (!this.answerMatches(current.node, submission.answer)) throw new EngineError('unsupported', `Answer '${submission.answer.kind}' does not match this scene.`);
       if (!this.practiceAnswerIsCorrect(current.node, submission.answer)) {
         session.responses.set(submission.answerRequestId, current);
         return current;
       }
-      const nextIndex = this.nextSceneIndex(session, submission.answer);
-      session.history.push(session.index);
-      session.index = nextIndex;
+      nextIndex = this.nextSceneIndex(session, submission.answer);
+      nextHistory = [...session.history, session.index];
     }
-    session.version += 1;
-    const next = this.toStep(session);
+    const prospective = { ...session, index: nextIndex, history: nextHistory, version: session.version + 1 };
+    const next = this.toStep(prospective);
+    session.index = nextIndex;
+    session.history = nextHistory;
+    session.version = prospective.version;
     session.responses.set(submission.answerRequestId, next);
     return next;
   }
