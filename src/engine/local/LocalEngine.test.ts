@@ -118,6 +118,16 @@ describe('LocalEngine', () => {
     expect((await engine.resumeSession(first.sessionId)).node.id).toBe('alternate');
   });
 
+  it('finishes a continue-only path and allows Back from the end view', async () => {
+    const engine = new LocalEngine(story);
+    const first = await start(engine, 'alternate-profile');
+    const end = await engine.respond(first.sessionId, { answerRequestId: 'finish', version: first.version, nodeId: first.node.id, answer: { kind: 'continue' } });
+    expect(end.node.type).toBe('result');
+    expect(end.progress).toEqual({ done: 1, total: 1 });
+    const returned = await engine.respond(first.sessionId, { answerRequestId: 'return', version: end.version, nodeId: end.node.id, answer: { kind: 'back' } });
+    expect(returned.node.id).toBe('alternate');
+  });
+
   it('marks both sides of a profile-specific version as different', async () => {
     const withRationale: StoryYaml = { ...story, demo: { profiles: story.demo!.profiles.map((profile) => ({ ...profile, rationale: { piece: 'Chosen for this profile.' } })) } };
     const engine = new LocalEngine(withRationale, ['choices']);

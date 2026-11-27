@@ -611,6 +611,11 @@
             },
             "description": "Optional scene media; null fields if not used"
           },
+          "auto_advance": {
+            "type": "boolean",
+            "description": "When true on a continue scene, advance after successful dialogue audio playback; Next stays visible and unavailable audio never triggers a timer",
+            "default": false
+          },
           "music": {
             "type": "object",
             "additionalProperties": false,

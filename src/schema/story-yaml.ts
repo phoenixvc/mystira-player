@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
 const TextAsset = z.union([z.string(), z.null()]);
+const RequiredOpaque = z.unknown().refine((value) => value !== undefined, 'Required legacy field is missing');
 
 export const CharacterYamlSchema = z.object({
-  id: z.string(), name: z.string(), image: TextAsset, audio: TextAsset, metadata: z.unknown(),
+  id: z.string(), name: z.string(), image: TextAsset, audio: TextAsset, metadata: RequiredOpaque,
   voice: z.object({ pitch: z.number(), rate: z.number() }).optional(), colour: z.string().optional(),
 }).passthrough();
 
@@ -15,9 +16,9 @@ const BranchYamlSchema = z.object({
 export const SceneYamlSchema = z.object({
   id: z.string(), title: z.string(), type: z.enum(['narrative', 'choice', 'roll', 'special']),
   active_character: z.union([z.string(), z.null()]), description: z.string(), next_scene: TextAsset,
-  difficulty: z.unknown(),
+  difficulty: RequiredOpaque,
   media: z.object({ image: TextAsset, audio: TextAsset, video: TextAsset, stage3d: z.unknown().optional(), model3d: z.unknown().optional() }).passthrough(),
-  branches: z.array(BranchYamlSchema), metadata: z.unknown(),
+  branches: z.array(BranchYamlSchema), metadata: RequiredOpaque,
   lines: z.array(z.object({ speaker: z.string(), text: z.string(), audio: TextAsset.optional() })).optional(),
   task: z.object({ text: z.string(), audio: TextAsset.optional() }).optional(),
   cast: z.array(z.object({ character_id: z.string(), slot: z.enum(['left', 'center', 'right']), pose: z.string().nullable().optional(), reactions: z.array(z.enum(['jump', 'startle', 'wave'])).optional() })).max(3).optional(),
@@ -27,6 +28,14 @@ export const SceneYamlSchema = z.object({
   interaction: z.record(z.string(), z.unknown()).optional(),
   research: z.object({ step: z.enum(['where', 'find', 'verify', 'use']), source: z.object({ kind: z.enum(['character', 'picture', 'clip', 'chart', 'page']), label: z.string() }).optional() }).optional(),
   exit_allowed: z.boolean().optional(), host_slot: TextAsset.optional(), auto_advance: z.boolean().optional(),
+  music: z.object({
+    profile: z.enum(['none', 'neutral', 'cozy', 'playful', 'wonder', 'mystery', 'tense', 'action', 'sad', 'victory']),
+    continuity: z.enum(['none', 'prefer_continue', 'allow_change', 'force_change', 'force_silence']),
+    priority: z.enum(['none', 'background', 'important']).optional(),
+    transition_hint: z.enum(['none', 'auto', 'keep', 'crossfade_short', 'crossfade_normal', 'crossfade_long', 'hard_cut']).optional(),
+    energy: z.number().min(0).max(1).optional(),
+    ducking: z.enum(['none', 'narration', 'dialogue']).optional(),
+  }).passthrough().optional(),
 }).passthrough();
 
 const LessonYamlSchema = z.object({
@@ -44,10 +53,10 @@ const DemoYamlSchema = z.object({ profiles: z.array(z.object({
 
 export const StoryYamlSchema = z.object({
   schema_version: z.string().optional(), version: z.string().optional(),
-  title: z.string(), description: z.string(), image: z.string(), tags: z.array(z.string()),
+  title: z.string(), description: z.string(), image: z.string(), tags: z.array(z.string()).min(1),
   difficulty: z.enum(['Easy', 'Medium', 'Hard']), session_length: z.enum(['Short', 'Medium', 'Long', 'Very Long']),
   age_group: z.enum(['1-2', '3-5', '6-9', '10-12', '13-18', '19+']), minimum_age: z.number().int(),
-  core_axes: z.unknown(), archetypes: z.array(z.string()), characters: z.array(CharacterYamlSchema),
+  core_axes: RequiredOpaque, archetypes: z.array(z.string()).min(1), characters: z.array(CharacterYamlSchema).min(1),
   scenes: z.array(SceneYamlSchema), lesson: LessonYamlSchema.optional(), demo: DemoYamlSchema.optional(),
 }).passthrough();
 

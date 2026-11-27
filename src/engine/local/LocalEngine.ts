@@ -127,7 +127,7 @@ export class LocalEngine implements Engine {
     if (this.story.lesson?.checks?.length && session.index + 1 >= session.sceneIds.length) {
       throw new EngineError('unsupported', 'The lesson check requires the choices/hotspots spec; it cannot be skipped.');
     }
-    throw new EngineError('unsupported', 'This session has reached its end; the end view is not implemented yet.');
+    return session.sceneIds.length;
   }
 
   private toSessionPlayer(seat: PlayerSeat): SessionPlayer {
@@ -143,6 +143,15 @@ export class LocalEngine implements Engine {
   }
 
   private toStep(session: Session): Step {
+    if (session.index === session.sceneIds.length) {
+      const end: Node = {
+        type: 'result', id: 'story-end', title: 'The End', media: {}, characters: [], speakers: [], lines: [], overlays: [],
+        correctFirstTry: 0, total: 0, interaction: { type: 'continue' },
+      };
+      return { sessionId: session.id, version: String(session.version), ageGroupId: session.ageGroupId,
+        players: session.players, node: end, canGoBack: session.history.length > 0,
+        progress: { done: session.sceneIds.length, total: session.sceneIds.length } };
+    }
     const sceneId = session.sceneIds[session.index];
     const scene = this.story.scenes.find((candidate) => candidate.id === sceneId);
     if (!scene) throw new EngineError('notFound', `Scene '${sceneId ?? ''}' was not found in the story.`);

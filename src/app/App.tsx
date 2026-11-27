@@ -35,7 +35,7 @@ export function App() {
   return <main className={styles.shell}>
     {demo?.isDemoMode && <aside className={styles.controls} aria-label="Demo controls">
       <label>Child <select value={profileId ?? ''} onChange={(event) => { setProfileId(event.target.value); setSessionKey((key) => key + 1); }}>{profiles.map((profile) => <option key={profile.profileId} value={profile.profileId}>{profile.displayName}</option>)}</select></label>
-      <label>Entry point <select value={entryPoint} onChange={(event) => { setEntryPoint(event.target.value); setSessionKey((key) => key + 1); }}><option value="lesson">Lesson</option><option value="assessment">Assessment</option><option value="follow-up">Follow-up assessment</option></select></label>
+      <label>Entry point <select value={entryPoint} onChange={(event) => { setEntryPoint(event.target.value); setSessionKey((key) => key + 1); }}><option value="lesson">Lesson</option><option value="assessment" disabled>Assessment · Spec 2</option><option value="follow-up" disabled>Follow-up assessment · Spec 2</option></select></label>
       <label><input type="checkbox" checked={notesEnabled} onChange={(event) => setNotesEnabled(event.target.checked)} /> Grown-up notes</label>
     </aside>}
     {!started ? <section className={styles.welcome}>
@@ -44,6 +44,6 @@ export function App() {
       <p>A welcoming path through the Manor.</p>
       <button type="button" disabled={!demo} onClick={() => setStarted(true)}>Start preview</button>
       {error && <p role="alert">{error}</p>}
-    </section> : demo && startRequest && <Player key={sessionKey} engine={demo.engine} startRequest={startRequest} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} />}
+    </section> : demo && startRequest && <Player key={sessionKey} engine={demo.engine} startRequest={startRequest} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} initialGesture />}
   </main>;
 }

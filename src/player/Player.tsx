@@ -10,15 +10,17 @@ type Props = {
   isDemoMode?: boolean;
   onStep?: (step: Step) => void;
   theme?: PlayerTheme;
+  initialGesture?: boolean;
 };
 
 const slots = ['left', 'center', 'right'] as const;
 
-export function Player({ engine, startRequest, notesEnabled = false, isDemoMode = false, onStep, theme = manorTheme }: Props) {
+export function Player({ engine, startRequest, notesEnabled = false, isDemoMode = false, onStep, theme = manorTheme, initialGesture = false }: Props) {
   const [step, setStep] = useState<Step>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [narration, setNarration] = useState<boolean>();
+  const [hasGesture, setHasGesture] = useState(initialGesture);
   const [lineIndex, setLineIndex] = useState(0);
   const [reaction, setReaction] = useState<string>();
   const audio = useRef<HTMLAudioElement | undefined>(undefined);
@@ -34,6 +36,29 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     audio.current = undefined;
     video.current?.pause();
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+  }, []);
+
+  const playReaction = useCallback(() => {
+    const AudioContextType = window.AudioContext;
+    if (!AudioContextType) return;
+    const context = new AudioContextType();
+    const tone = context.createOscillator();
+    const gain = context.createGain();
+    tone.type = 'sine';
+    tone.frequency.value = 520;
+    gain.gain.setValueAtTime(0.025, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.12);
+    tone.connect(gain).connect(context.destination);
+    tone.start();
+    tone.stop(context.currentTime + 0.12);
+    tone.onended = () => { void context.close(); };
+  }, []);
+
+  useEffect(() => {
+    const markGesture = () => setHasGesture(true);
+    window.addEventListener('pointerdown', markGesture, { once: true });
+    window.addEventListener('keydown', markGesture, { once: true });
+    return () => { window.removeEventListener('pointerdown', markGesture); window.removeEventListener('keydown', markGesture); };
   }, []);
 
   useEffect(() => {
@@ -102,7 +127,10 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       if (!line || token !== generation.current) return;
       setLineIndex(index);
       const speaker = step.node.speakers.find((item) => item.id === line.speakerId);
+      let fallbackStarted = false;
       const speech = () => {
+        if (fallbackStarted) return;
+        fallbackStarted = true;
         if (typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') return;
         const utterance = new SpeechSynthesisUtterance(line.text);
         utterance.pitch = speaker?.voice?.pitch ?? 1;
@@ -125,13 +153,22 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     if (!step) return;
     const defaultOn = step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9';
     if (narration === undefined) setNarration(defaultOn);
-    if (narration && step.node.lines.length && step.ageGroupId !== '1-2' && step.ageGroupId !== '3-5') playLines(0);
+    if ((narration ?? defaultOn) && step.node.lines.length && (!['1-2', '3-5'].includes(step.ageGroupId) || hasGesture)) playLines(0);
   // Only start narration when a new step arrives; replay and toggle use explicit handlers.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step?.node.id, step?.version]);
+  }, [step?.node.id, step?.version, hasGesture]);
 
   if (!step) return <section className={styles.player} aria-label="Story player">{error ? <p role="alert">{error}</p> : <p role="status">Loading story…</p>}</section>;
   const node = step.node;
+  if (node.type === 'result' && step.progress?.done === step.progress?.total) {
+    return <section className={styles.player} aria-label="Story complete" style={themeStyle(theme)}>
+      <h1>The End</h1><p>You made it through the Manor.</p>
+      <div className={styles.actions}>
+        {step.canGoBack && <button type="button" disabled={busy} onClick={() => void answer({ kind: 'back' })}>Back</button>}
+        <button type="button" onClick={() => { setStep(undefined); void engine.startSession(startRequest).then((next) => { setStep(next); onStep?.(next); }); }}>Play again</button>
+      </div>
+    </section>;
+  }
   const minTarget = step.ageGroupId === '1-2' || step.ageGroupId === '3-5' ? 64 : step.ageGroupId === '6-9' ? 48 : 44;
   const young = step.ageGroupId === '1-2' || step.ageGroupId === '3-5';
   const currentLine = node.lines[lineIndex];
@@ -152,18 +189,18 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       {node.media.video ? <video ref={video} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
         : node.media.imageUrl ? <img className={styles.media} src={node.media.imageUrl} alt={node.media.alt ?? ''} />
           : <div className={styles.mediaFallback} aria-hidden="true">✦</div>}
-      {characters.map((character) => <button className={`${styles.character} ${styles[character.position]} ${reaction === character.id ? styles.reaction : ''}`} key={character.id} type="button" disabled={!character.reactions?.length} aria-label={`${character.alt}${character.reactions?.length ? ', react' : ''}`} onClick={() => { setReaction(character.id); window.setTimeout(() => setReaction(undefined), 450); }}><img src={character.imageUrl} alt="" /></button>)}
+      {characters.map((character) => <button className={`${styles.character} ${styles[character.position]} ${reaction === character.id ? styles.reaction : ''}`} key={character.id} type="button" disabled={!character.reactions?.length} aria-label={`${character.alt}${character.reactions?.length ? ', react' : ''}`} onClick={() => { setReaction(character.id); playReaction(); window.setTimeout(() => setReaction(undefined), 450); }}><img src={character.imageUrl} alt="" /></button>)}
       {node.overlays.map((overlay) => <span className={styles.overlay} key={overlay.id} style={{ left: `clamp(5%, ${overlay.anchor.x * 100}%, 95%)`, top: `clamp(8%, ${overlay.anchor.y * 100}%, 92%)`, maxWidth: overlay.maxWidth ? `${overlay.maxWidth * 100}%` : undefined }}>{overlay.text}</span>)}
       {node.media.video?.skippable && node.interaction.type === 'continue' && <button className={styles.skip} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Skip video</button>}
     </div>
     {node.task && <p className={styles.task}>{node.task.text}</p>}
     <div className={styles.dialogue} aria-live="polite">
-      {currentLine && <><div className={styles.speaker}>{speaker?.avatarUrl && <img src={speaker.avatarUrl} alt="" />}<strong>{speaker?.name ?? 'Narrator'}</strong></div><p>{young ? currentLine.text.split(/[.!?]/)[0] : currentLine.text}</p></>}
+      {currentLine && <><div className={styles.speaker}>{speaker?.avatarUrl && <img src={speaker.avatarUrl} alt="" />}<strong style={{ color: speaker?.colour }}>{speaker?.name ?? 'Narrator'}</strong></div><p>{currentLine.text}</p></>}
       {node.lines.length > 1 && <div className={styles.lineControls}><span>Line {lineIndex + 1} of {node.lines.length}</span><button type="button" disabled={lineIndex >= node.lines.length - 1} onClick={() => { stopMedia(); setLineIndex((index) => index + 1); }}>Show next line</button></div>}
     </div>
     <div className={styles.actions}>
       <button type="button" disabled={busy || !step.canGoBack} hidden={!step.canGoBack} onClick={() => void answer({ kind: 'back' })}>Back</button>
-      <button type="button" onClick={() => { setNarration((value) => !value); stopMedia(); }}>{narration ? 'Narration on' : 'Narration off'}</button>
+      <button type="button" aria-pressed={narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')} onClick={() => { const next = !(narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')); setNarration(next); stopMedia(); if (next) playLines(lineIndex); }}>{narration ? 'Narration on' : 'Narration off'}</button>
       <button type="button" onClick={() => playLines(lineIndex)}>Replay line</button>
       {node.interaction.type === 'continue' ? <button className={styles.next} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Next</button> : <p role="status">This interaction is not available in the core preview yet.</p>}
     </div>

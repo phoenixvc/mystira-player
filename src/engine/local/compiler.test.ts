@@ -22,4 +22,13 @@ describe('local scene compilation', () => {
     expect(scene).toBeDefined();
     expect(() => compileScene(scene!, story, [])).toThrow(/Unsupported interaction: choices/);
   });
+
+  it('maps core media, narration and music without exposing authored answer fields', () => {
+    const source = story.scenes.find((candidate) => candidate.type === 'narrative' && candidate.branches.length === 0)!;
+    const scene = { ...source, interaction: undefined, branches: [], lines: undefined, media: { ...source.media, image: '/scene.webp', audio: '/line.mp3', video: '/clip.mp4' }, music: { profile: 'cozy' as const, continuity: 'allow_change' as const } };
+    const node = compileScene(scene, story);
+    expect(node.media).toMatchObject({ imageUrl: '/scene.webp', video: { url: '/clip.mp4' } });
+    expect(node.lines[0]).toMatchObject({ speakerId: 'narrator', text: source.description, audioUrl: '/line.mp3' });
+    expect(node.music).toEqual({ profile: 'cozy' });
+  });
 });

@@ -56,6 +56,7 @@ Required on every scene: `id`, `title`, `type`, `active_character` (may be `null
 | `scenes[].media`: `image`, `audio`, `video` | **used**: background, narration audio, video |
 | `scenes[].narration_timestamps` | **used**: read-along highlight |
 | `scenes[].music` (`profile` and the rest) | **used**: `profile` is passed to the host as a hint |
+| `scenes[].auto_advance` | **used**: optional boolean; after dialogue audio finishes on a continue scene, move to the next scene while keeping Next visible. Without available audio, wait for a tap. |
 | `scenes[].branches[]`: `choice`, `next_scene`, `id` | **used**: one choice button per branch |
 | `scenes[].objects[]`: `id`, `label`, `geometry` | **used**: tap targets (section 5) |
 | `scenes[].branches[]`: `object_id`, `verb` | **used**: what tapping an object does |
