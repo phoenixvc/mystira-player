@@ -56,6 +56,8 @@ The source pass reached 74 Vitest tests, typecheck and build. A connected browse
 
 The [core acceptance evidence](../.kiro/specs/player-core/verification.md) maps each requirement to the implementation and observed checks. It records Requirement 19.3 as partial: the demo shows disabled assessment and follow-up choices until Spec 2 compiles those nodes. Task 9.3 stays open while that requirement is unverified. A second draft Codex review was requested after the schema and child-chosen piece changes.
 
+That second review found a callout clipping issue near the stage edges. The renderer now positions each callout within an inset region and translates it by its own anchor fraction, keeping the full box inside the picture. A browser geometry check at 400 px and 280 px stage widths covered all four corners and the center; every tested box stayed at least 11 px inside the stage border. The 74-test suite, typecheck and build passed after the fix.
+
 ## MCP
 
 - **context7** and **playwright** (committed in `.kiro/settings/mcp.json`, launched with `cmd /c npx` because Windows cannot run `npx` directly): current library documentation, and browser control so the agent can open and inspect the running player.
