@@ -57,6 +57,8 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
   const [imageFailed, setImageFailed] = useState(false);
   const [keyImageFailed, setKeyImageFailed] = useState(false);
   const audio = useRef<HTMLAudioElement | undefined>(undefined);
+  const comparisonStop = useRef<(() => void) | undefined>(undefined);
+  const registerComparisonStop = useCallback((stop: (() => void) | undefined) => { comparisonStop.current = stop; }, []);
   const video = useRef<HTMLVideoElement>(null);
   const lastVideo = useRef<HTMLVideoElement>(null);
   const attachVideo = useCallback((element: HTMLVideoElement | null) => {
@@ -77,6 +79,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
     generation.current += 1;
     audio.current?.pause();
     audio.current = undefined;
+    comparisonStop.current?.();
     if (pauseVideo) (video.current ?? lastVideo.current)?.pause();
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
     if (reactionTimer.current) clearTimeout(reactionTimer.current);
@@ -425,7 +428,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
       {currentLine && !(node.type === 'check' && currentLine.text === node.question.text) && <><div className={styles.speaker}>{speaker?.avatarUrl && <img src={speaker.avatarUrl} alt="" />}<strong style={{ color: speaker?.colour }}>{speaker?.name ?? (afrikaans ? 'Verteller' : 'Narrator')}</strong></div><p>{currentLine.text}</p></>}
       {node.lines.length > 1 && <div className={styles.lineControls}><span>{afrikaans ? 'Sin' : 'Line'} {lineIndex + 1} {afrikaans ? 'van' : 'of'} {node.lines.length}</span><button type="button" disabled={!!held || lineIndex >= node.lines.length - 1} onClick={() => { if (!node.media.video) stopMedia(); setLineIndex((index) => index + 1); }}>{afrikaans ? 'Wys volgende sin' : 'Show next line'}</button></div>}
     </div>
-    {comparison && <LanguageExplorer key={`${node.id}:${lineIndex}`} pair={comparison} locale={locale} muted={muted} onExplore={() => stopMedia()} />}
+    {comparison && <LanguageExplorer key={`${node.id}:${lineIndex}`} pair={comparison} locale={locale} muted={muted} onExplore={() => stopMedia()} registerStop={registerComparisonStop} />}
     {node.type === 'result' && <aside className={styles.feedback} aria-label="Lesson result">{node.total > 0 && <p>{node.correctFirstTry} of {node.total} correct on the first try</p>}{node.key && <div className={styles.resultKey}>{node.key.iconUrl && !keyImageFailed ? <img src={node.key.iconUrl} alt="" onError={() => setKeyImageFailed(true)} /> : <span aria-hidden="true">✦</span>}<strong>{node.key.label}</strong></div>}</aside>}
     {node.type !== 'terminal' && <div className={styles.actions}>
       <button type="button" disabled={busy || !step.canGoBack} hidden={!step.canGoBack} onClick={() => void answer({ kind: 'back' })}>{afrikaans ? 'Terug' : 'Back'}</button>

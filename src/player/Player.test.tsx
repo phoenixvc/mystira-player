@@ -19,9 +19,10 @@ describe('Player', () => {
     const respond = vi.fn().mockResolvedValue(second);
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(first), resumeSession: vi.fn(), respond };
     const played: string[] = [];
+    const paused: string[] = [];
     vi.stubGlobal('Audio', class {
       constructor(public src: string) { played.push(src); }
-      pause = vi.fn();
+      pause = vi.fn(() => { paused.push(this.src); });
       play = vi.fn().mockResolvedValue(undefined);
     });
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} languagePair={() => pair} />);
@@ -29,6 +30,12 @@ describe('Player', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Hoor Afrikaans weer' }));
     expect(played).toContain('/af.mp3');
     expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Replay line' }));
+    expect(paused).toContain('/af.mp3');
+    expect(screen.getByRole('button', { name: 'Hoor Afrikaans weer' }).getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(screen.getByRole('button', { name: 'Hoor Afrikaans weer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Narration on' }));
+    expect(paused.filter((src) => src === '/af.mp3')).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() => expect(respond).toHaveBeenCalledOnce());
   });

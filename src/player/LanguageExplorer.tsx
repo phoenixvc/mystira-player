@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './LanguageExplorer.module.css';
 
 type Locale = 'en' | 'af';
@@ -9,7 +9,7 @@ export type LanguagePair = {
   af: { text: string; audioUrl: string; words?: { text: string; startMs: number; endMs: number }[] };
   links: { en: string; af: string }[];
 };
-type Props = { pair: LanguagePair; locale: Locale; muted: boolean; onExplore: () => void };
+type Props = { pair: LanguagePair; locale: Locale; muted: boolean; onExplore: () => void; registerStop?: (stop: (() => void) | undefined) => void };
 
 function highlighted(text: string, phrase: string | undefined, activeWord: number | undefined) {
   const phraseStart = phrase ? text.toLowerCase().indexOf(phrase.toLowerCase()) : -1;
@@ -26,20 +26,28 @@ function highlighted(text: string, phrase: string | undefined, activeWord: numbe
   return <>{parts}{text.slice(cursor)}</>;
 }
 
-export function LanguageExplorer({ pair, locale, muted, onExplore }: Props) {
+export function LanguageExplorer({ pair, locale, muted, onExplore, registerStop }: Props) {
   const [open, setOpen] = useState(false);
   const [playing, setPlaying] = useState<Locale>();
   const [elapsedMs, setElapsedMs] = useState(0);
   const [selectedLink, setSelectedLink] = useState<number>();
   const audio = useRef<HTMLAudioElement | undefined>(undefined);
 
-  useEffect(() => () => { audio.current?.pause(); audio.current = undefined; }, []);
+  const stopReplay = useCallback(() => {
+    audio.current?.pause();
+    audio.current = undefined;
+    setPlaying(undefined);
+    setElapsedMs(0);
+  }, []);
+
+  useEffect(() => {
+    registerStop?.(stopReplay);
+    return () => { registerStop?.(undefined); stopReplay(); };
+  }, [registerStop, stopReplay]);
 
   function replay(language: Locale) {
     onExplore();
-    audio.current?.pause();
-    setPlaying(undefined);
-    setElapsedMs(0);
+    stopReplay();
     if (muted) return;
     const sound = new Audio(pair[language].audioUrl);
     audio.current = sound;
@@ -52,7 +60,7 @@ export function LanguageExplorer({ pair, locale, muted, onExplore }: Props) {
 
   const selected = selectedLink === undefined ? undefined : pair.links[selectedLink];
   return <section className={styles.explorer} aria-label={locale === 'af' ? 'Vergelyk tale' : 'Compare languages'}>
-    <button type="button" aria-expanded={open} onClick={() => { if (!open) onExplore(); setOpen((value) => !value); if (open) { audio.current?.pause(); setPlaying(undefined); } }}>
+    <button type="button" aria-expanded={open} onClick={() => { if (!open) onExplore(); setOpen((value) => !value); if (open) stopReplay(); }}>
       {locale === 'af' ? 'Vergelyk Engels en Afrikaans' : 'Compare English and Afrikaans'}
     </button>
     {open && <div className={styles.content}>
