@@ -8,6 +8,7 @@ type Props = {
   startRequest: StartSessionRequest;
   notesEnabled?: boolean;
   isDemoMode?: boolean;
+  grownUpAuthorized?: boolean;
   onStep?: (step: Step) => void;
   theme?: PlayerTheme;
   initialGesture?: boolean;
@@ -15,7 +16,7 @@ type Props = {
 
 const slots = ['left', 'center', 'right'] as const;
 
-export function Player({ engine, startRequest, notesEnabled = false, isDemoMode = false, onStep, theme = manorTheme, initialGesture = false }: Props) {
+export function Player({ engine, startRequest, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, theme = manorTheme, initialGesture = false }: Props) {
   const [step, setStep] = useState<Step>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -204,7 +205,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       <button type="button" onClick={() => playLines(lineIndex)}>Replay line</button>
       {node.interaction.type === 'continue' ? <button className={styles.next} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Next</button> : <p role="status">This interaction is not available in the core preview yet.</p>}
     </div>
-    {notesEnabled && isDemoMode && node.rationale && <aside className={styles.notes}><h2>Grown-up note</h2><p>{node.title}</p><p>{node.rationale.differs ? 'Different for each child' : 'Same for every child'}</p><p>{node.rationale.text}</p></aside>}
+    {notesEnabled && (isDemoMode || grownUpAuthorized) && node.rationale && <aside className={styles.notes}><h2>Grown-up note</h2><p>{node.title}</p><p>{node.rationale.differs ? 'Different for each child' : 'Same for every child'}</p><p>{node.rationale.text}</p></aside>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
   </section>;
 }

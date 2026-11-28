@@ -26,6 +26,16 @@ export class LocalEngine implements Engine {
     return (this.story.demo?.profiles ?? []).map((profile) => ({ profileId: profile.id, displayName: profile.display_name }));
   }
 
+  /** Demo-only mapping; profile-specific piece selection stays inside the engine. */
+  demoSceneForProfile(sceneId: string, profileId: string): string | undefined {
+    if (!this.story.lesson) return this.getSceneIds(profileId).includes(sceneId) ? sceneId : undefined;
+    const piece = this.story.lesson.pieces.find((candidate) => candidate.scenes?.includes(sceneId) || candidate.versions?.some((version) => version.scenes.includes(sceneId)));
+    if (!piece) return undefined;
+    const profile = this.story.demo?.profiles.find((candidate) => candidate.id === profileId);
+    const selected = profile?.versions?.[piece.id];
+    return piece.scenes?.[0] ?? (piece.versions?.find((version) => version.id === selected) ?? piece.versions?.[0])?.scenes[0];
+  }
+
   async startSession(request: StartSessionRequest): Promise<Step> {
     const expectedActivityId = this.story.lesson?.id ?? this.story.title;
     if (request.activityId !== expectedActivityId) throw new EngineError('notFound', `Activity '${request.activityId}' was not found.`);

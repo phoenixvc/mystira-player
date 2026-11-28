@@ -37,6 +37,13 @@ describe('Player', () => {
     expect(screen.queryByText('A different way in.')).toBeNull();
   });
 
+  it('allows a trusted host to show grown-up notes', async () => {
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(first), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} notesEnabled grownUpAuthorized />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    expect(screen.getByText('A different way in.')).toBeTruthy();
+  });
+
   it('auto-advances only after recorded narration completes and keeps Next available', async () => {
     const played: Array<{ onended?: () => void; pause: ReturnType<typeof vi.fn> }> = [];
     vi.stubGlobal('Audio', class {

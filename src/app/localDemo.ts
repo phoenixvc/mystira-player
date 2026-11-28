@@ -11,10 +11,11 @@ const ConfigSchema = z.object({
   interactions: z.object({ enabled: z.array(z.enum(['choices', 'hotspots', 'sequence', 'inspect', 'pattern', 'keypad', 'count'])) }),
 });
 
-export async function loadLocalDemo(): Promise<{ engine: Engine; activityId: string; isDemoMode: boolean }> {
+export async function loadLocalDemo(): Promise<{ engine: Engine; activityId: string; isDemoMode: boolean; sceneForProfile: (sceneId: string, profileId: string) => string | undefined }> {
   const response = await fetch(`${import.meta.env.BASE_URL}config.json`);
   if (!response.ok) throw new Error(`Could not load player configuration (${response.status}).`);
   const config = ConfigSchema.parse(await response.json());
   const story = StoryYamlSchema.parse(parse(corePreview));
-  return { engine: new LocalEngine(story, config.interactions.enabled), activityId: story.title, isDemoMode: config.demo };
+  const engine = new LocalEngine(story, config.interactions.enabled);
+  return { engine, activityId: story.title, isDemoMode: config.demo, sceneForProfile: (sceneId, profileId) => engine.demoSceneForProfile(sceneId, profileId) };
 }

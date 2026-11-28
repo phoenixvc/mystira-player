@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Player } from '../player/Player';
-import type { Engine, Profile, StartSessionRequest } from '../engine/types';
+import type { Engine, Profile, StartSessionRequest, Step } from '../engine/types';
 import { loadLocalDemo } from './localDemo';
 import styles from './App.module.css';
 
 export function App() {
-  const [demo, setDemo] = useState<{ engine: Engine; activityId: string; isDemoMode?: boolean }>();
+  const [demo, setDemo] = useState<{ engine: Engine; activityId: string; isDemoMode?: boolean; sceneForProfile?: (sceneId: string, profileId: string) => string | undefined }>();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [profileId, setProfileId] = useState<string>();
   const [entryPoint, setEntryPoint] = useState('lesson');
@@ -13,6 +13,8 @@ export function App() {
   const [started, setStarted] = useState(false);
   const [error, setError] = useState<string>();
   const [sessionKey, setSessionKey] = useState(0);
+  const [startNodeId, setStartNodeId] = useState<string>();
+  const [currentStep, setCurrentStep] = useState<Step>();
 
   useEffect(() => {
     let active = true;
@@ -29,13 +31,13 @@ export function App() {
   const startRequest: StartSessionRequest | undefined = useMemo(() => demo ? {
     activityId: demo.activityId,
     players: profileId ? [{ type: 'Profile', profileId }] : [],
-    ...(entryPoint === 'lesson' ? {} : { startNodeId: entryPoint }),
-  } : undefined, [demo, profileId, entryPoint]);
+    ...(startNodeId ? { startNodeId } : entryPoint === 'lesson' ? {} : { startNodeId: entryPoint }),
+  } : undefined, [demo, profileId, entryPoint, startNodeId]);
 
   return <main className={styles.shell}>
     {demo?.isDemoMode && <aside className={styles.controls} aria-label="Demo controls">
-      <label>Child <select value={profileId ?? ''} onChange={(event) => { setProfileId(event.target.value); setSessionKey((key) => key + 1); }}>{profiles.map((profile) => <option key={profile.profileId} value={profile.profileId}>{profile.displayName}</option>)}</select></label>
-      <label>Entry point <select value={entryPoint} onChange={(event) => { setEntryPoint(event.target.value); setSessionKey((key) => key + 1); }}><option value="lesson">Lesson</option><option value="assessment" disabled>Assessment · Spec 2</option><option value="follow-up" disabled>Follow-up assessment · Spec 2</option></select></label>
+      <label>Child <select value={profileId ?? ''} onChange={(event) => { const target = event.target.value; setStartNodeId(currentStep ? demo.sceneForProfile?.(currentStep.node.id, target) : undefined); setProfileId(target); setSessionKey((key) => key + 1); }}>{profiles.map((profile) => <option key={profile.profileId} value={profile.profileId}>{profile.displayName}</option>)}</select></label>
+      <label>Entry point <select value={entryPoint} onChange={(event) => { setStartNodeId(undefined); setEntryPoint(event.target.value); setSessionKey((key) => key + 1); }}><option value="lesson">Lesson</option><option value="assessment" disabled>Assessment · Spec 2</option><option value="follow-up" disabled>Follow-up assessment · Spec 2</option></select></label>
       <label><input type="checkbox" checked={notesEnabled} onChange={(event) => setNotesEnabled(event.target.checked)} /> Grown-up notes</label>
     </aside>}
     {!started ? <section className={styles.welcome}>
@@ -44,6 +46,6 @@ export function App() {
       <p>A welcoming path through the Manor.</p>
       <button type="button" disabled={!demo} onClick={() => setStarted(true)}>Start preview</button>
       {error && <p role="alert">{error}</p>}
-    </section> : demo && startRequest && <Player key={sessionKey} engine={demo.engine} startRequest={startRequest} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} initialGesture />}
+    </section> : demo && startRequest && <Player key={sessionKey} engine={demo.engine} startRequest={startRequest} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} initialGesture onStep={setCurrentStep} />}
   </main>;
 }

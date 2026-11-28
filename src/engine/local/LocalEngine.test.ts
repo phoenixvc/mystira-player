@@ -31,6 +31,12 @@ describe('LocalEngine', () => {
     expect(step.node.lines[0]?.text).toBe('Alternate');
   });
 
+  it('maps a demo child switch to the same lesson piece in the other version', () => {
+    const engine = new LocalEngine(story, ['choices']);
+    expect(engine.demoSceneForProfile('choice', 'alternate-profile')).toBe('alternate');
+    expect(engine.demoSceneForProfile('alternate', 'base-profile')).toBe('opening');
+  });
+
   it('starts at a requested scene only when it belongs to the selected profile path', async () => {
     const engine = new LocalEngine(story, ['choices']);
     const selected = await engine.startSession({ activityId: 'lesson', players: [{ type: 'Profile', profileId: 'base-profile' }], startNodeId: 'choice' });

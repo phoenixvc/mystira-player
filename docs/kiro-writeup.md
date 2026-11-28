@@ -50,7 +50,7 @@ The four rows above are the core interaction specs. Separate support specs are m
 
 Review of the foundation PR found a session transition that mutated history before checking whether the destination could compile. The implementation now compiles a prospective step first, and a regression test verifies resume and retry after rejection. Review also exposed a missing `startNodeId` path and contradictions in the later interaction specs: check answers require confirmation, including a valid empty inspect answer. The requirements and design were reconciled in the foundation PR; those interaction implementations remain open in their task plans.
 
-The next Spec 1 work is on `feat/player-core-shell`, branched from the corrected foundation. It adds an Engine-driven scene renderer, Manor theme token contract, audio and media controls, a local demo shell, and focused tests. The player-core task list marks only verified subtasks complete; schema parity, profile-preserving demo switches, full audio cleanup, and the accessibility acceptance pass remain open.
+The next Spec 1 work is on `feat/player-core-shell`, branched from the corrected foundation. It adds an Engine-driven scene renderer, Manor theme token contract, audio and media controls, a local demo shell, and focused tests. The local Engine maps a profile switch to the corresponding lesson piece. The player-core task list marks only verified subtasks complete; schema parity, assessment entry points (Spec 2), full audio/request cleanup, and the accessibility acceptance pass remain open.
 
 ## MCP
 
