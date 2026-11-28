@@ -37,6 +37,38 @@ describe('Player', () => {
     expect(screen.queryByText('A different way in.')).toBeNull();
   });
 
+  it('ignores a response from a previous session after the player switches stories', async () => {
+    let finishResponse!: (step: Step) => void;
+    const oldEngine: Engine = {
+      startSession: vi.fn().mockResolvedValue(first), resumeSession: vi.fn(),
+      respond: vi.fn().mockImplementation(() => new Promise<Step>((resolve) => { finishResponse = resolve; })),
+    };
+    const replacement: Step = { ...first, sessionId: 's2', node: { ...first.node, id: 'new', title: 'New story' } };
+    const newEngine: Engine = { startSession: vi.fn().mockResolvedValue(replacement), resumeSession: vi.fn(), respond: vi.fn() };
+    const onStep = vi.fn();
+    const { rerender } = render(<Player engine={oldEngine} startRequest={{ activityId: 'old', players: [] }} onStep={onStep} />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    rerender(<Player engine={newEngine} startRequest={{ activityId: 'new', players: [] }} onStep={onStep} />);
+    await screen.findByRole('heading', { name: 'New story' });
+    finishResponse(second);
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'New story' })).toBeTruthy());
+    expect(onStep).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the end view usable when restarting the story fails', async () => {
+    const ended: Step = { ...first, progress: { done: 2, total: 2 }, node: { ...first.node, type: 'result', id: 'story-end', correctFirstTry: 0, total: 0 } };
+    const engine: Engine = {
+      startSession: vi.fn().mockResolvedValueOnce(ended).mockRejectedValueOnce(new Error('Story unavailable')),
+      resumeSession: vi.fn(), respond: vi.fn(),
+    };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('heading', { name: 'The End' });
+    fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Story unavailable');
+    expect(screen.getByRole('button', { name: 'Play again' }).hasAttribute('disabled')).toBe(false);
+  });
+
   it('allows a trusted host to show grown-up notes', async () => {
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(first), resumeSession: vi.fn(), respond: vi.fn() };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} notesEnabled grownUpAuthorized />);

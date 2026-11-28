@@ -30,6 +30,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
   const generation = useRef(0);
   const busyRef = useRef(false);
   const autoAdvanced = useRef<string | undefined>(undefined);
+  const reactionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const stopMedia = useCallback(() => {
     generation.current += 1;
@@ -37,6 +38,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     audio.current = undefined;
     video.current?.pause();
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+    if (reactionTimer.current) clearTimeout(reactionTimer.current);
   }, []);
 
   const playReaction = useCallback(() => {
@@ -88,6 +90,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
   const answer = useCallback(async (value: Answer) => {
     if (!step || busyRef.current) return;
     stopMedia();
+    const token = generation.current;
     busyRef.current = true;
     setBusy(true);
     setError(undefined);
@@ -100,15 +103,35 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
         answerRequestId: request.current.id, version: step.version, nodeId: step.node.id,
         answer: value, playerId: step.activePlayerId,
       });
+      if (token !== generation.current) return;
       setStep(next);
       onStep?.(next);
     } catch (cause) {
+      if (token !== generation.current) return;
       if (cause instanceof EngineError && cause.kind === 'conflict' && cause.currentStep) {
         setStep(cause.currentStep);
         onStep?.(cause.currentStep);
       } else setError(cause instanceof Error ? cause.message : 'Could not change scenes.');
-    } finally { busyRef.current = false; setBusy(false); }
+    } finally { if (token === generation.current) { busyRef.current = false; setBusy(false); } }
   }, [engine, onStep, step, stopMedia]);
+
+  const playAgain = useCallback(async () => {
+    if (busyRef.current) return;
+    stopMedia();
+    const token = generation.current;
+    busyRef.current = true;
+    setBusy(true);
+    setError(undefined);
+    request.current = undefined;
+    try {
+      const next = await engine.startSession(startRequest);
+      if (token !== generation.current) return;
+      setStep(next);
+      onStep?.(next);
+    } catch (cause) {
+      if (token === generation.current) setError(cause instanceof Error ? cause.message : 'Could not restart the story.');
+    } finally { if (token === generation.current) { busyRef.current = false; setBusy(false); } }
+  }, [engine, onStep, startRequest, stopMedia]);
 
   const playLines = useCallback((from: number) => {
     if (!step) return;
@@ -166,8 +189,9 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       <h1>The End</h1><p>You made it through the Manor.</p>
       <div className={styles.actions}>
         {step.canGoBack && <button type="button" disabled={busy} onClick={() => void answer({ kind: 'back' })}>Back</button>}
-        <button type="button" onClick={() => { setStep(undefined); void engine.startSession(startRequest).then((next) => { setStep(next); onStep?.(next); }); }}>Play again</button>
+        <button type="button" disabled={busy} onClick={() => void playAgain()}>Play again</button>
       </div>
+      {error && <p role="alert" className={styles.error}>{error}</p>}
     </section>;
   }
   const minTarget = step.ageGroupId === '1-2' || step.ageGroupId === '3-5' ? 64 : step.ageGroupId === '6-9' ? 48 : 44;
@@ -190,7 +214,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       {node.media.video ? <video ref={video} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
         : node.media.imageUrl ? <img className={styles.media} src={node.media.imageUrl} alt={node.media.alt ?? ''} />
           : <div className={styles.mediaFallback} aria-hidden="true">✦</div>}
-      {characters.map((character) => <button className={`${styles.character} ${styles[character.position]} ${reaction === character.id ? styles.reaction : ''}`} key={character.id} type="button" disabled={!character.reactions?.length} aria-label={`${character.alt}${character.reactions?.length ? ', react' : ''}`} onClick={() => { setReaction(character.id); playReaction(); window.setTimeout(() => setReaction(undefined), 450); }}><img src={character.imageUrl} alt="" /></button>)}
+      {characters.map((character) => <button className={`${styles.character} ${styles[character.position]} ${reaction === character.id ? styles.reaction : ''}`} key={character.id} type="button" disabled={!character.reactions?.length} aria-label={`${character.alt}${character.reactions?.length ? ', react' : ''}`} onClick={() => { setReaction(character.id); playReaction(); if (reactionTimer.current) clearTimeout(reactionTimer.current); reactionTimer.current = setTimeout(() => setReaction(undefined), 450); }}><img src={character.imageUrl} alt="" /></button>)}
       {node.overlays.map((overlay) => <span className={styles.overlay} key={overlay.id} style={{ left: `clamp(5%, ${overlay.anchor.x * 100}%, 95%)`, top: `clamp(8%, ${overlay.anchor.y * 100}%, 92%)`, maxWidth: overlay.maxWidth ? `${overlay.maxWidth * 100}%` : undefined }}>{overlay.text}</span>)}
       {node.media.video?.skippable && node.interaction.type === 'continue' && <button className={styles.skip} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Skip video</button>}
     </div>

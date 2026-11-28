@@ -52,7 +52,7 @@ Review of the foundation PR found a session transition that mutated history befo
 
 The next Spec 1 work is on `feat/player-core-shell`, based on the merged PR #13 commit in `dev`. It adds an Engine-driven scene renderer, Manor theme token contract, audio and media controls, a local demo shell, and focused tests. The local Engine maps a profile switch to the corresponding lesson piece. The player-core task list marks only verified subtasks complete; schema parity, assessment entry points (Spec 2), full audio/request cleanup, and the complete requirement evidence pass remain open.
 
-The source pass reached 55 Vitest tests, typecheck and build. A connected browser pass observed the desktop and narrow layouts, both continue scenes and the end view. Mobile Lighthouse accessibility scored 100 on the landing page and an active scene. The Python JSON-schema content checker could not run because `jsonschema` was absent in the worktree's Python environment; the JSON schema parsed and both Manor stories passed the Zod content tests. Broader schema parity and request cancellation are still open.
+The source pass reached 57 Vitest tests, typecheck and build. A connected browser pass observed the desktop and narrow layouts, both continue scenes and the end view. Mobile Lighthouse accessibility scored 100 on the landing page and an active scene. The Python JSON-schema content checker could not run because `jsonschema` was absent in the worktree's Python environment; the JSON schema parsed and both Manor stories passed the Zod content tests. Regression tests now cover a late Engine response after a story switch and a failed story restart; broader schema parity and network request cancellation are still open.
 
 ## MCP
 
