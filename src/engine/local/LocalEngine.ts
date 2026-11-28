@@ -351,6 +351,13 @@ export class LocalEngine implements Engine {
     return this.inspectSceneId() ? INSPECT_PREVIEW_ENTRY : undefined;
   }
 
+  demoInspectProfileIds(): string[] {
+    const sceneId = this.inspectSceneId();
+    return sceneId ? (this.story.demo?.profiles ?? [])
+      .filter((profile) => this.getSceneIds(profile.id).includes(sceneId))
+      .map((profile) => profile.id) : [];
+  }
+
   private inspectSceneId(): string | undefined {
     if (!this.enabled.includes('inspect')) return undefined;
     return this.story.scenes.find((scene) => scene.interaction?.kind === 'inspect')?.id;

@@ -22,11 +22,12 @@ type Props = {
   inheritTheme?: boolean;
   muted?: boolean;
   initialGesture?: boolean;
+  slotGuide?: boolean;
 };
 
 const slots = ['left', 'center', 'right'] as const;
 
-export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false }: Props) {
+export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false, slotGuide = false }: Props) {
   const onStepRef = useRef(onStep);
   onStepRef.current = onStep;
   const onAnswerRef = useRef(onAnswer);
@@ -381,7 +382,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
       <h1>{node.title ?? 'Story scene'}</h1>
       {step.progress && <p className={styles.progress}>{node.type === 'result' ? 'Result' : `Scene ${step.progress.done + 1} of ${step.progress.total}`}</p>}
     </header>
-    <div className={styles.stage} key={`${node.id}:${step.version}`} onClick={(event) => { if (node.interaction.type === 'hotspots' && !held && !(event.target as HTMLElement).closest('button')) setFeedback('Nothing here'); }}>
+    <div className={`${styles.stage} ${slotGuide ? styles.slotGuide : ''}`} key={`${node.id}:${step.version}`} onClick={(event) => { if (node.interaction.type === 'hotspots' && !held && !(event.target as HTMLElement).closest('button')) setFeedback('Nothing here'); }}>
       {node.media.video && !held?.image ? <video ref={video} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline muted={muted} onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
         : (held?.image?.imageUrl ?? node.media.imageUrl) && !imageFailed ? <img className={styles.media} src={held?.image?.imageUrl ?? node.media.imageUrl} alt={held?.image?.alt ?? node.media.alt ?? ''} onError={() => setImageFailed(true)} />
           : <div className={styles.mediaFallback} role="img" aria-label={imageFailed ? held?.image?.alt ?? node.media.alt ?? 'Scene image unavailable' : 'Scene artwork'}>✦</div>}

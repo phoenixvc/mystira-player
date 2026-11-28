@@ -68,4 +68,13 @@ describe('local demo bootstrap', () => {
     const daan = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: daanPiece.startSceneId });
     expect(daan.node).toMatchObject({ id: 'how_know_teach', interaction: { type: 'sequence' } });
   });
+
+  it('offers the Mummy’s Party inspect entry only to Max, whose path contains it', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence', 'inspect'] } }) }));
+    const demo = await loadLocalDemo('mummys-party');
+    expect(demo.assessment?.entries.inspect).toBe('demo:inspect');
+    expect(demo.assessment?.inspectProfiles.map((profile) => profile.profileId)).toEqual(['demo_max']);
+    const step = await demo.assessment!.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_max' }], startNodeId: demo.assessment!.entries.inspect });
+    expect(step.node.interaction.type).toBe('inspect');
+  });
 });
