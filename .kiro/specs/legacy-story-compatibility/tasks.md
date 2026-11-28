@@ -1,9 +1,9 @@
 # Implementation Plan: Legacy Story Compatibility
 
-All items are open. Spec 5 follows the four Kiroween specs and is the gate for replacing the old Blazor story surface. Mark an item done only with linked fixture/test or hosted evidence.
+Spec 5 follows the four Kiroween specs and is the gate for replacing the old Blazor story surface. Mark an item done only with linked fixture/test or hosted evidence. The source inventory and working matrix are in [source-audit.md](source-audit.md) and [compatibility-matrix.md](compatibility-matrix.md); the matrix is not frozen until actual API captures and the missing case inventory are supplied.
 
 - [ ] 1. Inventory the live Blazor story contract and record a compatibility matrix.
-  - [ ] 1.1 Refresh `source-audit.md` against the integration branch: scene-type names/numeric values, DTO shapes, roll/special/3D semantics, session transitions, assignments, AI turns, narration, audio, settings and awards. Confirm the current no-op Rewind handler.
+  - [x] 1.1 Refresh `source-audit.md` against the integration branch: scene-type names/numeric values, DTO shapes, roll/special/3D semantics, session transitions, assignments, AI turns, narration, audio, settings and awards. Confirm the current no-op Rewind handler.
   - [ ] 1.2 Select non-sensitive story fixtures and sanitized API snapshots, including roll, special, 3D, branching, and terminal paths.
   - [ ] 1.3 Mark every case supported, host-rendered, unsupported, or not applicable; reconcile the PRD's blanket compatibility claim.
   - Requirements: 1
