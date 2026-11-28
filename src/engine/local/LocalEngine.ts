@@ -81,12 +81,14 @@ export class LocalEngine implements Engine {
     const availableSceneIds = this.getSceneIds(profileId, assessmentEntry ? undefined : request.startNodeId);
     const assessmentIndex = availableSceneIds.indexOf(firstCheck ?? '');
     if (assessmentEntry && assessmentIndex < 0) throw new EngineError('notFound', 'The assessment start scene is unavailable.');
-    const practicePreview = !assessmentEntry && profile?.order === 'fixed' && !!request.startNodeId && request.startNodeId === this.demoPracticeEntry();
+    const isolatedInspectPreview = !assessmentEntry && profile?.order === 'fixed' && !!request.startNodeId && request.startNodeId === this.demoInspectEntry();
+    const practicePreview = !assessmentEntry && profile?.order === 'fixed' && !!request.startNodeId && (request.startNodeId === this.demoPracticeEntry() || isolatedInspectPreview);
     const firstUnsupported = practicePreview ? availableSceneIds.findIndex((id) => {
       const kind = this.story.scenes.find((scene) => scene.id === id)?.interaction?.kind;
       return kind !== undefined && !this.enabled.includes(kind);
     }) : -1;
-    const sceneIds = assessmentEntry ? availableSceneIds.slice(assessmentIndex) : practicePreview
+    const sceneIds = assessmentEntry ? availableSceneIds.slice(assessmentIndex) : isolatedInspectPreview
+      ? this.pieceSceneIds(profileId).find((piece) => piece.sceneIds.includes(request.startNodeId!))?.sceneIds ?? [] : practicePreview
       ? availableSceneIds.slice(0, firstUnsupported < 0 ? availableSceneIds.length : firstUnsupported) : availableSceneIds;
     if (sceneIds.length === 0) {
       if (request.startNodeId) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
@@ -281,7 +283,7 @@ export class LocalEngine implements Engine {
     if (session.index === session.sceneIds.length) {
       const profile = this.story.demo?.profiles.find((candidate) => candidate.id === session.profileId);
       const end: Node = {
-        type: 'result', id: 'story-end', title: profile?.order === 'child_chooses' ? 'Piece complete' : 'The End', media: {}, characters: [], speakers: [], lines: [], overlays: [],
+        type: 'result', id: 'story-end', title: profile?.order === 'child_chooses' || session.practicePreview ? 'Piece complete' : 'The End', media: {}, characters: [], speakers: [], lines: [], overlays: [],
         correctFirstTry: 0, total: 0, interaction: { type: 'continue' },
       };
       return { sessionId: session.id, version: String(session.version), ageGroupId: session.ageGroupId,

@@ -16,5 +16,5 @@ Spec 4 implements the Inspect interaction in `feat/inspect-impl`, based on merge
 - `pnpm test`: 122 tests across 12 files passed.
 - `pnpm build`: TypeScript and Vite production build passed.
 - `scripts/check-content.py` through `uv` with `jsonschema` and `pyyaml`: 0 problems for both bundled stories.
-- Local Playwright browser: Inspect entry, fictional message, active keyboard focus, `aria-pressed` state, minimum Done gate, wrong feedback, correction and progression to the next lesson scene.
+- Local Playwright browser: Inspect entry, fictional message, active keyboard focus, `aria-pressed` state, minimum Done gate, wrong feedback, correction and progression. A review fix subsequently isolated the fixed-profile standalone preview to its Inspect piece; a regression test verifies it ends in “Piece complete” with Inspect enabled alone.
 - A LocalEngine integration test traverses the fixed-profile Pumpkin Gate lesson through Inspect, assessment and result when all four core interaction flags are enabled.

@@ -25,6 +25,12 @@ export function InspectView({ document, minMarks, disabled, revealIds = [], onEd
     const part = document.parts.find((candidate) => candidate.id === id)!;
     setAnnouncement(`${part.role} ${part.text} ${next.includes(id) ? 'marked' : 'unmarked'}. ${next.length} of at least ${minMarks} marked.`);
   };
+  const chooseNothingWrong = () => {
+    onEdit();
+    setSelected([]);
+    setAnnouncement('No parts marked. Nothing is wrong selected.');
+    onDone([]);
+  };
 
   return <section className={`${styles.inspect} ${styles[`inspect${document.kind}`]}`} aria-label={`Inspect ${document.kind}: ${document.title}`}>
     <header className={styles.inspectHeader}><span>{document.kind}</span><h2>{document.title}</h2></header>
@@ -37,7 +43,7 @@ export function InspectView({ document, minMarks, disabled, revealIds = [], onEd
     <p role="status" aria-live="polite" className={styles.inspectStatus}>{announcement}</p>
     <div className={styles.actions}>
       <button type="button" disabled={disabled || ordered.length < minMarks} onClick={() => onDone(ordered)}>Done</button>
-      {minMarks === 0 && <button type="button" disabled={disabled} onClick={() => onDone([])}>Nothing is wrong</button>}
+      {minMarks === 0 && <button type="button" disabled={disabled} onClick={chooseNothingWrong}>Nothing is wrong</button>}
     </div>
   </section>;
 }

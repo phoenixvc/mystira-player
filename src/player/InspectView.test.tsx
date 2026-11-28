@@ -45,7 +45,11 @@ describe('InspectView', () => {
     const done = vi.fn();
     render(<InspectView document={inspectDocument} minMarks={0} disabled={false} onEdit={() => {}} onDone={done} />);
     expect(done).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Mark sender: coinz4u.example' }));
+    expect(screen.getByRole('button', { name: 'Mark sender: coinz4u.example' }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Nothing is wrong' }));
     expect(done).toHaveBeenCalledWith([]);
+    expect(screen.getByRole('button', { name: 'Mark sender: coinz4u.example' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByRole('status').textContent).toContain('No parts marked');
   });
 });
