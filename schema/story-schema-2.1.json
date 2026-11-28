@@ -1024,7 +1024,8 @@
                         ]
                       },
                       "title": {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "\\S"
                       },
                       "parts": {
                         "type": "array",
@@ -1040,7 +1041,8 @@
                           ],
                           "properties": {
                             "id": {
-                              "type": "string"
+                              "type": "string",
+                              "pattern": "\\S"
                             },
                             "role": {
                               "enum": [
@@ -1055,13 +1057,18 @@
                               ]
                             },
                             "text": {
-                              "type": "string"
+                              "type": "string",
+                              "pattern": "\\S"
                             },
                             "image": {
                               "type": [
                                 "string",
                                 "null"
                               ]
+                            },
+                            "alt": {
+                              "type": "string",
+                              "pattern": "\\S"
                             }
                           }
                         }

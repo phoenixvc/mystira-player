@@ -231,7 +231,7 @@ export class LocalEngine implements Engine {
       target = scene.branches.find((branch, index) => (branch.id ?? `choice-${index + 1}`) === answer.choiceId)?.next_scene;
     } else if (answer.kind === 'hotspot') {
       target = scene.branches.find((branch) => branch.object_id === answer.hotspotId)?.next_scene;
-    } else if (answer.kind === 'continue' || answer.kind === 'sequence') {
+    } else if (answer.kind === 'continue' || answer.kind === 'sequence' || answer.kind === 'inspect') {
       target = scene.next_scene;
     }
     if (target) {
@@ -256,7 +256,7 @@ export class LocalEngine implements Engine {
       if (owner) return session.sceneIds.indexOf(owner.scene);
     }
     if (this.checkQuestions().some((question) => question.scene === scene.id)) return this.indexAfterCheck(session.sceneIds, scene.id);
-    if (answer.kind !== 'continue' && answer.kind !== 'choice' && answer.kind !== 'hotspot' && answer.kind !== 'sequence') {
+    if (answer.kind !== 'continue' && answer.kind !== 'choice' && answer.kind !== 'hotspot' && answer.kind !== 'sequence' && answer.kind !== 'inspect') {
       throw new EngineError('unsupported', `Navigation for '${answer.kind}' is not implemented yet.`);
     }
     if (session.index + 1 < session.sceneIds.length && this.story.lesson) return session.index + 1;
@@ -317,7 +317,7 @@ export class LocalEngine implements Engine {
       case 'choices': return answer.kind === 'choice' && interaction.options.some((option) => option.id === answer.choiceId);
       case 'hotspots': return answer.kind === 'hotspot' && interaction.spots.some((spot) => spot.id === answer.hotspotId);
       case 'sequence': return answer.kind === 'sequence' && answer.itemIds.length === interaction.items.length && new Set(answer.itemIds).size === interaction.items.length && answer.itemIds.every((id) => interaction.items.some((item) => item.id === id));
-      case 'inspect': return answer.kind === 'inspect' && answer.partIds.every((id) => interaction.document.parts.some((part) => part.id === id));
+      case 'inspect': return answer.kind === 'inspect' && answer.partIds.length >= (interaction.minMarks ?? 1) && new Set(answer.partIds).size === answer.partIds.length && answer.partIds.every((id) => interaction.document.parts.some((part) => part.id === id));
       case 'pattern': return answer.kind === 'pattern';
       case 'keypad': return answer.kind === 'keypad';
       case 'count': return answer.kind === 'count';
@@ -328,6 +328,12 @@ export class LocalEngine implements Engine {
   demoSequenceEntry(): string | undefined {
     if (!this.enabled.includes('sequence')) return undefined;
     return this.story.scenes.find((scene) => scene.interaction?.kind === 'sequence')?.id;
+  }
+
+  /** Demo-only entry for a supported inspect piece. */
+  demoInspectEntry(): string | undefined {
+    if (!this.enabled.includes('inspect')) return undefined;
+    return this.story.scenes.find((scene) => scene.interaction?.kind === 'inspect')?.id;
   }
 
   private sequenceOrder(sessionId: string, scene: StoryYaml['scenes'][number]): string[] | undefined {
@@ -353,7 +359,7 @@ export class LocalEngine implements Engine {
     if (node.interaction.type === 'choices' && answer.kind === 'choice' && 'correctId' in local) return answer.choiceId === local.correctId;
     if (node.interaction.type === 'hotspots' && answer.kind === 'hotspot' && 'correctId' in local) return answer.hotspotId === local.correctId;
     if (node.interaction.type === 'sequence' && answer.kind === 'sequence' && 'order' in local) return answer.itemIds.length === local.order.length && answer.itemIds.every((id, index) => id === local.order[index]);
-    if (node.interaction.type === 'inspect' && answer.kind === 'inspect' && 'flagged' in local) return local.flagged.every((id) => answer.partIds.includes(id));
+    if (node.interaction.type === 'inspect' && answer.kind === 'inspect' && 'flagged' in local) return answer.partIds.length === local.flagged.length && local.flagged.every((id) => answer.partIds.includes(id));
     return true;
   }
 }

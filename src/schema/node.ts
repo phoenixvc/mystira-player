@@ -47,6 +47,14 @@ function addNodeInvariants(node: Node, ctx: z.RefinementCtx): void {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local', 'order'], message: 'Practice order must contain every sequence item exactly once' });
     }
   }
+  if (node.interaction.type === 'inspect') {
+    const ids = node.interaction.document.parts.map((part) => part.id);
+    if (new Set(ids).size !== ids.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'document', 'parts'], message: 'Inspect part IDs must be unique' });
+    if ((node.interaction.minMarks ?? 1) > ids.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'minMarks'], message: 'Minimum marks exceeds the number of parts' });
+    const flagged = node.interaction.local?.flagged;
+    if (flagged && (new Set(flagged).size !== flagged.length || flagged.some((id) => !ids.includes(id)))) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local', 'flagged'], message: 'Practice flags must identify unique document parts' });
+    if (flagged && flagged.length < (node.interaction.minMarks ?? 1)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local', 'flagged'], message: 'Practice flags must meet the minimum marks' });
+  }
   if (node.type !== 'check') return;
   if ('local' in node.interaction && node.interaction.local !== undefined) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local'], message: 'Check nodes must not carry a local answer block' });
   if (node.interaction.type === 'hotspots' && node.interaction.spots.some((spot) => spot.reveal !== undefined)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'spots'], message: 'Check nodes must not carry reveal content' });

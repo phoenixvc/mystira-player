@@ -36,6 +36,25 @@
 .sequence li img { width:2.75rem; height:2.75rem; object-fit:contain; }
 .sequenceStatus { margin:0; color:var(--mp-muted); }
 @media (max-width:540px) { .sequenceColumns { grid-template-columns:1fr; } }
+.inspect { width:min(100%,960px); background:var(--mp-surface); border:2px solid var(--mp-accent); border-radius:var(--mp-radius); padding:1rem; display:grid; gap:.8rem; }
+.inspectHeader { border-bottom:2px solid var(--mp-accent); padding-bottom:.5rem; }
+.inspectHeader span { text-transform:uppercase; color:var(--mp-muted); font-size:.85em; letter-spacing:.1em; }
+.inspectHeader h2 { margin:.2rem 0; }
+.inspectmessage { max-width:720px; }
+.inspectsign { max-width:680px; text-align:center; }
+.inspectpage { box-shadow:0 3px 16px #0005; }
+.inspectParts { display:grid; gap:.5rem; }
+.inspect .inspectPart { width:100%; display:flex; align-items:center; gap:.7rem; text-align:left; font-weight:400; border-color:color-mix(in srgb,var(--mp-accent) 55%,transparent); }
+.inspect .inspectPart[aria-pressed="true"] { background:color-mix(in srgb,var(--mp-accent) 23%,var(--mp-surface)); border-width:3px; }
+.inspectMark { min-width:1.5em; font-size:1.2em; font-weight:700; }
+.inspectPartContent { display:flex; align-items:center; gap:.6rem; overflow-wrap:anywhere; }
+.inspectPartContent img { width:3.5rem; max-height:3.5rem; object-fit:contain; }
+.inspect .inspectRolesender,.inspect .inspectRolefooter { font-size:.9em; color:var(--mp-muted); }
+.inspect .inspectRoleheading { font-size:1.3em; font-weight:700; }
+.inspect .inspectRolelink { text-decoration:underline; text-underline-offset:.15em; }
+.inspect .inspectRolebutton { background:color-mix(in srgb,var(--mp-accent) 16%,var(--mp-surface)); font-weight:700; }
+.inspect .inspectRoleprice { font-weight:700; }
+.inspectStatus { margin:0; }
 .hotspot { position:absolute; z-index:2; display:grid; place-items:center; overflow:hidden; border-color:transparent!important; background:transparent!important; color:transparent!important; padding:.2rem!important; font-size:clamp(.7rem,1.5vw,1rem)!important; }
 .hotspot span { position:absolute; clip:rect(0 0 0 0); clip-path:inset(50%); width:1px; height:1px; overflow:hidden; white-space:nowrap; }
 .hotspot:hover,.hotspot:focus-visible,.hotspot.revealed { border-color:var(--mp-accent)!important; background:color-mix(in srgb,var(--mp-surface) 75%,transparent)!important; color:var(--mp-text)!important; }
