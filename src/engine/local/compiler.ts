@@ -11,7 +11,7 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   }
   const interactionKind = typeof scene.interaction === 'object' && scene.interaction !== null && 'kind' in scene.interaction
     ? scene.interaction.kind : undefined;
-  if (interactionKind !== undefined && interactionKind !== 'sequence') {
+  if (interactionKind !== undefined && interactionKind !== 'sequence' && interactionKind !== 'inspect') {
     throw new EngineError('unsupported', `Scene '${scene.id}' interaction '${String(interactionKind)}' is not implemented yet.`);
   }
 
@@ -61,6 +61,13 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
 }
 
 function buildInteraction(scene: SceneYaml, sequenceOrder?: string[]) {
+  if (scene.interaction?.kind === 'inspect') {
+    if (scene.branches.length) throw new EngineError('server', `Scene '${scene.id}' cannot mix inspect parts and branches.`);
+    const document = scene.interaction.document;
+    const flagged = scene.practice?.answer.parts;
+    const local = flagged ? { flagged, ...(feedbackFor(scene) ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+    return { type: 'inspect' as const, document: { kind: document.kind, title: document.title, parts: document.parts.map((part) => ({ id: part.id, role: part.role, text: part.text, ...(part.image ? { imageUrl: part.image, alt: part.alt } : {}) })) }, minMarks: scene.interaction.min_marks ?? 1, ...(local ? { local } : {}) };
+  }
   if (scene.interaction?.kind === 'sequence') {
     if (scene.branches.length) throw new EngineError('server', `Scene '${scene.id}' cannot mix sequence items and branches.`);
     const authored = scene.interaction.items;

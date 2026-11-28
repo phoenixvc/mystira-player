@@ -60,8 +60,10 @@ def answer_resolves(sc: dict, ans: dict, where: str) -> None:
             errors.append(f"{where}: answer order must name every sequence item of '{sc['id']}' exactly once")
     if "parts" in ans:
         parts = {p["id"] for p in inter.get("document", {}).get("parts", [])} if inter.get("kind") == "inspect" else set()
-        if not set(ans["parts"]) <= parts:
-            errors.append(f"{where}: answer parts not all in inspect document of '{sc['id']}'")
+        if len(ans["parts"]) != len(set(ans["parts"])) or not set(ans["parts"]) <= parts:
+            errors.append(f"{where}: answer parts must be unique IDs in inspect document of '{sc['id']}'")
+        if inter.get("kind") == "inspect" and len(ans["parts"]) < inter.get("min_marks", 1):
+            errors.append(f"{where}: inspect answer does not meet minimum marks")
 
 
 def boxes_ok(boxes: list[tuple[str, list[float]]], where: str) -> None:
@@ -89,6 +91,16 @@ for sc in scenes.values():
         for item in sequence_items:
             if item.get("image") and not (item.get("alt") or "").strip():
                 errors.append(f"{w}: sequence image '{item['id']}' needs alt text")
+    if interaction.get("kind") == "inspect":
+        inspect_parts = interaction.get("document", {}).get("parts", [])
+        inspect_ids = [part["id"] for part in inspect_parts]
+        if len(inspect_ids) != len(set(inspect_ids)):
+            errors.append(f"{w}: inspect part IDs must be unique")
+        if interaction.get("min_marks", 1) > len(inspect_parts):
+            errors.append(f"{w}: inspect minimum marks exceeds part count")
+        for part in inspect_parts:
+            if part.get("image") and not (part.get("alt") or "").strip():
+                errors.append(f"{w}: inspect image '{part['id']}' needs alt text")
     for b in sc.get("branches", []):
         if b.get("next_scene") and b["next_scene"] not in scenes:
             errors.append(f"{w}: branch '{b.get('id')}' goes to missing scene '{b['next_scene']}'")

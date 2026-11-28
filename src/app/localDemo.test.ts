@@ -35,4 +35,22 @@ describe('local demo bootstrap', () => {
     const step = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: demo.assessment!.entries.sequence });
     expect(step.node.interaction.type).toBe('sequence');
   });
+
+  it('exposes the fictional inspect piece with inspect enabled alone', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['inspect'] } }) }));
+    const demo = await loadLocalDemo();
+    expect(demo.assessment?.entries).toEqual({ inspect: 'what_do_they_want' });
+    const first = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: demo.assessment!.entries.inspect });
+    expect(first.node.interaction.type).toBe('inspect');
+    if (first.node.interaction.type !== 'inspect') throw new Error('Expected inspect');
+    const document = first.node.interaction.document;
+    expect(document.parts.find((part) => part.role === 'link')?.text).toContain('password');
+    for (const part of document.parts) {
+      const domains = part.text.match(/\b[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*\b/gi) ?? [];
+      expect(domains.every((domain) => domain.endsWith('.example'))).toBe(true);
+    }
+    const fixed = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: demo.assessment!.entries.inspect });
+    const completed = await demo.assessment!.engine.respond(fixed.sessionId, { answerRequestId: 'inspect-only', version: fixed.version, nodeId: fixed.node.id, answer: { kind: 'inspect', partIds: ['link', 'price'] } });
+    expect(completed.node).toMatchObject({ type: 'result', title: 'Piece complete' });
+  });
 });

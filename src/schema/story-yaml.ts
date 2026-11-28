@@ -23,11 +23,13 @@ const InteractionYamlSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('inspect'), min_marks: z.number().int().min(0).optional(),
     document: z.object({
-      kind: z.enum(['message', 'page', 'sign']), title: z.string(),
-      parts: z.array(z.object({ id: z.string(), role: z.enum(['sender', 'heading', 'text', 'link', 'button', 'image', 'price', 'footer']), text: z.string(), image: TextAsset.optional() }).strict()).min(3).max(8),
+      kind: z.enum(['message', 'page', 'sign']), title: z.string().trim().min(1),
+      parts: z.array(z.object({ id: z.string().trim().min(1), role: z.enum(['sender', 'heading', 'text', 'link', 'button', 'image', 'price', 'footer']), text: z.string().trim().min(1), image: TextAsset.optional(), alt: z.string().trim().min(1).optional() }).strict().refine((part) => !part.image || !!part.alt, 'Inspect images need alt text')).min(3).max(8).refine((parts) => new Set(parts.map((part) => part.id)).size === parts.length, 'Inspect part IDs must be unique'),
     }).strict(),
   }).strict(),
-]);
+]).superRefine((interaction, ctx) => {
+  if (interaction.kind === 'inspect' && (interaction.min_marks ?? 1) > interaction.document.parts.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['min_marks'], message: 'Minimum marks exceeds the number of parts' });
+});
 
 export const CharacterYamlSchema = z.object({
   id: z.string(), name: z.string(), image: TextAsset, audio: TextAsset, metadata: RequiredOpaque,

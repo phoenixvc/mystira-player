@@ -13,6 +13,56 @@ const first: Step = {
 const second: Step = { ...first, version: '2', canGoBack: true, progress: { done: 1, total: 2 }, node: { ...first.node, id: 'hall', title: 'In the hall' } };
 
 describe('Player', () => {
+  const inspectParts = [
+    { id: 'sender', role: 'sender' as const, text: 'coinz4u.example' },
+    { id: 'link', role: 'link' as const, text: 'Enter a password' },
+    { id: 'price', role: 'price' as const, text: 'R9.99' },
+  ];
+
+  it('submits inspect marks only on Done in open mode', async () => {
+    const step: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'inspect', document: { kind: 'message', title: 'Offer', parts: inspectParts }, minMarks: 2 } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(step), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    const done = await screen.findByRole('button', { name: 'Done' });
+    expect(done.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Mark price: R9.99' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mark link: Enter a password' }));
+    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(done);
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'inspect', partIds: ['link', 'price'] } }), expect.anything()));
+  });
+
+  it('keeps wrong inspect practice local and uses shared feedback and reveal', async () => {
+    const step: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'inspect', document: { kind: 'message', title: 'Offer', parts: inspectParts }, local: { flagged: ['link'], feedback: { hint: { text: 'Look at what they ask for.' }, revealAfter: 1 } } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(step), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('button', { name: 'Mark sender: coinz4u.example' });
+    fireEvent.click(screen.getByRole('button', { name: 'Mark sender: coinz4u.example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.getByText('Look at what they ask for.')).toBeTruthy();
+    expect(screen.getByText(/Look again at Enter a password/)).toBeTruthy();
+    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Mark sender: coinz4u.example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mark link: Enter a password' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'inspect', partIds: ['link'] }, wrongTries: 1 }), expect.anything()));
+  });
+
+  it('confirms an explicit empty inspect check response', async () => {
+    const step: Step = { ...first, node: { ...first.node, type: 'check', task: undefined, question: { text: 'What looks wrong?' }, attempt: 1, scored: true, lines: [], interaction: { type: 'inspect', document: { kind: 'sign', title: 'Notice', parts: inspectParts }, minMarks: 0 } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(step), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    const confirm = await screen.findByRole('button', { name: "That's my answer" });
+    expect(confirm.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Nothing is wrong' }));
+    expect(respond).not.toHaveBeenCalled();
+    expect(confirm.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(confirm);
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'inspect', partIds: [] } }), expect.anything()));
+  });
   const sequenceItems = [{ id: 'ear', label: 'Someone told me' }, { id: 'eye', label: 'I saw it' }, { id: 'book', label: 'I read it' }];
 
   it('places sequence items in Engine order, supports Undo, and submits only after Done in open mode', async () => {

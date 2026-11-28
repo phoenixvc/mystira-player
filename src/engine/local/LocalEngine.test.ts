@@ -3,6 +3,7 @@ import { LocalEngine } from './LocalEngine';
 import type { StoryYaml } from '../../schema/story-yaml';
 import { StoryYamlSchema } from '../../schema/story-yaml';
 import { parse } from 'yaml';
+import type { Answer } from '../types';
 import pumpkinGate from '../../../content/manor/pumpkin-gate.story.yaml?raw';
 
 const story = {
@@ -190,6 +191,58 @@ describe('LocalEngine', () => {
     expect(wrong.node.id).toBe(first.node.id);
     const done = await engine.respond(first.sessionId, { answerRequestId: 'correct', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'book', 'ear'] } });
     expect(done.node).toMatchObject({ type: 'result', title: 'Piece complete' });
+  });
+
+  it('plays the full fixed-profile lesson through Inspect, check, and result when all core interactions are enabled', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots', 'sequence', 'inspect']);
+    let step = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }] });
+    const visited: string[] = [];
+    for (let index = 0; index < 25 && step.node.id !== 'story-end'; index += 1) {
+      visited.push(step.node.id);
+      const interaction = step.node.interaction;
+      let answer: Answer;
+      switch (interaction.type) {
+        case 'continue': answer = { kind: 'continue' }; break;
+        case 'choices': answer = { kind: 'choice', choiceId: step.node.type === 'check' ? 'who' : interaction.local?.correctId ?? interaction.options[0]!.id }; break;
+        case 'hotspots': answer = { kind: 'hotspot', hotspotId: interaction.local?.correctId ?? interaction.spots[0]!.id }; break;
+        case 'sequence': answer = { kind: 'sequence', itemIds: interaction.local?.order ?? interaction.items.map((item) => item.id) }; break;
+        case 'inspect': answer = { kind: 'inspect', partIds: interaction.local?.flagged ?? interaction.document.parts.slice(0, interaction.minMarks ?? 1).map((part) => part.id) }; break;
+        default: throw new Error(`Unexpected interaction ${interaction.type}`);
+      }
+      step = await engine.respond(step.sessionId, { answerRequestId: `full-${index}`, version: step.version, nodeId: step.node.id, answer });
+    }
+    expect(visited).toContain('what_do_they_want');
+    expect(visited).toContain('q1_free_coins');
+    expect(visited).toContain('gate_opens');
+    expect(step.node.id).toBe('story-end');
+  });
+
+  it('validates inspect answers, keeps incorrect practice local, and completes the chosen piece', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['inspect']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: engine.demoInspectEntry() });
+    expect(first.node.interaction).toMatchObject({ type: 'inspect', minMarks: 1, local: { flagged: ['link', 'price'] } });
+    await expect(engine.respond(first.sessionId, { answerRequestId: 'empty', version: first.version, nodeId: first.node.id, answer: { kind: 'inspect', partIds: [] } })).rejects.toMatchObject({ kind: 'unsupported' });
+    await expect(engine.respond(first.sessionId, { answerRequestId: 'dup', version: first.version, nodeId: first.node.id, answer: { kind: 'inspect', partIds: ['link', 'link'] } })).rejects.toMatchObject({ kind: 'unsupported' });
+    const wrong = await engine.respond(first.sessionId, { answerRequestId: 'extra', version: first.version, nodeId: first.node.id, answer: { kind: 'inspect', partIds: ['sender', 'link', 'price'] } });
+    expect(wrong.node.id).toBe(first.node.id);
+    const done = await engine.respond(first.sessionId, { answerRequestId: 'correct', version: first.version, nodeId: first.node.id, answer: { kind: 'inspect', partIds: ['price', 'link'] } });
+    expect(done.node).toMatchObject({ type: 'result', title: 'Piece complete' });
+  });
+
+  it('keeps inspect check keys private and scores an explicit empty answer', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const original = gate.scenes.find((scene) => scene.id === 'q1_free_coins')!;
+    const inspectScene: StoryYaml['scenes'][number] = { ...original, branches: [], practice: undefined, interaction: { kind: 'inspect', min_marks: 0, document: { kind: 'sign', title: 'A safe notice', parts: ['a', 'b', 'c'].map((id) => ({ id, role: 'text', text: id })) } } };
+    const checkStory: StoryYaml = { ...gate, scenes: gate.scenes.map((scene) => scene.id === original.id ? inspectScene : scene), lesson: { ...gate.lesson!, checks: [{ ...gate.lesson!.checks![0]!, questions: [{ id: 'q1', scene: original.id, answer: { parts: [] }, research: [] }] }] } };
+    const engine = new LocalEngine(checkStory, ['choices', 'hotspots', 'inspect']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: 'assessment' });
+    expect(first.node).toMatchObject({ type: 'check', interaction: { type: 'inspect', minMarks: 0 } });
+    expect(JSON.stringify(first.node)).not.toContain('"flagged"');
+    expect(JSON.stringify(first.node)).not.toContain('"answer"');
+    const result = await engine.respond(first.sessionId, { answerRequestId: 'empty', version: first.version, nodeId: first.node.id, answer: { kind: 'inspect', partIds: [] } });
+    expect(result.node).toMatchObject({ type: 'result', correctFirstTry: 1, total: 1 });
   });
 
   it('keeps sequence check answers private and scores only the first confirmed try', async () => {

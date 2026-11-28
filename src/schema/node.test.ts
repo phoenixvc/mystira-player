@@ -49,6 +49,23 @@ describe('node validation', () => {
     expect(NodeSchema.safeParse({ ...sequence, interaction: { ...sequence.interaction, local: { order: ['eye', 'eye', 'ear'] } } }).success).toBe(false);
   });
 
+  it('validates inspect part bounds, unique IDs, images, minimum marks, and practice flags', () => {
+    const parts = ['sender', 'link', 'price'].map((id) => ({ id, role: 'text', text: id }));
+    const inspect = { ...base, type: 'scene', interaction: { type: 'inspect', document: { kind: 'message', title: 'Example', parts }, local: { flagged: ['link'] } } };
+    expect(NodeSchema.safeParse(inspect).success).toBe(true);
+    expect(createNodeValidator([]).safeParse(inspect).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, document: { ...inspect.interaction.document, parts: parts.slice(0, 2) } } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, document: { ...inspect.interaction.document, parts: Array.from({ length: 9 }, (_, id) => ({ id: String(id), role: 'text', text: String(id) })) } } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, document: { ...inspect.interaction.document, parts: [parts[0], parts[0], parts[2]] } } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, minMarks: 4 } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, minMarks: 0, local: { flagged: [] } } }).success).toBe(true);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, local: { flagged: [] } } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, local: { flagged: ['missing'] } } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, document: { ...inspect.interaction.document, parts: [{ ...parts[0], imageUrl: '/x.png' }, ...parts.slice(1)] } } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, document: { ...inspect.interaction.document, parts: [{ ...parts[0], imageUrl: '/x.png', alt: 'A sender' }, ...parts.slice(1)] } } }).success).toBe(true);
+    expect(NodeSchema.safeParse({ ...inspect, interaction: { ...inspect.interaction, document: { ...inspect.interaction.document, parts: [{ id: 'x', role: 'unsupported', text: 'x' }, ...parts.slice(1)] } } }).success).toBe(false);
+  });
+
   it('round trips generated continue nodes without changing their runtime shape', () => {
     for (let seed = 0; seed < 24; seed += 1) {
       const authored = {

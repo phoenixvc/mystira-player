@@ -74,4 +74,13 @@ describe('local scene compilation', () => {
     expect(JSON.stringify(node)).not.toContain('"answer"');
     expect(() => compileScene(scene, story, ['sequence'], 'demo_daan', ['ear', 'eye', 'eye'])).toThrow(/invalid Engine-supplied sequence order/);
   });
+
+  it('compiles inspect parts and transformed practice flags only when enabled', () => {
+    const scene = story.scenes.find((candidate) => candidate.id === 'what_do_they_want')!;
+    expect(() => compileScene(scene, story, [])).toThrow(/Unsupported interaction: inspect/);
+    const node = compileScene(scene, story, ['inspect']);
+    expect(node.interaction).toMatchObject({ type: 'inspect', minMarks: 1, document: { kind: 'message', title: 'FREE COINS!!!', parts: [{ id: 'sender' }, { id: 'body' }, { id: 'link' }, { id: 'price' }] }, local: { flagged: ['link', 'price'] } });
+    expect(JSON.stringify(node)).not.toContain('"answer"');
+    expect(NodeSchema.parse(JSON.parse(JSON.stringify(node)))).toEqual(node);
+  });
 });
