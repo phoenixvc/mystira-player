@@ -176,6 +176,43 @@ describe('LocalEngine', () => {
     expect(end.node).toMatchObject({ id: 'story-end', type: 'result' });
   });
 
+  it('mixes sequence items once per session, rejects malformed answers, and completes the chosen piece', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots', 'sequence']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: 'how_know_teach' });
+    expect(first.node.interaction.type).toBe('sequence');
+    if (first.node.interaction.type !== 'sequence') throw new Error('Expected sequence');
+    const displayed = first.node.interaction.items.map((item) => item.id);
+    expect(displayed).not.toEqual(['eye', 'book', 'ear']);
+    expect((await engine.resumeSession(first.sessionId)).node.interaction).toEqual(first.node.interaction);
+    await expect(engine.respond(first.sessionId, { answerRequestId: 'duplicate', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'eye', 'ear'] } })).rejects.toMatchObject({ kind: 'unsupported' });
+    const wrong = await engine.respond(first.sessionId, { answerRequestId: 'wrong', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['ear', 'book', 'eye'] } });
+    expect(wrong.node.id).toBe(first.node.id);
+    const done = await engine.respond(first.sessionId, { answerRequestId: 'correct', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'book', 'ear'] } });
+    expect(done.node).toMatchObject({ type: 'result', title: 'Piece complete' });
+  });
+
+  it('keeps sequence check answers private and scores only the first confirmed try', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const original = gate.scenes.find((scene) => scene.id === 'q1_free_coins')!;
+    const sequenceScene: StoryYaml['scenes'][number] = { ...original, branches: [], practice: undefined, interaction: { kind: 'sequence', items: [
+      { id: 'eye', label: 'Saw it' }, { id: 'book', label: 'Read it' }, { id: 'ear', label: 'Heard it' },
+    ] } };
+    const sequenceStory: StoryYaml = { ...gate, scenes: gate.scenes.map((scene) => scene.id === original.id ? sequenceScene : scene), lesson: { ...gate.lesson!, checks: [{ ...gate.lesson!.checks![0]!, questions: [{ id: 'q1', scene: original.id, answer: { order: ['eye', 'book', 'ear'] }, research: [] }] }] } };
+    const engine = new LocalEngine(sequenceStory, ['choices', 'hotspots', 'sequence']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: 'assessment' });
+    expect(first.node).toMatchObject({ type: 'check', attempt: 1, scored: true });
+    expect(JSON.stringify(first.node)).not.toContain('"answer"');
+    expect(JSON.stringify(first.node)).not.toContain('"order"');
+    const retry = await engine.respond(first.sessionId, { answerRequestId: 'wrong', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['ear', 'book', 'eye'] } });
+    expect(retry.node).toMatchObject({ type: 'check', attempt: 2, scored: false });
+    const result = await engine.respond(retry.sessionId, { answerRequestId: 'correct-second', version: retry.version, nodeId: retry.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'book', 'ear'] } });
+    expect(result.node).toMatchObject({ type: 'result', correctFirstTry: 0, total: 1 });
+    const direct = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: 'assessment' });
+    const scored = await engine.respond(direct.sessionId, { answerRequestId: 'correct-first', version: direct.version, nodeId: direct.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'book', 'ear'] } });
+    expect(scored.node).toMatchObject({ type: 'result', correctFirstTry: 1, total: 1 });
+  });
+
   it('finishes a child-chosen piece when its authored next scene belongs to a different profile version', async () => {
     const gate = StoryYamlSchema.parse(parse(pumpkinGate));
     const engine = new LocalEngine(gate, ['choices', 'hotspots']);

@@ -56,7 +56,7 @@ def answer_resolves(sc: dict, ans: dict, where: str) -> None:
         errors.append(f"{where}: answer object '{ans['object']}' not in scene '{sc['id']}'")
     if "order" in ans:
         items = {i["id"] for i in inter.get("items", [])} if inter.get("kind") == "sequence" else set()
-        if set(ans["order"]) != items:
+        if len(ans["order"]) != len(items) or set(ans["order"]) != items:
             errors.append(f"{where}: answer order must name every sequence item of '{sc['id']}' exactly once")
     if "parts" in ans:
         parts = {p["id"] for p in inter.get("document", {}).get("parts", [])} if inter.get("kind") == "inspect" else set()
@@ -80,6 +80,15 @@ def boxes_ok(boxes: list[tuple[str, list[float]]], where: str) -> None:
 
 for sc in scenes.values():
     w = f"scene '{sc['id']}'"
+    interaction = sc.get("interaction") or {}
+    if interaction.get("kind") == "sequence":
+        sequence_items = interaction.get("items", [])
+        sequence_ids = [item["id"] for item in sequence_items]
+        if len(sequence_ids) != len(set(sequence_ids)):
+            errors.append(f"{w}: sequence item IDs must be unique")
+        for item in sequence_items:
+            if item.get("image") and not (item.get("alt") or "").strip():
+                errors.append(f"{w}: sequence image '{item['id']}' needs alt text")
     for b in sc.get("branches", []):
         if b.get("next_scene") and b["next_scene"] not in scenes:
             errors.append(f"{w}: branch '{b.get('id')}' goes to missing scene '{b['next_scene']}'")

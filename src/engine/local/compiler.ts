@@ -5,13 +5,13 @@ import { EngineError } from '../types';
 
 const FALLBACK_COLOUR = '#A9C0DC';
 
-export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: InteractionType[] = [], profileId?: string): Node {
+export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: InteractionType[] = [], profileId?: string, sequenceOrder?: string[]): Node {
   if (scene.type === 'roll' || scene.type === 'special' || (scene.media.stage3d != null && scene.media.image == null && scene.media.video == null)) {
     throw new EngineError('unsupported', `Scene '${scene.id}' uses an unsupported 3D or special presentation.`);
   }
   const interactionKind = typeof scene.interaction === 'object' && scene.interaction !== null && 'kind' in scene.interaction
     ? scene.interaction.kind : undefined;
-  if (interactionKind !== undefined) {
+  if (interactionKind !== undefined && interactionKind !== 'sequence') {
     throw new EngineError('unsupported', `Scene '${scene.id}' interaction '${String(interactionKind)}' is not implemented yet.`);
   }
 
@@ -37,7 +37,7 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   const piece = story.lesson?.pieces.find((candidate) => candidate.scenes?.includes(scene.id) || candidate.versions?.some((version) => version.scenes.includes(scene.id)));
   const differsByProfile = piece !== undefined && new Set((story.demo?.profiles ?? []).map((candidate) => candidate.versions?.[piece.id] ?? piece.versions?.[0]?.id ?? '')).size > 1;
   const rationaleText = piece ? profile?.rationale?.[piece.id] : undefined;
-  const interaction = buildInteraction(scene);
+  const interaction = buildInteraction(scene, sequenceOrder);
   const node = {
     type: 'scene' as const, id: scene.id, title: scene.title,
     media: {
@@ -60,7 +60,23 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   return parsed.data;
 }
 
-function buildInteraction(scene: SceneYaml) {
+function buildInteraction(scene: SceneYaml, sequenceOrder?: string[]) {
+  if (scene.interaction?.kind === 'sequence') {
+    if (scene.branches.length) throw new EngineError('server', `Scene '${scene.id}' cannot mix sequence items and branches.`);
+    const authored = scene.interaction.items;
+    const ids = authored.map((item) => item.id);
+    const order = sequenceOrder ?? ids;
+    if (order.length !== ids.length || new Set(order).size !== ids.length || order.some((id) => !ids.includes(id))) {
+      throw new EngineError('server', `Scene '${scene.id}' has an invalid Engine-supplied sequence order.`);
+    }
+    const items = order.map((id) => {
+      const item = authored.find((entry) => entry.id === id)!;
+      return { id: item.id, label: item.label, ...(item.image ? { imageUrl: item.image, alt: item.alt } : {}) };
+    });
+    const practiceOrder = scene.practice?.answer.order;
+    const local = practiceOrder ? { order: practiceOrder, ...(feedbackFor(scene) ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+    return { type: 'sequence' as const, items, ...(local ? { local } : {}) };
+  }
   const branches = scene.branches;
   if (branches.length) {
     const answer = scene.practice?.answer;

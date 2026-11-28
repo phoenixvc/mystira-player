@@ -35,6 +35,20 @@ describe('node validation', () => {
     expect(createNodeValidator(['choices']).safeParse(base).success).toBe(true);
   });
 
+  it('validates bounded sequence items, unique IDs, image alt text, and an exact practice permutation', () => {
+    const items = ['eye', 'book', 'ear'].map((id) => ({ id, label: id }));
+    const sequence = { ...base, type: 'scene', interaction: { type: 'sequence', items, local: { order: ['eye', 'book', 'ear'] } } };
+    expect(createNodeValidator(['sequence']).safeParse(sequence).success).toBe(true);
+    expect(NodeSchema.safeParse({ ...sequence, interaction: { ...sequence.interaction, items: [...items, { id: 'four', label: 'Four' }, { id: 'five', label: 'Five' }], local: { order: ['eye', 'book', 'ear', 'four', 'five'] } } }).success).toBe(true);
+    expect(createNodeValidator([]).safeParse(sequence).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...sequence, interaction: { ...sequence.interaction, items: items.slice(0, 2) } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...sequence, interaction: { ...sequence.interaction, items: [...items, ...items] } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...sequence, interaction: { ...sequence.interaction, items: [items[0], items[0], items[2]] } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...sequence, interaction: { ...sequence.interaction, items: [{ ...items[0], imageUrl: '/eye.webp' }, ...items.slice(1)] } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...sequence, interaction: { ...sequence.interaction, items: [{ ...items[0], imageUrl: '/eye.webp', alt: 'A child looking' }, ...items.slice(1)] } }).success).toBe(true);
+    expect(NodeSchema.safeParse({ ...sequence, interaction: { ...sequence.interaction, local: { order: ['eye', 'eye', 'ear'] } } }).success).toBe(false);
+  });
+
   it('round trips generated continue nodes without changing their runtime shape', () => {
     for (let seed = 0; seed < 24; seed += 1) {
       const authored = {

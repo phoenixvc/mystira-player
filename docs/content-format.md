@@ -153,7 +153,7 @@ Choices and tap targets already exist in the format. The two interactions that d
     interaction:                          # NEW
       kind: sequence
       items:
-        - { id: eye,  label: "I saw it myself",        image: assets/eye.webp }
+        - { id: eye,  label: "I saw it myself",        image: assets/eye.webp, alt: "An eye" }
         - { id: book, label: "I learned it from a book" }
         - { id: ear,  label: "Someone told me" }
     practice: { answer: { order: [eye, book, ear] }, hint: { text: "Which one is the surest?" } }

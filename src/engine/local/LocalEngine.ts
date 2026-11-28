@@ -231,7 +231,7 @@ export class LocalEngine implements Engine {
       target = scene.branches.find((branch, index) => (branch.id ?? `choice-${index + 1}`) === answer.choiceId)?.next_scene;
     } else if (answer.kind === 'hotspot') {
       target = scene.branches.find((branch) => branch.object_id === answer.hotspotId)?.next_scene;
-    } else if (answer.kind === 'continue') {
+    } else if (answer.kind === 'continue' || answer.kind === 'sequence') {
       target = scene.next_scene;
     }
     if (target) {
@@ -256,7 +256,7 @@ export class LocalEngine implements Engine {
       if (owner) return session.sceneIds.indexOf(owner.scene);
     }
     if (this.checkQuestions().some((question) => question.scene === scene.id)) return this.indexAfterCheck(session.sceneIds, scene.id);
-    if (answer.kind !== 'continue' && answer.kind !== 'choice' && answer.kind !== 'hotspot') {
+    if (answer.kind !== 'continue' && answer.kind !== 'choice' && answer.kind !== 'hotspot' && answer.kind !== 'sequence') {
       throw new EngineError('unsupported', `Navigation for '${answer.kind}' is not implemented yet.`);
     }
     if (session.index + 1 < session.sceneIds.length && this.story.lesson) return session.index + 1;
@@ -291,7 +291,7 @@ export class LocalEngine implements Engine {
     const sceneId = session.sceneIds[session.index];
     const scene = this.story.scenes.find((candidate) => candidate.id === sceneId);
     if (!scene) throw new EngineError('notFound', `Scene '${sceneId ?? ''}' was not found in the story.`);
-    const base = compileScene(scene, this.story, this.enabled, session.profileId);
+    const base = compileScene(scene, this.story, this.enabled, session.profileId, this.sequenceOrder(session.id, scene));
     const question = this.checkQuestions().find((item) => item.scene === scene.id);
     let node: Node = base;
     if (question) {
@@ -316,12 +316,33 @@ export class LocalEngine implements Engine {
       case 'continue': return answer.kind === 'continue';
       case 'choices': return answer.kind === 'choice' && interaction.options.some((option) => option.id === answer.choiceId);
       case 'hotspots': return answer.kind === 'hotspot' && interaction.spots.some((spot) => spot.id === answer.hotspotId);
-      case 'sequence': return answer.kind === 'sequence' && answer.itemIds.length === interaction.items.length;
+      case 'sequence': return answer.kind === 'sequence' && answer.itemIds.length === interaction.items.length && new Set(answer.itemIds).size === interaction.items.length && answer.itemIds.every((id) => interaction.items.some((item) => item.id === id));
       case 'inspect': return answer.kind === 'inspect' && answer.partIds.every((id) => interaction.document.parts.some((part) => part.id === id));
       case 'pattern': return answer.kind === 'pattern';
       case 'keypad': return answer.kind === 'keypad';
       case 'count': return answer.kind === 'count';
     }
+  }
+
+  /** Demo-only entry for a supported sequence piece. */
+  demoSequenceEntry(): string | undefined {
+    if (!this.enabled.includes('sequence')) return undefined;
+    return this.story.scenes.find((scene) => scene.interaction?.kind === 'sequence')?.id;
+  }
+
+  private sequenceOrder(sessionId: string, scene: StoryYaml['scenes'][number]): string[] | undefined {
+    if (scene.interaction?.kind !== 'sequence') return undefined;
+    const ids = scene.interaction.items.map((item) => item.id);
+    let seed = 2166136261;
+    for (const character of `${sessionId}:${scene.id}`) seed = Math.imul(seed ^ character.charCodeAt(0), 16777619);
+    const mixed = [...ids];
+    for (let index = mixed.length - 1; index > 0; index -= 1) {
+      seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+      const target = (seed >>> 0) % (index + 1);
+      [mixed[index], mixed[target]] = [mixed[target]!, mixed[index]!];
+    }
+    if (mixed.every((id, index) => id === ids[index])) mixed.push(mixed.shift()!);
+    return mixed;
   }
 
   private practiceAnswerIsCorrect(node: Node, answer: Answer): boolean {
