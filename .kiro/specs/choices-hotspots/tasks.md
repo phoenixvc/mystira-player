@@ -2,14 +2,14 @@
 
 Spec 2 follows the core contracts and continue-only renderer. Specs 3 and 4 depend on the shared machinery defined here.
 
-- [ ] 0. Review and freeze the approved practice-outcome extension before implementation.
-  - [ ] 0.1 Review the proposed answer-ID-keyed YAML shape, uniqueness/reference validation, and fallback precedence with the Spec 2 owner.
-  - [ ] 0.2 Confirm how a correct-selection image and explanatory line complete when narration is unavailable or disabled; preserve an accessible text path and explicit Next.
-  - Requirements: CH1.6–CH1.7, CH2.7, CH5.6–CH5.8
+- [x] 0. Review and freeze the approved practice-outcome extension before implementation.
+  - [x] 0.1 Freeze the answer-ID-keyed YAML shape, uniqueness/reference validation, and fallback precedence against the approved product behavior and existing Story YAML/Engine contracts.
+  - [x] 0.2 Freeze the correct-selection image/line completion rule: authored alt text, accessible text, narration completion or explicit skip before Next, and immediate Next when narration is off or unavailable.
+  - Requirements: CH1.6–CH1.8, CH2.7, CH5.6–CH5.9
 - [ ] 1. Complete choice/hotspot schemas and config gating.
   - [ ] 1.1 Validate stable choice/object IDs, labels, positions and practice-local data.
   - [ ] 1.2 Enforce check-only schema invariants and attempt/scoring consistency.
-  - [ ] 1.3 After task 0, validate optional answer-ID-keyed practice outcomes and reject unknown or duplicate IDs and any check-node outcome block.
+  - [ ] 1.3 Validate optional answer-ID-keyed practice outcomes and reject unknown or duplicate IDs, duplicate YAML keys, missing image alt text, and any check-node outcome block; align optional hint in the runtime schema.
   - Requirements: CH1–CH3
 - [ ] 2. Compile the assessment path.
   - [ ] 2.1 Keep check answers Engine-private and compile first-attempt check nodes.
@@ -37,5 +37,5 @@ Spec 2 follows the core contracts and continue-only renderer. Specs 3 and 4 depe
   - [ ] 6.1 Add schema, compiler, component and mode property tests.
   - [ ] 6.2 Verify answer privacy, scoring, navigation and config gating.
   - [ ] 6.3 Document the mode/feedback API for Specs 3 and 4.
-  - [ ] 6.4 Cover keyed-feedback precedence, absent outcome fallback, changed-image/line ordering, narration-disabled access and check-mode answer privacy.
+  - [ ] 6.4 Cover keyed-feedback precedence, absent outcome fallback, changed-image/line ordering, narration-disabled/failed/stalled access, explicit skip, auto-advance suppression, retry idempotency and check-mode answer privacy.
   - Requirements: CH1–CH6

@@ -123,6 +123,23 @@ characters:
     host_slot: null                       # NEW: a slot the host may fill on this scene
 ```
 
+Spec 2 freezes an optional practice-outcome extension for choice and hotspot scenes. It is a planned content contract until Spec 2 schema and renderer tasks implement it; current validators still reject `practice.outcomes`. The map keys are the stable submitted branch IDs or hotspot `object_id` values. When outcomes are used, choice branches require explicit unique IDs. Wrong IDs can carry `on_wrong`; only the correct choice ID can carry `on_correct`:
+
+```yaml
+practice:
+  answer: { branch: video }
+  hint: { text: "Listen to Kai again." }
+  outcomes:
+    teacher:
+      on_wrong: { text: "Kai heard it from a video, not a teacher." }
+    video:
+      on_correct:
+        image: { src: assets/kai-shows-video.webp, alt: "Kai shows Milo the video on a tablet" }
+        line: { text: "Kai shows Milo the video he saw.", audio: null }
+```
+
+Each outcome entry has exactly one of `on_wrong` or `on_correct`; the latter is choice-only. Text and image alt text must be non-blank. If there is no keyed wrong message, feedback falls back to per-try `on_wrong`, then `hint`, then “Not yet. Try again.” Without `on_correct`, a correct choice keeps its existing progression. With it, the image and line appear before Next; narration must finish or be explicitly skipped before Next is enabled. Narration off or unavailable never blocks the text path. Check scenes cannot use practice outcomes or expose answer-keyed data.
+
 `slot` takes `left`, `center` or `right`, the 2D subset of the existing `stage_slot` values. `reactions` takes `jump`, `startle` or `wave`; tapping the character plays one, and it never counts as an answer.
 
 ### Sequence and inspect
@@ -294,6 +311,7 @@ A Kiro hook and a CI step run `scripts/check-content.py schema/story-schema-2.1.
 
 - the file is valid Mystira story content (required story fields present);
 - every `lesson`, `practice`, `answer`, `object_id` and `cast` reference resolves;
+- once Spec 2 implementation lands, outcome keys resolve to unique explicit choice IDs or unique hotspot object IDs, and duplicate YAML map keys are rejected;
 - no check scene has `practice`, `task` or `reveal`;
 - object and door boxes lie inside the picture and do not overlap;
 - interactions are within their limits (choices 2 to 4, targets 2 to 6, sequence 3 to 5, inspect parts 3 to 8);

@@ -16,11 +16,11 @@ Apply check refinements to the completed node union so they run after discrimina
 
 Choice and hotspot components consume typed runtime nodes and submit stable IDs using the core Engine respond contract. Both are gated by config interactions.enabled. Components use the shared mode classifier; correctness stays in the Engine in open and check modes. In practice, the local block supports deterministic feedback. Hotspot practice must not mark a wrong location with an explicit miss indicator.
 
-### Approved practice outcome behavior; proposed authoring shape
+### Frozen practice outcome contract (task 0)
 
-Baton Spec 2 decision `e3f1c06f` approves answer-specific wrong-choice feedback and an optional changed scene image with an explanatory line after a correct practice choice, before Next. The product behavior is approved; the exact YAML shape and fallbacks below are a proposal to review and freeze in task 0 before schema or renderer implementation. Keep legacy practice stories valid without this extension.
+Baton Spec 2 decision `e3f1c06f` approves answer-specific wrong-choice feedback and an optional changed scene image with an explanatory line after a correct practice choice, before Next. Task 0 freezes the following authoring and runtime contract for Spec 2. This is a design decision; schema, compiler and renderer implementation remain in tasks 1–6. Existing practice stories without `outcomes` stay valid.
 
-Proposed authoring form: an optional `practice.outcomes` map keyed by the stable branch ID or object ID already submitted by the interaction. An entry may supply `on_wrong` for that answer. The correct answer's entry may also supply `on_correct`, with an optional replacement image and a required explanatory line when present. For example:
+Authoring uses optional `practice.outcomes`, a map keyed by the submitted stable branch ID or hotspot object ID. Wrong choice and hotspot entries contain `on_wrong`. Only the correct **choice** may contain `on_correct`, whose `line` is required and whose replacement `image` is optional. A replacement image carries its own non-empty alt text:
 
 ```yaml
 practice:
@@ -32,15 +32,15 @@ practice:
       on_wrong: { text: "Kai heard it from a video, not a teacher." }
     video:
       on_correct:
-        image: assets/kai-shows-video.webp
+        image: { src: assets/kai-shows-video.webp, alt: "Kai shows Milo the video on a tablet" }
         line: { text: "Kai shows Milo the video he saw.", audio: null }
 ```
 
-The schema must accept only keys that match a choice or object ID in the same scene, reject duplicate IDs at the interaction source, and reject `on_correct` on an incorrect ID. Check nodes cannot carry `practice` or these outcome data. The compiler maps authored values to typed practice-local data, never copies the raw content `answer` object, and does not expose check answers. Open mode continues to submit the selected ID to the Engine without local judgment.
+Validation rules: `outcomes` is allowed only on a choice or hotspot scene with `practice`; it is a non-empty map when present. A choice scene must give every branch an explicit, unique, non-empty `id` when it uses outcomes; generated `choice-N` fallback IDs are not valid authoring keys. A hotspot scene uses each branch's unique, non-empty `object_id`, which must resolve to an object with usable bounds. Every outcome key must match one of those submitted IDs. A wrong ID entry must contain only `on_wrong`; the correct ID entry may contain only `on_correct` and is allowed only for choices. Require non-blank feedback/line text and image `src`/`alt` when an image is present. Reject duplicate YAML map keys during parsing, rather than allowing the last value to win. Check scenes cannot carry `practice` or outcomes. Sequence and inspect practice blocks do not accept outcomes in this Spec 2 extension.
 
-For a wrong practice selection, look up that ID's `on_wrong` first. If absent, use per-try `practice.on_wrong[n-1]`, then `practice.hint`, then “Not yet. Try again.” An authored answer-specific message does not reset the wrong-try count or bypass revealAfter. Hotspots retain the no-wrong-location-marker rule. For a correct practice selection without `on_correct`, preserve the existing progression. With `on_correct`, hold the correct selection and wrong-try count locally; retain the current scene, replace only its displayed scene image when supplied, display the explanatory line, and play its narration when enabled and available. Offer Next after the line is presented; if audio is disabled or unavailable, its text remains available and Next does not wait on audio. Next submits the held answer exactly once through the Engine, then uses the returned step. Navigation away, replay, or session switch must cancel stale audio and presentation. The runtime should let a child explicitly proceed if playback stalls.
+The compiler maps authored outcomes into typed `local.outcomes` entries and maps `src` to `imageUrl`; it never copies the raw content `answer` object onto a node. Shared `Feedback` retains its per-try fields; keyed outcomes belong only to choice/hotspot locals. In open mode, the selected ID goes straight to the Engine. In check mode, the Engine alone judges and no outcome data reaches the renderer.
 
-Do not use this practice presentation to indicate correctness on first-attempt or follow-up checks. The Engine owns check judgment, score, and subsequent steps. The design review must decide whether the proposed map and field names become the 2.1 content contract, and record any revisions before task 1.3 or task 3.4 begins.
+For a wrong practice selection, look up that ID's `on_wrong` first. If absent, use per-try `practice.on_wrong[n-1]`, then `practice.hint`, then “Not yet. Try again.” An authored keyed message still increments the wrong-try count and does not bypass `revealAfter`. Hotspots retain the no-wrong-location-marker rule. For a correct practice choice without `on_correct`, preserve the existing progression. With `on_correct`, hold the correct selection and wrong-try count locally; keep the current node active; replace only its displayed scene image when supplied; show the explanatory line as text; and begin recorded audio or speech fallback when narration is enabled. Suppress scene `autoAdvance` for this presentation. Enable Next when narration finishes. If narration is disabled, unavailable, or fails, enable Next as soon as text appears. Offer an explicit skip/continue-without-audio control while narration is pending so a stalled playback cannot trap the child; that control enables Next. Next submits the held answer once with `wrongTries`, then uses the Engine's returned Step. Repeated Next or network retries preserve the same `answerRequestId` until the response resolves. Navigation away, replay, or session switch cancels stale audio and presentation.
 
 ## Assessment/research/result compilation
 
@@ -248,7 +248,7 @@ function extractCheckAnswers(story: StoryYaml): Map<string, CheckAnswer> {
 }
 
 // Requirement 7.3: build local block from practice
-function buildLocalBlock(practice: PracticeYaml): object | undefined {
+function buildLocalBlock(practice: PracticeYaml, kind: "choices" | "hotspots" | "sequence" | "inspect"): object | undefined {
   if (!practice) return undefined;
   // Transform practice.answer into the interaction's local block
   // The content 'answer' field is NOT copied; it is transformed:
@@ -265,6 +265,9 @@ function buildLocalBlock(practice: PracticeYaml): object | undefined {
       onWrong: practice.on_wrong?.map(buildNarration),
       revealAfter: practice.reveal_after ?? 3,
     },
+    // Only choice/hotspot locals may carry outcomes; validate IDs first.
+    ...((kind === "choices" || kind === "hotspots") && practice.outcomes
+      ? { outcomes: compilePracticeOutcomes(practice.outcomes) } : {}),
   };
 }
 
@@ -329,10 +332,11 @@ export function getFeedback(
   wrongTryNumber: number,        // 1-based
   wrongTryCount: number,          // total wrong tries so far (including this one)
   feedback: Feedback | undefined,
+  outcomes: ChoicePracticeOutcomes | HotspotPracticeOutcomes | undefined,
 ): FeedbackResult {
   // CH5.6: selected-ID onWrong → per-try onWrong[n-1] → hint → built-in.
   let message: Narration;
-  const keyedMessage = feedback?.outcomes?.[selectedId]?.onWrong;
+  const keyedMessage = outcomes?.[selectedId]?.onWrong;
   if (keyedMessage) {
     message = keyedMessage;
   } else if (feedback?.onWrong && wrongTryNumber - 1 < feedback.onWrong.length) {
@@ -372,7 +376,7 @@ function usePracticeMode(local: LocalBlock | undefined, mode: Mode) {
     }
     const newWrongTries = wrongTries + 1;
     setWrongTries(newWrongTries);
-    const feedback = getFeedback(stableIdOf(answer), newWrongTries, newWrongTries, local.feedback);
+    const feedback = getFeedback(stableIdOf(answer), newWrongTries, newWrongTries, local.feedback, local.outcomes);
     if (feedback.revealTarget) setRevealed(true);
     return { correct: false, feedback };
   }, [local, mode, wrongTries]);
@@ -381,7 +385,7 @@ function usePracticeMode(local: LocalBlock | undefined, mode: Mode) {
 }
 ```
 
-`stableIdOf` is illustrative for choices and hotspots; the shared implementation should extract the stable ID from each typed answer without weakening the answer union. After a correct practice judgment, inspect only the matching `onCorrect` presentation. Stage its image and line before enabling explicit Next; hold the final answer until Next, then submit it once. Task 0 resolves the exact runtime field names and sequencing contract.
+`stableIdOf` is illustrative for choices and hotspots; the shared implementation should extract the stable ID from each typed answer without weakening the answer union. After a correct practice judgment, inspect only the matching `onCorrect` presentation on a choice local. Stage its image and line before enabling explicit Next; hold the final answer until Next, then submit it once. The frozen runtime field names are `local.outcomes[id].onWrong` and `local.outcomes[id].onCorrect` (with `image?: { imageUrl, alt }` and `line: Narration`). The exact types belong in the choice/hotspot interaction schemas in task 1.3.
 
 #### `CheckConfirmation.tsx` — "That's my answer" (Requirement 15)
 
