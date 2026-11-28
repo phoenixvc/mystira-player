@@ -17,6 +17,20 @@ function makeEngine(): Engine {
 }
 
 describe('mystira-player host element', () => {
+  it('notifies the host when a generic story ending is resumed', async () => {
+    const terminal: Step = { ...first, node: { ...first.node, type: 'terminal', id: 'story-end', interaction: { type: 'terminal' } } };
+    const engine: Engine = { startSession: vi.fn(), resumeSession: vi.fn().mockResolvedValue(terminal), respond: vi.fn() };
+    const element = document.createElement('mystira-player') as MystiraPlayerElement;
+    element.engine = engine;
+    element.muted = true;
+    const complete = vi.fn();
+    element.addEventListener('mp-complete', complete);
+    document.body.append(element);
+    element.resume('session-1');
+    await waitFor(() => expect(complete).toHaveBeenCalledTimes(1));
+    expect((complete.mock.calls[0]![0] as CustomEvent).detail).toEqual({ sessionId: 'session-1' });
+    expect(element.shadowRoot?.querySelector('button')).toBeNull();
+  });
   it('renders in a shadow root and emits only sanitized composed lifecycle events', async () => {
     const engine = makeEngine();
     const element = document.createElement('mystira-player') as MystiraPlayerElement;

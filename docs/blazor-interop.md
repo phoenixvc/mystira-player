@@ -16,4 +16,6 @@ The host object exposes `PlayerStartSession(request)`, `PlayerResumeSession(sess
 
 For a legacy roll, return `interaction: { type: 'roll', state: 'ready', target }`. On `{ kind: 'roll' }`, compute and persist the result using the existing host flow, then return the **same scene ID** with a newer version and `state: 'resolved'`, `result: { value, success, message }`. The player displays that result and sends `{ kind: 'continue' }`; the host follows the success/failure branch, including its no-forward-path rule. A remount must resume the resolved step. The player never calculates success from the target.
 
+For a completed story path, return a `node` with `type: 'terminal'` and `interaction: { type: 'terminal' }`, plus the usual scene presentation fields. The player shows the ending without an assessment score or a Next action and emits `mp-complete`; the host must finalize the session and awards idempotently. Do not reuse the assessment `result` node for an ordinary story ending.
+
 This document describes the player-side contract. The Blazor wrapper, DTO mapping, host method implementation, actual API snapshots, media/audio bridge and signed-in acceptance remain Spec 5 work. Keep the existing story surface behind the host flag until the compatibility gate passes.

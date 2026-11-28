@@ -411,7 +411,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
       {node.lines.length > 1 && <div className={styles.lineControls}><span>Line {lineIndex + 1} of {node.lines.length}</span><button type="button" disabled={!!held || lineIndex >= node.lines.length - 1} onClick={() => { stopMedia(); setLineIndex((index) => index + 1); }}>Show next line</button></div>}
     </div>
     {node.type === 'result' && <aside className={styles.feedback} aria-label="Lesson result">{node.total > 0 && <p>{node.correctFirstTry} of {node.total} correct on the first try</p>}{node.key && <div className={styles.resultKey}>{node.key.iconUrl && !keyImageFailed ? <img src={node.key.iconUrl} alt="" onError={() => setKeyImageFailed(true)} /> : <span aria-hidden="true">✦</span>}<strong>{node.key.label}</strong></div>}</aside>}
-    <div className={styles.actions}>
+    {node.type !== 'terminal' && <div className={styles.actions}>
       <button type="button" disabled={busy || !step.canGoBack} hidden={!step.canGoBack} onClick={() => void answer({ kind: 'back' })}>Back</button>
       <button type="button" aria-pressed={narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')} onClick={() => { const next = !(narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')); setNarration(next); stopMedia(); if (!next && held) setHeldReady(true); if (next && !held) playLines(lineIndex); }}>{narration ? 'Narration on' : 'Narration off'}</button>
       <button type="button" disabled={!!held} onClick={() => playLines(lineIndex)}>Replay line</button>
@@ -421,7 +421,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
           : node.interaction.type === 'continue' ? <button className={styles.next} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Next</button>
             : node.interaction.type === 'roll' && node.interaction.state === 'resolved' ? <button ref={rollContinue} className={styles.next} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Continue adventure</button>
               : node.interaction.type !== 'roll' && node.interaction.type !== 'choices' && node.interaction.type !== 'hotspots' && node.interaction.type !== 'sequence' && node.interaction.type !== 'inspect' ? <p role="status">This interaction is not available in the core preview yet.</p> : null}
-    </div>
+    </div>}
     {notesEnabled && (isDemoMode || grownUpAuthorized) && node.rationale && <aside className={styles.notes}><h2>Grown-up note</h2><p>{node.title}</p><p>{node.rationale.differs ? 'Different for each child' : 'Same for every child'}</p><p>{node.rationale.text}</p></aside>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
   </section>;

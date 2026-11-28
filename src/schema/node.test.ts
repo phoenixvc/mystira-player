@@ -11,6 +11,13 @@ const base = {
 };
 
 describe('node validation', () => {
+  it('accepts a generic terminal scene without enabling an answer capability', () => {
+    const terminal = { ...base, type: 'terminal', interaction: { type: 'terminal' }, title: 'The End' };
+    expect(createNodeValidator([]).safeParse(terminal).success).toBe(true);
+    expect(NodeSchema.safeParse({ ...terminal, interaction: { type: 'terminal', answer: 'hidden' } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...terminal, interaction: { type: 'continue' } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...terminal, type: 'scene' }).success).toBe(false);
+  });
   it('gates legacy rolls and requires a host result only in the resolved state', () => {
     const scene = { ...base, type: 'scene', interaction: { type: 'roll', state: 'ready', target: 3 } };
     expect(createNodeValidator([]).safeParse(scene).success).toBe(false);

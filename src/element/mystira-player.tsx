@@ -93,7 +93,7 @@ export class MystiraPlayerElement extends HTMLElement {
   private onStep = (step: Step): void => {
     const { node, sessionId } = step;
     this.emit('mp-node-enter', { sessionId, nodeId: node.id, nodeType: node.type, ...(node.music ? { music: node.music.profile } : {}), exitAllowed: node.exitAllowed ?? true });
-    if (node.type === 'result') {
+    if (node.type === 'result' || node.type === 'terminal') {
       this.setAttribute('data-complete', '');
       this.emit('mp-complete', { sessionId });
     } else this.removeAttribute('data-complete');
