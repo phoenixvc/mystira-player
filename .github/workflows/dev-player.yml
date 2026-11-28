@@ -40,6 +40,8 @@ jobs:
         continue-on-error: true
         run: python scripts/check-content.py schema/story-schema-2.1.json content/manor/fire-door.story.yaml
       - run: pnpm build
+        env:
+          VITE_DEFAULT_STORY: mummys-party
       - uses: actions/upload-artifact@v4
         with:
           name: player-dist

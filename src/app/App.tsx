@@ -9,7 +9,8 @@ const textChoiceScenes = new Set(['zoe_s2_05', 'q1_find', 'q3_where', 'q3_verify
 
 export function App() {
   const search = new URLSearchParams(window.location.search);
-  const mummyParty = search.get('story') === 'mummys-party';
+  const requestedStory = search.get('story');
+  const mummyParty = requestedStory === 'mummys-party' || (!requestedStory && import.meta.env.VITE_DEFAULT_STORY === 'mummys-party');
   const locale = mummyParty && search.get('lang') === 'af' ? 'af' : 'en';
   const afrikaans = locale === 'af';
   const [demo, setDemo] = useState<{ engine: Engine; activityId: string; isDemoMode?: boolean; fullLesson?: boolean; languagePair?: LanguagePairLookup; sceneForProfile?: (sceneId: string, profileId: string) => string | undefined; piecesForProfile?: (profileId: string) => { id: string; title: string; startSceneId: string }[]; assessment?: { engine: Engine; activityId: string; profiles: Profile[]; sequenceProfiles: Profile[]; inspectProfiles: Profile[]; entries: { practice?: string; assessment?: string; followUp?: string; sequence?: string; inspect?: string } } }>();
