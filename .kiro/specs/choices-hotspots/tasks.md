@@ -2,9 +2,14 @@
 
 Spec 2 follows the core contracts and continue-only renderer. Specs 3 and 4 depend on the shared machinery defined here.
 
+- [ ] 0. Review and freeze the approved practice-outcome extension before implementation.
+  - [ ] 0.1 Review the proposed answer-ID-keyed YAML shape, uniqueness/reference validation, and fallback precedence with the Spec 2 owner.
+  - [ ] 0.2 Confirm how a correct-selection image and explanatory line complete when narration is unavailable or disabled; preserve an accessible text path and explicit Next.
+  - Requirements: CH1.6–CH1.7, CH2.7, CH5.6–CH5.8
 - [ ] 1. Complete choice/hotspot schemas and config gating.
   - [ ] 1.1 Validate stable choice/object IDs, labels, positions and practice-local data.
   - [ ] 1.2 Enforce check-only schema invariants and attempt/scoring consistency.
+  - [ ] 1.3 After task 0, validate optional answer-ID-keyed practice outcomes and reject unknown or duplicate IDs and any check-node outcome block.
   - Requirements: CH1–CH3
 - [ ] 2. Compile the assessment path.
   - [ ] 2.1 Keep check answers Engine-private and compile first-attempt check nodes.
@@ -15,7 +20,8 @@ Spec 2 follows the core contracts and continue-only renderer. Specs 3 and 4 depe
 - [ ] 3. Implement shared mode and practice behavior.
   - [ ] 3.1 Add the total open/practice/check classifier with check precedence.
   - [ ] 3.2 Build practice-local data without raw content answer fields.
-  - [ ] 3.3 Add feedback selection, gentle shake/low tone, revealAfter and final selection.
+  - [ ] 3.3 Add choice/object-specific wrong feedback with per-try onWrong, hint and built-in fallbacks; retain gentle shake/low tone, revealAfter and final selection.
+  - [ ] 3.4 Present an optional changed scene image and explanatory line after a correct practice selection, then require explicit Next.
   - Requirements: CH4–CH5
 - [ ] 4. Implement choice and hotspot interactions.
   - [ ] 4.1 Render accessible choices and submit stable choice IDs.
@@ -31,4 +37,5 @@ Spec 2 follows the core contracts and continue-only renderer. Specs 3 and 4 depe
   - [ ] 6.1 Add schema, compiler, component and mode property tests.
   - [ ] 6.2 Verify answer privacy, scoring, navigation and config gating.
   - [ ] 6.3 Document the mode/feedback API for Specs 3 and 4.
+  - [ ] 6.4 Cover keyed-feedback precedence, absent outcome fallback, changed-image/line ordering, narration-disabled access and check-mode answer privacy.
   - Requirements: CH1–CH6
