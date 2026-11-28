@@ -33,14 +33,14 @@ Tasks are grouped by implementation boundary. Checked items are present in the c
   - [x] 4.6 Complete start-node selection, failed-answer history and session end.
   - [ ] 4.7 Add compiler/session property tests.
   - Requirements: 5, 6, 8
-- [ ] 5. Build the engine-agnostic scene player and navigation.
+- [x] 5. Build the engine-agnostic scene player and navigation.
   - [x] 5.1 Add the player root and render nodes from the Engine interface.
   - [x] 5.2 Render image/video media and video end/skip behavior.
   - [x] 5.3 Render characters, unique slots, reactions and reduced motion.
   - [x] 5.4 Render dialogue, recorded audio, speech synthesis, replay and fallback.
   - [x] 5.5 Render overlays and task text on core scene nodes.
   - [x] 5.6 Add visible, keyboard-operable Next and conditional Back.
-  - [ ] 5.7 Test renderer components and fallback paths.
+  - [x] 5.7 Test renderer components and fallback paths.
   - Requirements: 9–12
 - [ ] 6. Add grown-up notes, age density and audio lifecycle.
   - [x] 6.1 Show rationale notes only in permitted grown-up/demo contexts.
@@ -54,13 +54,13 @@ Tasks are grouped by implementation boundary. Checked items are present in the c
   - [x] 7.3 Verify contrast and reduced-motion styling.
   - [ ] 7.4 Test demo visibility, controls and contrast.
   - Requirements: 19–20
-- [ ] 8. Implement configurable scene auto-advance.
+- [x] 8. Implement configurable scene auto-advance.
   - [x] 8.1 Finalize the content field and update JSON schema, Zod schema and docs.
   - [x] 8.2 Advance only continue scenes after dialogue; retain visible Next.
   - [x] 8.3 Test enabled, disabled, non-continue and unavailable-audio cases.
   - Requirements: 21
 - [ ] 9. Run the core acceptance pass.
   - [ ] 9.1 Validate core Manor content against the final schema.
-  - [ ] 9.2 Run typecheck, core tests, build and accessibility harness.
+  - [x] 9.2 Run typecheck, core tests, build and accessibility harness.
   - [ ] 9.3 Confirm every core requirement has implementation and verification evidence.
   - Requirements: 1–12, 16–21
