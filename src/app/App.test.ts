@@ -24,14 +24,79 @@ describe('core preview', () => {
       resumeSession: vi.fn().mockResolvedValue(step),
       respond,
     };
-    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo' });
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id) => id, piecesForProfile: () => [] });
 
     render(React.createElement(App));
     const startButton = screen.getByRole('button', { name: 'Start preview' });
     await waitFor(() => expect(startButton.hasAttribute('disabled')).toBe(false));
     fireEvent.click(startButton);
-    expect((await screen.findByRole('status')).textContent).toContain('not available in the core preview');
+    await waitFor(() => expect(screen.getByText('This interaction is not available in the core preview yet.')).toBeTruthy());
     expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
     expect(respond).not.toHaveBeenCalled();
+  });
+
+  it('switches demo profiles at the corresponding scene supplied by the engine', async () => {
+    const step: Step = {
+      sessionId: 'first', version: '1', ageGroupId: '6-9', players: [],
+      node: { type: 'scene', id: 'base-scene', title: 'Base scene', media: {}, characters: [], speakers: [], lines: [], overlays: [], interaction: { type: 'continue' } },
+    };
+    const other = { ...step, sessionId: 'second', node: { ...step.node, id: 'other-scene', title: 'Other scene' } };
+    const startSession = vi.fn().mockResolvedValueOnce(step).mockResolvedValueOnce(other);
+    const engine: Engine = { listProfiles: vi.fn().mockResolvedValue([{ profileId: 'a', displayName: 'A' }, { profileId: 'b', displayName: 'B' }]), startSession, resumeSession: vi.fn(), respond: vi.fn() };
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id, profileId) => id === 'base-scene' && profileId === 'b' ? 'other-scene' : undefined, piecesForProfile: () => [] });
+    render(React.createElement(App));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start preview' }));
+    await screen.findByRole('heading', { name: 'Base scene' });
+    fireEvent.change(screen.getByLabelText('Child'), { target: { value: 'b' } });
+    await screen.findByRole('heading', { name: 'Other scene' });
+    expect(startSession).toHaveBeenLastCalledWith(expect.objectContaining({ players: [{ type: 'Profile', profileId: 'b' }], startNodeId: 'other-scene' }), expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  });
+
+  it('keeps the selected piece across rapid profile changes while a session is pending', async () => {
+    const scene = (profile: string): Step => ({
+      sessionId: profile, version: '1', ageGroupId: '6-9', players: [],
+      node: { type: 'scene', id: `${profile}-piece`, title: `${profile} piece`, media: {}, characters: [], speakers: [], lines: [], overlays: [], interaction: { type: 'continue' } },
+    });
+    const startSession = vi.fn().mockResolvedValueOnce(scene('a'))
+      .mockImplementationOnce(() => new Promise<Step>(() => { /* delayed profile b */ }))
+      .mockResolvedValueOnce(scene('c'));
+    const engine: Engine = {
+      listProfiles: vi.fn().mockResolvedValue(['a', 'b', 'c'].map((profileId) => ({ profileId, displayName: profileId }))),
+      startSession, resumeSession: vi.fn(), respond: vi.fn(),
+    };
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id, profileId) => id.endsWith('-piece') ? `${profileId}-piece` : undefined, piecesForProfile: () => [] });
+    render(React.createElement(App));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start preview' }));
+    await screen.findByRole('heading', { name: 'a piece' });
+    fireEvent.change(screen.getByLabelText('Child'), { target: { value: 'b' } });
+    fireEvent.change(screen.getByLabelText('Child'), { target: { value: 'c' } });
+    await screen.findByRole('heading', { name: 'c piece' });
+    expect(startSession).toHaveBeenLastCalledWith(expect.objectContaining({ startNodeId: 'c-piece' }), expect.anything());
+  });
+
+  it('keeps demo controls outside the player and toggles grown-up notes', async () => {
+    const step: Step = {
+      sessionId: 'session', version: '1', ageGroupId: '6-9', players: [],
+      node: { type: 'scene', id: 'scene', title: 'Scene', media: {}, characters: [], speakers: [], lines: [], overlays: [], rationale: { differs: false, text: 'A note for grown-ups.' }, interaction: { type: 'continue' } },
+    };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(step), resumeSession: vi.fn(), respond: vi.fn() };
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id) => id, piecesForProfile: () => [] });
+    render(React.createElement(App));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start preview' }));
+    await screen.findByRole('heading', { name: 'Scene' });
+    const controls = screen.getByRole('complementary', { name: 'Demo controls' });
+    expect(screen.getByRole('region', { name: 'Story player' }).contains(controls)).toBe(false);
+    expect(screen.getByRole('option', { name: 'Assessment · Spec 2' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.queryByText('A note for grown-ups.')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Grown-up notes'));
+    expect(screen.getByText('A note for grown-ups.')).toBeTruthy();
+  });
+
+  it('hides demo controls when the host is not in demo mode', async () => {
+    const engine: Engine = { startSession: vi.fn(), resumeSession: vi.fn(), respond: vi.fn() };
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: false, sceneForProfile: () => undefined, piecesForProfile: () => [] });
+    render(React.createElement(App));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start preview' }).hasAttribute('disabled')).toBe(false));
+    expect(screen.queryByRole('complementary', { name: 'Demo controls' })).toBeNull();
   });
 });

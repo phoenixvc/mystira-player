@@ -9,8 +9,10 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   if (scene.type === 'roll' || scene.type === 'special' || (scene.media.stage3d != null && scene.media.image == null && scene.media.video == null)) {
     throw new EngineError('unsupported', `Scene '${scene.id}' uses an unsupported 3D or special presentation.`);
   }
-  if (scene.interaction?.kind !== undefined) {
-    throw new EngineError('unsupported', `Scene '${scene.id}' interaction '${String(scene.interaction.kind)}' is not implemented yet.`);
+  const interactionKind = typeof scene.interaction === 'object' && scene.interaction !== null && 'kind' in scene.interaction
+    ? scene.interaction.kind : undefined;
+  if (interactionKind !== undefined) {
+    throw new EngineError('unsupported', `Scene '${scene.id}' interaction '${String(interactionKind)}' is not implemented yet.`);
   }
 
   const cast = (scene.cast ?? []).flatMap((member) => {
@@ -24,7 +26,7 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   }));
   const lines = scene.lines?.length
     ? scene.lines.map((line) => ({ speakerId: line.speaker, text: line.text, ...(line.audio ? { audioUrl: line.audio } : {}) }))
-    : [{ speakerId: 'narrator' as const, text: scene.description }];
+    : [{ speakerId: 'narrator' as const, text: scene.description, ...(scene.media.audio ? { audioUrl: scene.media.audio } : {}) }];
   const task = scene.task ? { text: scene.task.text, ...(scene.task.audio ? { audioUrl: scene.task.audio } : {}) } : undefined;
   const overlays = (scene.overlays ?? []).map((overlay) => ({
     id: overlay.id, text: overlay.text, anchor: { x: overlay.x, y: overlay.y },
@@ -38,11 +40,15 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   const interaction = buildInteraction(scene);
   const node = {
     type: 'scene' as const, id: scene.id, title: scene.title,
-    media: { ...(scene.media.image ? { imageUrl: scene.media.image, alt: scene.title } : {}) },
+    media: {
+      ...(scene.media.image ? { imageUrl: scene.media.image, alt: scene.title } : {}),
+      ...(scene.media.video ? { video: { url: scene.media.video, onEnd: 'stop' as const, skippable: true } } : {}),
+    },
     characters: cast, speakers, lines, ...(task ? { task } : {}), overlays,
     ...(scene.exit_allowed === undefined ? {} : { exitAllowed: scene.exit_allowed }),
     ...(rationaleText ? { rationale: { differs: differsByProfile, text: rationaleText } } : {}),
     ...(scene.host_slot ? { slot: scene.host_slot } : {}), ...(scene.auto_advance === undefined ? {} : { autoAdvance: scene.auto_advance }),
+    ...(scene.music ? { music: { profile: scene.music.profile } } : {}),
     interaction,
   };
   const parsed = createNodeValidator(enabled).safeParse(node);

@@ -9,6 +9,7 @@ export type Home = { activities: ActivityCard[]; hub?: Hub };
 export type StartSessionRequest = { activityId: string; players: PlayerSeat[]; startNodeId?: string };
 export type Answer = { kind: 'continue' } | { kind: 'back' } | { kind: 'choice'; choiceId: string } | { kind: 'hotspot'; hotspotId: string } | { kind: 'sequence'; itemIds: string[] } | { kind: 'inspect'; partIds: string[] } | { kind: 'pattern'; stepIds: string[] } | { kind: 'keypad'; value: string } | { kind: 'count'; targetIds: string[] };
 export type AnswerSubmission = { answerRequestId: string; version: string; nodeId: string; answer: Answer; wrongTries?: number; playerId?: string };
+export type EngineRequestOptions = { signal?: AbortSignal };
 export type Step = { sessionId: string; version: string; ageGroupId: AgeGroupId; players: SessionPlayer[]; activePlayerId?: string; node: Node; canGoBack?: boolean; progress?: { done: number; total: number }; prefetch?: string[] };
 export type EngineErrorKind = 'network' | 'auth' | 'notFound' | 'conflict' | 'unsupported' | 'server';
 export class EngineError extends Error {
@@ -17,7 +18,7 @@ export class EngineError extends Error {
 export interface Engine {
   listProfiles?(): Promise<Profile[]>;
   getHome?(profileId: string): Promise<Home>;
-  startSession(request: StartSessionRequest): Promise<Step>;
-  resumeSession(sessionId: string): Promise<Step>;
-  respond(sessionId: string, submission: AnswerSubmission): Promise<Step>;
+  startSession(request: StartSessionRequest, options?: EngineRequestOptions): Promise<Step>;
+  resumeSession(sessionId: string, options?: EngineRequestOptions): Promise<Step>;
+  respond(sessionId: string, submission: AnswerSubmission, options?: EngineRequestOptions): Promise<Step>;
 }

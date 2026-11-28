@@ -1021,13 +1021,14 @@ export type Home = {
 export interface Engine {
   listProfiles?(): Promise<Profile[]>;
   getHome?(profileId: string): Promise<Home>;
-  startSession(req: StartSessionRequest): Promise<Step>;
-  resumeSession(sessionId: string): Promise<Step>;
-  respond(sessionId: string, r: AnswerSubmission): Promise<Step>;
+  startSession(req: StartSessionRequest, options?: { signal?: AbortSignal }): Promise<Step>;
+  resumeSession(sessionId: string, options?: { signal?: AbortSignal }): Promise<Step>;
+  respond(sessionId: string, r: AnswerSubmission, options?: { signal?: AbortSignal }): Promise<Step>;
 }
 ```
 
 **Design note**: The `Node` type is inferred from the Zod schema in `src/schema/node.ts` and imported here. This avoids a parallel type definition. The engine types reference `Node` but do not re-define it.
+The optional request signal lets network-backed engines abort transport work when the player unmounts or switches sessions. LocalEngine may complete synchronously and ignore the signal; the player still rejects stale responses by session generation.
 
 ### 4. LocalEngine (core path; Requirements 5–8)
 
@@ -1046,7 +1047,7 @@ Choices, hotspots, sequence, inspect, practice-local data, assessment checks, re
 
 #### Per-profile selection (Requirement 6)
 
-The engine reads the active profile's named version for each piece. Fixed order follows lesson order; child_chooses order is exposed as an engine-controlled choice. Per-piece rationale comes from demo and is attached to the node. Profile-specific decisions remain inside the engine.
+The engine reads the active profile's named version for each piece. Fixed order follows lesson order. For a `child_chooses` demo profile, LocalEngine exposes the profile-specific piece starts to the standalone shell; the child selects a piece before starting. Each selected piece is one session, ending before a fixed cross-piece link. The shell can then start another chosen piece. Per-piece rationale comes from demo and is attached to the node. Profile-specific decisions remain inside the engine. Assessment entry points remain a Spec 2 dependency.
 
 #### Generic session control (Requirement 8)
 
@@ -1504,25 +1505,12 @@ export class Tones {
 
 ### 10. Demo controls (Requirement 19)
 
-#### `app/DemoControls.tsx`
+`src/app/App.tsx` owns the standalone demo controls. It reads the local demo bootstrap, offers profile and entry-point selection, and passes only the selected start request and authorized notes state into `Player`. `LocalEngine` supplies profile-specific lesson piece starts; the shell does not choose a child's version.
 
-```typescript
-interface DemoControlsProps {
-  profiles: Profile[];          // demo children
-  currentProfileId: string;
-  onSwitchProfile: (profileId: string) => void;
-  entryPoints: { id: string; label: string }[];  // lesson, assessment, follow-up assessment
-  currentEntryPoint: string;
-  onSwitchEntryPoint: (entryPointId: string) => void;
-  notesOpen: boolean;
-  onToggleNotes: () => void;
-}
-```
-
-- **Requirement 19.1**: Shown only when `config.json` has `mode: "local"` and `demo: true`. The `Player` component checks config and conditionally renders `DemoControls`.
-- **Requirement 19.2**: Child switch jumps to the same piece for the other demo child. This calls `onSwitchProfile`, which starts a new session for the other profile, attempting to land on the same piece (the engine preserves the current piece position across profile switches).
-- **Requirement 19.3**: The entry-point switch starts a session at the selected lesson, assessment or follow-up assessment entry point.
-- **Requirement 19.4**: Rendered outside the player root (in the standalone shell, not inside `<mystira-player>`), so it never appears in an embedded player.
+- **Requirement 19.1**: Controls appear only when runtime config sets `mode: "local"` and `demo: true`.
+- **Requirement 19.2**: Profile switching asks the engine for the corresponding lesson piece in the other profile and starts a new session there.
+- **Requirement 19.3**: Lesson entry works. Assessment and follow-up options remain disabled while their nodes or interactions are unsupported; Spec 2 task 2.4 owns enabling them.
+- **Requirement 19.4**: Controls render in the standalone shell, outside the player root.
 
 ### 11. Styling and the Manor theme (Requirement 20)
 
@@ -1928,4 +1916,4 @@ PBT is not appropriate for:
 
 ### Coverage target
 
-Every core requirement has at least one test. The five core properties cover the formal correctness guarantees. Unit and component tests cover the specific behaviours. The scaffold smoke test (Requirement 1) runs as a CI build step rather than a Vitest test.
+The current [acceptance evidence](verification.md) maps each core requirement to implementation and observed verification under the continue-only boundary. Assessment and follow-up entry-point acceptance belongs to Spec 2 CH3.9. The current branch passes local unit/component tests, typecheck, build and browser checks; no GitHub CI job is configured for PR #14.

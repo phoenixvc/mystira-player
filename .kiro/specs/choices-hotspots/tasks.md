@@ -10,6 +10,7 @@ Spec 2 follows the core contracts and continue-only renderer. Specs 3 and 4 depe
   - [ ] 2.1 Keep check answers Engine-private and compile first-attempt check nodes.
   - [ ] 2.2 Compile research scenes and lesson results.
   - [ ] 2.3 Enforce check back-navigation and unscored follow-up behavior.
+  - [ ] 2.4 Enable demo assessment and follow-up entry points once their nodes and interactions are supported.
   - Requirements: CH3
 - [ ] 3. Implement shared mode and practice behavior.
   - [ ] 3.1 Add the total open/practice/check classifier with check precedence.

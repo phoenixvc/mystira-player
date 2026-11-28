@@ -34,4 +34,19 @@ describe('node validation', () => {
     expect(createNodeValidator([]).safeParse(base).success).toBe(false);
     expect(createNodeValidator(['choices']).safeParse(base).success).toBe(true);
   });
+
+  it('round trips generated continue nodes without changing their runtime shape', () => {
+    for (let seed = 0; seed < 24; seed += 1) {
+      const authored = {
+        type: 'scene', id: `scene-${seed}`, title: `Scene ${seed}`,
+        media: seed % 2 === 0 ? { imageUrl: `/scene-${seed}.webp`, alt: `Scene ${seed}` } : {},
+        characters: seed % 3 === 0 ? [{ id: `character-${seed}`, imageUrl: '/character.webp', alt: 'Character', position: 'left' }] : [],
+        speakers: [], lines: [{ speakerId: 'narrator', text: `Line ${seed}` }],
+        overlays: [], interaction: { type: 'continue', label: seed % 2 === 0 ? 'Onward' : undefined },
+        autoAdvance: seed % 4 === 0,
+      };
+      const first = NodeSchema.parse(authored);
+      expect(NodeSchema.parse(JSON.parse(JSON.stringify(first)))).toEqual(first);
+    }
+  });
 });
