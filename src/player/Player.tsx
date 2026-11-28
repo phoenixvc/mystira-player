@@ -263,7 +263,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
       setImageFailed(false);
       setHeld({ answer: value, ...presentation });
       const narrate = narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9');
-      if (!narrate) { setHeldReady(true); return; }
+      if (muted || !narrate) { setHeldReady(true); return; }
       const token = generation.current;
       const finish = () => { if (token === generation.current) setHeldReady(true); };
       let fallbackStarted = false;
@@ -288,7 +288,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
       return;
     }
     void answer(value, wrongTries);
-  }, [step, held, answer, wrongTries, narration, stopMedia, playReaction]);
+  }, [step, held, answer, wrongTries, narration, muted, stopMedia, playReaction]);
 
   const submitSequence = useCallback((itemIds: string[]) => {
     if (!step || step.node.interaction.type !== 'sequence' || busyRef.current) return;

@@ -222,6 +222,24 @@ describe('Player', () => {
     await waitFor(() => expect(respond).toHaveBeenCalledTimes(1));
   });
 
+  it('keeps a correct-choice explanation silent and ready when the host mutes playback', async () => {
+    const audio = vi.fn();
+    const speak = vi.fn();
+    vi.stubGlobal('Audio', audio);
+    vi.stubGlobal('speechSynthesis', { speak, cancel: vi.fn() });
+    const practice: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }], local: { correctId: 'yes', outcomes: { yes: { onCorrect: { line: { text: 'Here is why.', audioUrl: '/why.mp3' } } } } } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture muted />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    expect(await screen.findByText('Here is why.')).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false));
+    expect(audio).not.toHaveBeenCalled();
+    expect(speak).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledTimes(1));
+  });
+
   it('allows Next when explanation audio fails and speech is unavailable', async () => {
     vi.stubGlobal('speechSynthesis', undefined);
     vi.stubGlobal('SpeechSynthesisUtterance', undefined);
