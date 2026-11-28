@@ -45,6 +45,8 @@ The first version used a file shape Kiro accepted but flagged as legacy, with a 
 | Choices and hotspots | Spec 2 owns choices/hotspots, shared modes/feedback/check confirmation and assessment/research behavior. A later product decision approved answer-specific wrong-choice feedback and a changed image with an explanatory line after a correct practice choice; task 0 froze the authoring shape and fallbacks. |
 | Sequence | Spec 3 requirements, design and tasks are authored; it reuses Spec 2 shared mode machinery and leaves item ordering to the Engine. |
 | Inspect | Spec 4 requirements, design and tasks are authored; it reuses Spec 2 shared modes and uses fictional content on reserved .example domains. |
+| Seven interactions | Spec 7 requirements and design were reconciled with PRD 07. Task 0 now makes the core acceptance check and first new-type contract freeze explicit before keypad work. |
+| Bilingual learning | PRD 08 now has requirements, design and tasks. Task 0 verifies the existing demo and freezes reviewed phrase, clip and timing data before extending it. No educator acceptance is claimed. |
 
 The four rows above are the core interaction specs. Separate support specs are maintained for [legacy story compatibility](../.kiro/specs/legacy-story-compatibility/requirements.md) and [third-party scenarios](../.kiro/specs/third-party-scenarios/requirements.md). PR #13 delivered the first continue-only foundation slice. PR #14 delivered the renderer and shell, completing Spec 1's continue-only scope. Specs 2–4 subsequently landed; the Spec 5–6 integrations remain open.
 

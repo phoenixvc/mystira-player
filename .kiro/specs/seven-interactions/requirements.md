@@ -6,6 +6,8 @@ This spec adds pattern, keypad and count to the four interaction families in Spe
 
 The three new types are a post-core product target. Jurie targeted keypad for the Kiroween fire-safety lesson on 2026-11-28, with a separately authored core-interaction fallback; keypad is not a submission blocker. Pattern and count remain after the contest minimum. No new type is enabled before all four core gates and its own acceptance gate pass.
 
+The [design](design.md) places these requirements in the existing Engine and Player contracts, and the [task plan](tasks.md) begins with task 0: review current core acceptance evidence and freeze the first new type's authored and runtime contract. A target in this spec is not a claim that the current build supports it.
+
 ## Requirements
 
 ### S7-1: Versioned content and capability contract

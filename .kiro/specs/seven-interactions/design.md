@@ -33,3 +33,7 @@ Use visible labels, focus rings, announced selection and completion state, minim
 ## Integration
 
 Extend [the content format](../../../docs/content-format.md) and [technical specification](../../../docs/tech-spec.md) with final field definitions alongside the schema implementation. Test one fixture per type in open, practice and check mode, then run a second-host contract check through Spec 6 before claiming portable seven-type support.
+
+## Task 0 contract review
+
+Before implementing keypad, inspect the current four-core acceptance records and the live schema, node, Answer and capability definitions. Record which types are actually enabled in the release under review. Freeze keypad field names, length bounds, open/practice/check data placement, unsupported behavior and its separately authored core lesson path in one reviewable contract note. Apply the same gate to pattern and count immediately before each type is built; do not infer acceptance from a schema enum or from this design document.
