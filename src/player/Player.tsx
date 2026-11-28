@@ -22,11 +22,12 @@ type Props = {
   inheritTheme?: boolean;
   muted?: boolean;
   initialGesture?: boolean;
+  slotGuide?: boolean;
 };
 
 const slots = ['left', 'center', 'right'] as const;
 
-export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false }: Props) {
+export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false, slotGuide = false }: Props) {
   const onStepRef = useRef(onStep);
   onStepRef.current = onStep;
   const onAnswerRef = useRef(onAnswer);
@@ -381,10 +382,11 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
       <h1>{node.title ?? 'Story scene'}</h1>
       {step.progress && <p className={styles.progress}>{node.type === 'result' ? 'Result' : `Scene ${step.progress.done + 1} of ${step.progress.total}`}</p>}
     </header>
-    <div className={styles.stage} key={`${node.id}:${step.version}`} onClick={(event) => { if (node.interaction.type === 'hotspots' && !held && !(event.target as HTMLElement).closest('button')) setFeedback('Nothing here'); }}>
+    <div className={`${styles.stage} ${slotGuide ? styles.slotGuide : ''}`} key={`${node.id}:${step.version}`} onClick={(event) => { if (node.interaction.type === 'hotspots' && !held && !(event.target as HTMLElement).closest('button')) setFeedback('Nothing here'); }}>
       {node.media.video && !held?.image ? <video ref={video} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline muted={muted} onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
         : (held?.image?.imageUrl ?? node.media.imageUrl) && !imageFailed ? <img className={styles.media} src={held?.image?.imageUrl ?? node.media.imageUrl} alt={held?.image?.alt ?? node.media.alt ?? ''} onError={() => setImageFailed(true)} />
           : <div className={styles.mediaFallback} role="img" aria-label={imageFailed ? held?.image?.alt ?? node.media.alt ?? 'Scene image unavailable' : 'Scene artwork'}>✦</div>}
+      {!node.media.video && !held?.image && node.media.layers?.map((layer) => <img key={layer.id} className={`${styles.stageLayer} ${layer.overlay ? styles.stageOverlay : ''}`} src={layer.imageUrl} alt={layer.alt} style={{ left: `${layer.left}%`, bottom: `${layer.bottom}%`, width: `${layer.width}%`, height: layer.height ? `${layer.height}%` : undefined }} />)}
       {characters.map((character) => <button className={`${styles.character} ${styles[character.position]} ${reaction === character.id ? styles.reaction : ''}`} key={character.id} type="button" disabled={!character.reactions?.length} aria-label={`${character.alt}${character.reactions?.length ? ', react' : ''}`} onClick={() => { setReaction(character.id); playReaction(); if (reactionTimer.current) clearTimeout(reactionTimer.current); reactionTimer.current = setTimeout(() => setReaction(undefined), 450); }}><img src={character.imageUrl} alt="" /></button>)}
       {node.interaction.type === 'roll' && <div className={`${styles.rollPanel} ${node.interaction.state === 'resolved' ? styles.rollResolved : ''}`} role="region" aria-label="Roll challenge" tabIndex={0}>
         {node.interaction.state === 'ready' ? <><p>Time to test your luck!</p>{node.interaction.target && <p>Roll target <strong>{node.interaction.target}</strong> or higher</p>}<button type="button" disabled={busy} onClick={() => void answer({ kind: 'roll' })}>Roll</button></>

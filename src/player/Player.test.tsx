@@ -195,7 +195,7 @@ describe('Player', () => {
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(hotspot), resumeSession: vi.fn(), respond };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
     fireEvent.click(await screen.findByRole('button', { name: 'The dog' }));
-    expect(screen.getByText('Not yet. Try again.')).toBeTruthy();
+    expect(await screen.findByText('Not yet. Try again.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'The crow' }).getAttribute('class')).toContain('revealed');
     expect(screen.getByRole('button', { name: 'The dog' }).getAttribute('class')).not.toContain('revealed');
     expect(respond).not.toHaveBeenCalled();
@@ -283,7 +283,7 @@ describe('Player', () => {
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
     fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
-    expect(screen.getByText('Read this explanation.')).toBeTruthy();
+    expect(await screen.findByText('Read this explanation.')).toBeTruthy();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false));
   });
 

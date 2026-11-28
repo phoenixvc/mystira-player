@@ -1,9 +1,9 @@
 import type { InteractionType } from '../../schema/interactions';
 import type { Node } from '../../schema/node';
-import type { StoryYaml } from '../../schema/story-yaml';
+import type { SceneYaml, StoryYaml } from '../../schema/story-yaml';
 import type { Answer, AnswerSubmission, Engine, PlayerSeat, Profile, SessionPlayer, StartSessionRequest, Step } from '../types';
 import { EngineError } from '../types';
-import { compileScene } from './compiler';
+import { compileScene, type SceneStaging } from './compiler';
 import { createNodeValidator } from '../../schema/node';
 
 const PRACTICE_PREVIEW_ENTRY = 'demo:practice';
@@ -29,7 +29,7 @@ type Session = {
 export class LocalEngine implements Engine {
   private readonly sessions = new Map<string, Session>();
 
-  constructor(private readonly story: StoryYaml, private readonly enabled: InteractionType[] = []) {}
+  constructor(private readonly story: StoryYaml, private readonly enabled: InteractionType[] = [], private readonly staging?: (scene: SceneYaml) => SceneStaging) {}
 
   async listProfiles(): Promise<Profile[]> {
     return (this.story.demo?.profiles ?? []).map((profile) => ({ profileId: profile.id, displayName: profile.display_name }));
@@ -98,7 +98,8 @@ export class LocalEngine implements Engine {
       const kind = this.story.scenes.find((scene) => scene.id === id)?.interaction?.kind;
       return kind !== undefined && !this.enabled.includes(kind);
     }) : -1;
-    const sceneIds = assessmentEntry ? availableSceneIds.slice(assessmentIndex) : isolatedInspectPreview
+    const introSceneId = request.startNodeId === 'assessment' && this.story.scenes.some((scene) => scene.id === 'assessment_intro') ? 'assessment_intro' : undefined;
+    const sceneIds = assessmentEntry ? [...(introSceneId ? [introSceneId] : []), ...availableSceneIds.slice(assessmentIndex)] : isolatedInspectPreview
       ? this.pieceSceneIds(profileId).find((piece) => piece.sceneIds.includes(startNodeId!))?.sceneIds ?? [] : practicePreview
       ? availableSceneIds.slice(0, firstUnsupported < 0 ? availableSceneIds.length : firstUnsupported) : availableSceneIds;
     if (sceneIds.length === 0) {
@@ -305,7 +306,7 @@ export class LocalEngine implements Engine {
     const sceneId = session.sceneIds[session.index];
     const scene = this.story.scenes.find((candidate) => candidate.id === sceneId);
     if (!scene) throw new EngineError('notFound', `Scene '${sceneId ?? ''}' was not found in the story.`);
-    const base = compileScene(scene, this.story, this.enabled, session.profileId, this.sequenceOrder(session.id, scene));
+    const base = compileScene(scene, this.story, this.enabled, session.profileId, this.sequenceOrder(session.id, scene), this.staging?.(scene));
     const question = this.checkQuestions().find((item) => item.scene === scene.id);
     let node: Node = base;
     if (question) {
@@ -349,6 +350,13 @@ export class LocalEngine implements Engine {
   /** Demo-only entry for a supported inspect piece. */
   demoInspectEntry(): string | undefined {
     return this.inspectSceneId() ? INSPECT_PREVIEW_ENTRY : undefined;
+  }
+
+  demoInspectProfileIds(): string[] {
+    const sceneId = this.inspectSceneId();
+    return sceneId ? (this.story.demo?.profiles ?? [])
+      .filter((profile) => this.getSceneIds(profile.id, sceneId).includes(sceneId))
+      .map((profile) => profile.id) : [];
   }
 
   private inspectSceneId(): string | undefined {

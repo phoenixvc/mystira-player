@@ -40,6 +40,7 @@ describe('local demo bootstrap', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['inspect'] } }) }));
     const demo = await loadLocalDemo();
     expect(demo.assessment?.entries).toEqual({ inspect: 'demo:inspect' });
+    expect(demo.assessment?.inspectProfiles.map((profile) => profile.profileId)).toEqual(['demo_lerato', 'demo_daan']);
     const first = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: demo.assessment!.entries.inspect });
     expect(first.node.interaction.type).toBe('inspect');
     if (first.node.interaction.type !== 'inspect') throw new Error('Expected inspect');
@@ -67,5 +68,22 @@ describe('local demo bootstrap', () => {
     const daanPiece = demo.piecesForProfile('demo_daan')[1]!;
     const daan = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: daanPiece.startSceneId });
     expect(daan.node).toMatchObject({ id: 'how_know_teach', interaction: { type: 'sequence' } });
+  });
+
+  it('offers the Mummy’s Party inspect entry only to Max, whose path contains it', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence', 'inspect'] } }) }));
+    const demo = await loadLocalDemo('mummys-party');
+    expect(demo.assessment?.entries.inspect).toBe('demo:inspect');
+    expect(demo.assessment?.inspectProfiles.map((profile) => profile.profileId)).toEqual(['demo_max']);
+    const step = await demo.assessment!.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_max' }], startNodeId: demo.assessment!.entries.inspect });
+    expect(step.node.interaction.type).toBe('inspect');
+  });
+
+  it('keeps Mummy’s Party assessment entries on the same story with partial capabilities', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots'] } }) }));
+    const demo = await loadLocalDemo('mummys-party');
+    expect(demo.assessment?.engine).toBe(demo.engine);
+    const step = await demo.assessment!.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_zoe' }], startNodeId: demo.assessment!.entries.assessment });
+    expect(step.node.id).toBe('assessment_intro');
   });
 });
