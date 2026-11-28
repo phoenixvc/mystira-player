@@ -52,6 +52,28 @@ describe('core preview', () => {
     expect(startSession).toHaveBeenLastCalledWith(expect.objectContaining({ players: [{ type: 'Profile', profileId: 'b' }], startNodeId: 'other-scene' }), expect.objectContaining({ signal: expect.any(AbortSignal) }));
   });
 
+  it('keeps the selected piece across rapid profile changes while a session is pending', async () => {
+    const scene = (profile: string): Step => ({
+      sessionId: profile, version: '1', ageGroupId: '6-9', players: [],
+      node: { type: 'scene', id: `${profile}-piece`, title: `${profile} piece`, media: {}, characters: [], speakers: [], lines: [], overlays: [], interaction: { type: 'continue' } },
+    });
+    const startSession = vi.fn().mockResolvedValueOnce(scene('a'))
+      .mockImplementationOnce(() => new Promise<Step>(() => { /* delayed profile b */ }))
+      .mockResolvedValueOnce(scene('c'));
+    const engine: Engine = {
+      listProfiles: vi.fn().mockResolvedValue(['a', 'b', 'c'].map((profileId) => ({ profileId, displayName: profileId }))),
+      startSession, resumeSession: vi.fn(), respond: vi.fn(),
+    };
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id, profileId) => id.endsWith('-piece') ? `${profileId}-piece` : undefined, piecesForProfile: () => [] });
+    render(React.createElement(App));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start preview' }));
+    await screen.findByRole('heading', { name: 'a piece' });
+    fireEvent.change(screen.getByLabelText('Child'), { target: { value: 'b' } });
+    fireEvent.change(screen.getByLabelText('Child'), { target: { value: 'c' } });
+    await screen.findByRole('heading', { name: 'c piece' });
+    expect(startSession).toHaveBeenLastCalledWith(expect.objectContaining({ startNodeId: 'c-piece' }), expect.anything());
+  });
+
   it('keeps demo controls outside the player and toggles grown-up notes', async () => {
     const step: Step = {
       sessionId: 'session', version: '1', ageGroupId: '6-9', players: [],

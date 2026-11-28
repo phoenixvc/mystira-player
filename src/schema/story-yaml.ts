@@ -10,6 +10,19 @@ const MusicProfiles = ['none', 'neutral', 'cozy', 'playful', 'wonder', 'mystery'
 const MusicPaletteYamlSchema = z.object({
   tracks_by_profile: z.record(z.enum(MusicProfiles), z.array(z.string())),
 }).strict();
+const InteractionYamlSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('sequence'),
+    items: z.array(z.object({ id: z.string(), label: z.string(), image: TextAsset.optional() }).strict()).min(3).max(5),
+  }).strict(),
+  z.object({
+    kind: z.literal('inspect'), min_marks: z.number().int().min(0).optional(),
+    document: z.object({
+      kind: z.enum(['message', 'page', 'sign']), title: z.string(),
+      parts: z.array(z.object({ id: z.string(), role: z.enum(['sender', 'heading', 'text', 'link', 'button', 'image', 'price', 'footer']), text: z.string(), image: TextAsset.optional() }).strict()).min(3).max(8),
+    }).strict(),
+  }).strict(),
+]);
 
 export const CharacterYamlSchema = z.object({
   id: z.string(), name: z.string(), image: TextAsset, audio: TextAsset, metadata: RequiredOpaque,
@@ -49,7 +62,7 @@ export const SceneYamlSchema = z.object({
     bounds: z.array(z.number()).nullable().optional(),
   }).strict().nullable().optional(), reveal: z.object({ text: z.string(), image: TextAsset.optional() }).strict().optional() }).strict()).optional(),
   practice: z.object({ answer: z.object({ branch: z.string().optional(), object: z.string().optional(), order: z.array(z.string()).min(3).max(5).optional(), parts: z.array(z.string()).optional() }).strict(), hint: z.object({ text: z.string(), audio: TextAsset.optional() }).strict().optional(), on_wrong: z.array(z.object({ text: z.string(), audio: TextAsset.optional() }).strict()).optional(), reveal_after: z.number().int().min(1).max(5).optional() }).strict().optional(),
-  interaction: z.unknown().optional(),
+  interaction: InteractionYamlSchema.optional(),
   research: z.object({ step: z.enum(['where', 'find', 'verify', 'use']), source: z.object({ kind: z.enum(['character', 'picture', 'clip', 'chart', 'page']), label: z.string() }).strict().optional() }).strict().optional(),
   exit_allowed: z.boolean().optional(), host_slot: TextAsset.optional(), auto_advance: z.boolean().optional(),
   narration_timestamps: z.array(TimestampYamlSchema).nullable().optional(),

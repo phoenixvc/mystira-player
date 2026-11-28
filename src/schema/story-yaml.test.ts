@@ -64,6 +64,20 @@ describe('Story YAML foundation schema', () => {
     expect(StoryYamlSchema.safeParse(story).success).toBe(false);
   });
 
+  it('rejects malformed interactions and round trips the declared variants', () => {
+    const authored = parse(corePreview);
+    for (const interaction of ['sequence', null, [], { kind: 'sequence' }, { kind: 'inspect', document: {} }]) {
+      authored.scenes[0].interaction = interaction;
+      expect(StoryYamlSchema.safeParse(authored).success).toBe(false);
+    }
+    authored.scenes[0].interaction = { kind: 'sequence', items: ['a', 'b', 'c'].map((id) => ({ id, label: id })) };
+    const sequence = StoryYamlSchema.parse(authored);
+    expect(StoryYamlSchema.parse(parse(stringify(sequence)))).toEqual(sequence);
+    authored.scenes[0].interaction = { kind: 'inspect', min_marks: 0, document: { kind: 'page', title: 'Look closer', parts: ['a', 'b', 'c'].map((id) => ({ id, role: 'text', text: id })) } };
+    const inspect = StoryYamlSchema.parse(authored);
+    expect(StoryYamlSchema.parse(parse(stringify(inspect)))).toEqual(inspect);
+  });
+
   it('preserves opaque engine fields through YAML round trips across generated values', () => {
     for (let seed = 0; seed < 24; seed += 1) {
       const authored = parse(corePreview);

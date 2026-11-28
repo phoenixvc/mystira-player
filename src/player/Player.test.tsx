@@ -37,6 +37,24 @@ describe('Player', () => {
     expect(screen.queryByText('A different way in.')).toBeNull();
   });
 
+  it('keeps the session when a host replaces its onStep callback', async () => {
+    const startRequest = { activityId: 'story', players: [] };
+    const startSession = vi.fn().mockResolvedValue(first);
+    const respond = vi.fn().mockResolvedValue(second);
+    const firstCallback = vi.fn();
+    const nextCallback = vi.fn();
+    const engine: Engine = { startSession, resumeSession: vi.fn(), respond };
+    const view = render(<Player engine={engine} startRequest={startRequest} onStep={firstCallback} />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    view.rerender(<Player engine={engine} startRequest={startRequest} onStep={nextCallback} />);
+    expect(startSession).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await screen.findByRole('heading', { name: 'In the hall' });
+    expect(firstCallback).toHaveBeenCalledTimes(1);
+    expect(nextCallback).toHaveBeenCalledWith(second);
+    expect(startSession).toHaveBeenCalledTimes(1);
+  });
+
   it('ignores a response from a previous session after the player switches stories', async () => {
     let finishResponse!: (step: Step) => void;
     const oldEngine: Engine = {

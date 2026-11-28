@@ -17,6 +17,8 @@ type Props = {
 const slots = ['left', 'center', 'right'] as const;
 
 export function Player({ engine, startRequest, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, theme = manorTheme, initialGesture = false }: Props) {
+  const onStepRef = useRef(onStep);
+  onStepRef.current = onStep;
   const [step, setStep] = useState<Step>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -84,12 +86,12 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     request.current = undefined;
     const controller = beginRequest();
     engine.startSession(startRequest, { signal: controller.signal }).then((next) => {
-      if (active) { setStep(next); onStep?.(next); }
+      if (active) { setStep(next); onStepRef.current?.(next); }
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : 'Could not start the story.');
     }).finally(() => { if (inFlight.current === controller) inFlight.current = undefined; if (active) { setBusy(false); busyRef.current = false; } });
     return () => { active = false; requestGeneration.current += 1; inFlight.current?.abort(); controller.abort(); stopMedia(); };
-  }, [engine, startRequest, stopMedia, onStep, beginRequest]);
+  }, [engine, startRequest, stopMedia, beginRequest]);
 
   useEffect(() => {
     stopMedia();
@@ -117,15 +119,15 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       }, { signal: controller.signal });
       if (token !== requestGeneration.current) return;
       setStep(next);
-      onStep?.(next);
+      onStepRef.current?.(next);
     } catch (cause) {
       if (token !== requestGeneration.current) return;
       if (cause instanceof EngineError && cause.kind === 'conflict' && cause.currentStep) {
         setStep(cause.currentStep);
-        onStep?.(cause.currentStep);
+        onStepRef.current?.(cause.currentStep);
       } else setError(cause instanceof Error ? cause.message : 'Could not change scenes.');
     } finally { if (inFlight.current === controller) inFlight.current = undefined; if (token === requestGeneration.current) { busyRef.current = false; setBusy(false); } }
-  }, [engine, onStep, step, stopMedia, beginRequest]);
+  }, [engine, step, stopMedia, beginRequest]);
 
   const playAgain = useCallback(async () => {
     if (busyRef.current) return;
@@ -141,11 +143,11 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       const next = await engine.startSession(startRequest, { signal: controller.signal });
       if (token !== requestGeneration.current) return;
       setStep(next);
-      onStep?.(next);
+      onStepRef.current?.(next);
     } catch (cause) {
       if (token === requestGeneration.current) setError(cause instanceof Error ? cause.message : 'Could not restart the story.');
     } finally { if (inFlight.current === controller) inFlight.current = undefined; if (token === requestGeneration.current) { busyRef.current = false; setBusy(false); } }
-  }, [engine, onStep, startRequest, stopMedia, beginRequest]);
+  }, [engine, startRequest, stopMedia, beginRequest]);
 
   const playLines = useCallback((from: number) => {
     if (!step) return;
