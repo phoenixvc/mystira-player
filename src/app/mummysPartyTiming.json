@@ -1,0 +1,280 @@
+{
+  "clips": [
+    {
+      "sceneId": "spot_table",
+      "lineIndex": 0,
+      "locale": "en",
+      "text": "A fire hazard can start a fire, or trap us inside.",
+      "file": "ghost-26df728149aeefe0c617.mp3",
+      "words": [
+        {
+          "text": "A",
+          "startMs": 0,
+          "endMs": 104
+        },
+        {
+          "text": "fire",
+          "startMs": 186,
+          "endMs": 511
+        },
+        {
+          "text": "hazard",
+          "startMs": 557,
+          "endMs": 859
+        },
+        {
+          "text": "can",
+          "startMs": 906,
+          "endMs": 1022
+        },
+        {
+          "text": "start",
+          "startMs": 1080,
+          "endMs": 1312
+        },
+        {
+          "text": "a",
+          "startMs": 1347,
+          "endMs": 1370
+        },
+        {
+          "text": "fire,",
+          "startMs": 1416,
+          "endMs": 1753
+        },
+        {
+          "text": "or",
+          "startMs": 1776,
+          "endMs": 1881
+        },
+        {
+          "text": "trap",
+          "startMs": 1939,
+          "endMs": 2194
+        },
+        {
+          "text": "us",
+          "startMs": 2252,
+          "endMs": 2334
+        },
+        {
+          "text": "inside.",
+          "startMs": 2392,
+          "endMs": 3158
+        }
+      ]
+    },
+    {
+      "sceneId": "max_s1_01",
+      "lineIndex": 0,
+      "locale": "en",
+      "text": "The mummy cannot see the fire hazards. Tell him what to do.",
+      "file": "ghost-32dbbda3814593c546f3.mp3",
+      "words": [
+        {
+          "text": "The",
+          "startMs": 0,
+          "endMs": 116
+        },
+        {
+          "text": "mummy",
+          "startMs": 151,
+          "endMs": 348
+        },
+        {
+          "text": "cannot",
+          "startMs": 395,
+          "endMs": 639
+        },
+        {
+          "text": "see",
+          "startMs": 685,
+          "endMs": 813
+        },
+        {
+          "text": "the",
+          "startMs": 836,
+          "endMs": 906
+        },
+        {
+          "text": "fire",
+          "startMs": 940,
+          "endMs": 1207
+        },
+        {
+          "text": "hazards.",
+          "startMs": 1254,
+          "endMs": 1660
+        },
+        {
+          "text": "Tell",
+          "startMs": 1683,
+          "endMs": 1858
+        },
+        {
+          "text": "him",
+          "startMs": 1904,
+          "endMs": 1974
+        },
+        {
+          "text": "what",
+          "startMs": 2009,
+          "endMs": 2136
+        },
+        {
+          "text": "to",
+          "startMs": 2171,
+          "endMs": 2229
+        },
+        {
+          "text": "do.",
+          "startMs": 2287,
+          "endMs": 2740
+        }
+      ]
+    },
+    {
+      "sceneId": "spot_table",
+      "lineIndex": 0,
+      "locale": "af",
+      "text": "'n Brandgevaar kan 'n brand veroorsaak of ons binne vaskeer.",
+      "file": "ghost-84cdf7fba2370d8f3b71.mp3",
+      "words": [
+        {
+          "text": "'n",
+          "startMs": 0,
+          "endMs": 80
+        },
+        {
+          "text": "Brandgevaar",
+          "startMs": 173,
+          "endMs": 1120
+        },
+        {
+          "text": "kan",
+          "startMs": 1180,
+          "endMs": 1360
+        },
+        {
+          "text": "'n",
+          "startMs": 1400,
+          "endMs": 1520
+        },
+        {
+          "text": "brand",
+          "startMs": 1573,
+          "endMs": 1840
+        },
+        {
+          "text": "veroorsaak",
+          "startMs": 1904,
+          "endMs": 2640
+        },
+        {
+          "text": "of",
+          "startMs": 2773,
+          "endMs": 3040
+        },
+        {
+          "text": "ons",
+          "startMs": 3120,
+          "endMs": 3360
+        },
+        {
+          "text": "binne",
+          "startMs": 3400,
+          "endMs": 3600
+        },
+        {
+          "text": "vaskeer.",
+          "startMs": 3680,
+          "endMs": 4320
+        }
+      ]
+    },
+    {
+      "sceneId": "max_s1_01",
+      "lineIndex": 0,
+      "locale": "af",
+      "text": "Die mummie sien nie die brandgevare raak nie. Sê vir hom wat om te doen.",
+      "file": "ghost-1fed553765de4b7636d1.mp3",
+      "words": [
+        {
+          "text": "Die",
+          "startMs": 0,
+          "endMs": 80
+        },
+        {
+          "text": "mummie",
+          "startMs": 160,
+          "endMs": 480
+        },
+        {
+          "text": "sien",
+          "startMs": 560,
+          "endMs": 720
+        },
+        {
+          "text": "nie",
+          "startMs": 760,
+          "endMs": 880
+        },
+        {
+          "text": "die",
+          "startMs": 900,
+          "endMs": 960
+        },
+        {
+          "text": "brandgevare",
+          "startMs": 1040,
+          "endMs": 1920
+        },
+        {
+          "text": "raak",
+          "startMs": 2000,
+          "endMs": 2320
+        },
+        {
+          "text": "nie.",
+          "startMs": 2380,
+          "endMs": 2960
+        },
+        {
+          "text": "Sê",
+          "startMs": 3040,
+          "endMs": 3200
+        },
+        {
+          "text": "vir",
+          "startMs": 3240,
+          "endMs": 3360
+        },
+        {
+          "text": "hom",
+          "startMs": 3400,
+          "endMs": 3520
+        },
+        {
+          "text": "wat",
+          "startMs": 3580,
+          "endMs": 3760
+        },
+        {
+          "text": "om",
+          "startMs": 3787,
+          "endMs": 3840
+        },
+        {
+          "text": "te",
+          "startMs": 3893,
+          "endMs": 4000
+        },
+        {
+          "text": "doen.",
+          "startMs": 4080,
+          "endMs": 4480
+        }
+      ]
+    }
+  ]
+}

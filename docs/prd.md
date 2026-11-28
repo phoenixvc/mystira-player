@@ -7,7 +7,7 @@
 | Entrant | Mystira (Pty) Ltd |
 | Contest | Kiroween 2026, category: Costume Contest |
 | Submission deadline | Friday 4 December 2026, 14:00 PT (midnight going into Saturday, South African time) |
-| Companion docs | [Technical Specification](./tech-spec.md) v1.6, [Content format](./content-format.md) v1.1, [PRD 07: Seven interaction types](./prd-07-seven-interactions.md) |
+| Companion docs | [Technical Specification](./tech-spec.md) v1.6, [Content format](./content-format.md) v1.1, [PRD 07: Seven interaction types](./prd-07-seven-interactions.md), [PRD 08: Bilingual learning layers](./prd-08-bilingual-learning.md) |
 
 > This repository is public and open source. This document describes only the player and its demo content. How Mystira decides what a child gets (story engine, personalisation rules, scoring and child-profile logic) runs in private services; it is out of scope here and is not described.
 
