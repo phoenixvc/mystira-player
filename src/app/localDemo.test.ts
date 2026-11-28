@@ -17,7 +17,7 @@ describe('local demo bootstrap', () => {
   it('exposes assessment and follow-up only when both Spec 2 interactions are enabled', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots'] } }) }));
     const demo = await loadLocalDemo();
-    expect(demo.assessment?.entries).toEqual({ practice: 'who_said_it', assessment: 'assessment', followUp: 'follow-up' });
+    expect(demo.assessment?.entries).toEqual({ practice: 'demo:practice', assessment: 'assessment', followUp: 'follow-up' });
     const first = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: demo.assessment!.profiles[0]!.profileId }], startNodeId: demo.assessment!.entries.assessment });
     expect(first.node).toMatchObject({ type: 'check', attempt: 1 });
     const followUp = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: demo.assessment!.profiles[0]!.profileId }], startNodeId: demo.assessment!.entries.followUp });
@@ -39,7 +39,7 @@ describe('local demo bootstrap', () => {
   it('exposes the fictional inspect piece with inspect enabled alone', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['inspect'] } }) }));
     const demo = await loadLocalDemo();
-    expect(demo.assessment?.entries).toEqual({ inspect: 'what_do_they_want' });
+    expect(demo.assessment?.entries).toEqual({ inspect: 'demo:inspect' });
     const first = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: demo.assessment!.entries.inspect });
     expect(first.node.interaction.type).toBe('inspect');
     if (first.node.interaction.type !== 'inspect') throw new Error('Expected inspect');

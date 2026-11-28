@@ -221,6 +221,19 @@ describe('LocalEngine', () => {
     expect(assessment.node).toMatchObject({ id: 'q1_free_coins', type: 'check' });
   });
 
+  it('continues a fixed-profile lesson from authored practice and inspect scene IDs', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots', 'sequence', 'inspect']);
+    const players = [{ type: 'Profile' as const, profileId: 'demo_lerato' }];
+    const practice = await engine.startSession({ activityId: 'pumpkin_gate', players, startNodeId: 'who_said_it' });
+    const hotspot = await engine.respond(practice.sessionId, { answerRequestId: 'lesson-choice', version: practice.version, nodeId: practice.node.id, answer: { kind: 'choice', choiceId: 'video' } });
+    expect(hotspot.node.id).toBe('how_know_find');
+
+    const inspect = await engine.startSession({ activityId: 'pumpkin_gate', players, startNodeId: 'what_do_they_want' });
+    const next = await engine.respond(inspect.sessionId, { answerRequestId: 'lesson-inspect', version: inspect.version, nodeId: inspect.node.id, answer: { kind: 'inspect', partIds: ['link', 'price'] } });
+    expect(next.node.id).toBe('who_else_says_it');
+  });
+
   it('lets the child-chosen profile complete all five lesson pieces in any order', async () => {
     const gate = StoryYamlSchema.parse(parse(pumpkinGate));
     const engine = new LocalEngine(gate, ['choices', 'hotspots', 'sequence', 'inspect']);

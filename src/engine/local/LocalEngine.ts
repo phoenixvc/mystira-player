@@ -6,6 +6,9 @@ import { EngineError } from '../types';
 import { compileScene } from './compiler';
 import { createNodeValidator } from '../../schema/node';
 
+const PRACTICE_PREVIEW_ENTRY = 'demo:practice';
+const INSPECT_PREVIEW_ENTRY = 'demo:inspect';
+
 type Session = {
   id: string;
   sceneIds: string[];
@@ -59,6 +62,10 @@ export class LocalEngine implements Engine {
 
   /** Demo-only start for the first supported choice practice piece. */
   demoPracticeEntry(): string | undefined {
+    return this.practiceSceneId() ? PRACTICE_PREVIEW_ENTRY : undefined;
+  }
+
+  private practiceSceneId(): string | undefined {
     if (!this.enabled.includes('choices')) return undefined;
     const firstPiece = this.story.lesson?.pieces[0];
     return firstPiece?.scenes?.find((id) => this.story.scenes.some((scene) => scene.id === id && scene.practice?.answer.branch && scene.branches.length >= 2));
@@ -72,29 +79,33 @@ export class LocalEngine implements Engine {
     if (!profileId) throw new EngineError('notFound', 'This local story has no demo profile.');
     const profile = this.story.demo?.profiles.find((candidate) => candidate.id === profileId);
     if (this.story.demo && !profile) throw new EngineError('notFound', `Demo profile '${profileId}' was not found.`);
-    if (profile?.order === 'child_chooses' && this.story.lesson && !request.startNodeId) {
+    const practiceEntry = request.startNodeId === PRACTICE_PREVIEW_ENTRY;
+    const inspectEntry = request.startNodeId === INSPECT_PREVIEW_ENTRY;
+    const startNodeId = practiceEntry ? this.practiceSceneId() : inspectEntry ? this.inspectSceneId() : request.startNodeId;
+    if ((practiceEntry || inspectEntry) && !startNodeId) throw new EngineError('unsupported', 'This preview interaction is not enabled.');
+    if (profile?.order === 'child_chooses' && this.story.lesson && !startNodeId) {
       throw new EngineError('unsupported', 'Choose a lesson piece before starting this profile.');
     }
     const assessmentEntry = request.startNodeId === 'assessment' || request.startNodeId === 'follow-up';
     if (assessmentEntry && !this.demoAssessmentEntries().assessment) throw new EngineError('unsupported', 'Assessment interactions are not enabled.');
     const firstCheck = this.checkQuestions()[0]?.scene;
-    const availableSceneIds = this.getSceneIds(profileId, assessmentEntry ? undefined : request.startNodeId, assessmentEntry);
+    const availableSceneIds = this.getSceneIds(profileId, assessmentEntry ? undefined : startNodeId, assessmentEntry);
     const assessmentIndex = availableSceneIds.indexOf(firstCheck ?? '');
     if (assessmentEntry && assessmentIndex < 0) throw new EngineError('notFound', 'The assessment start scene is unavailable.');
-    const isolatedInspectPreview = !assessmentEntry && profile?.order === 'fixed' && !!request.startNodeId && request.startNodeId === this.demoInspectEntry();
-    const practicePreview = !assessmentEntry && profile?.order === 'fixed' && !!request.startNodeId && (request.startNodeId === this.demoPracticeEntry() || isolatedInspectPreview);
+    const isolatedInspectPreview = !assessmentEntry && profile?.order === 'fixed' && inspectEntry;
+    const practicePreview = !assessmentEntry && profile?.order === 'fixed' && (practiceEntry || isolatedInspectPreview);
     const firstUnsupported = practicePreview ? availableSceneIds.findIndex((id) => {
       const kind = this.story.scenes.find((scene) => scene.id === id)?.interaction?.kind;
       return kind !== undefined && !this.enabled.includes(kind);
     }) : -1;
     const sceneIds = assessmentEntry ? availableSceneIds.slice(assessmentIndex) : isolatedInspectPreview
-      ? this.pieceSceneIds(profileId).find((piece) => piece.sceneIds.includes(request.startNodeId!))?.sceneIds ?? [] : practicePreview
+      ? this.pieceSceneIds(profileId).find((piece) => piece.sceneIds.includes(startNodeId!))?.sceneIds ?? [] : practicePreview
       ? availableSceneIds.slice(0, firstUnsupported < 0 ? availableSceneIds.length : firstUnsupported) : availableSceneIds;
     if (sceneIds.length === 0) {
       if (request.startNodeId) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
       throw new EngineError('unsupported', 'This story has no playable lesson scenes yet.');
     }
-    const startIndex = assessmentEntry ? 0 : request.startNodeId === undefined ? 0 : sceneIds.indexOf(request.startNodeId);
+    const startIndex = assessmentEntry ? 0 : startNodeId === undefined ? 0 : sceneIds.indexOf(startNodeId);
     if (startIndex < 0) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
     const players = request.players.length > 0 ? request.players : [{ type: 'Guest' as const, displayName: profile?.display_name ?? 'Guest' }];
     const session: Session = {
@@ -335,6 +346,10 @@ export class LocalEngine implements Engine {
 
   /** Demo-only entry for a supported inspect piece. */
   demoInspectEntry(): string | undefined {
+    return this.inspectSceneId() ? INSPECT_PREVIEW_ENTRY : undefined;
+  }
+
+  private inspectSceneId(): string | undefined {
     if (!this.enabled.includes('inspect')) return undefined;
     return this.story.scenes.find((scene) => scene.interaction?.kind === 'inspect')?.id;
   }
