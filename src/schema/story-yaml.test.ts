@@ -11,6 +11,7 @@ describe('Story YAML foundation schema', () => {
   ])('parses the %s content without dropping legacy fields', (_name, source) => {
     const authored = parse(source);
     const story = StoryYamlSchema.parse(authored);
+    expect(story).toEqual(authored);
     expect(story.scenes.map((scene) => scene.id)).toEqual(authored.scenes.map((scene: { id: string }) => scene.id));
     expect(story.scenes[0]?.metadata).toEqual(authored.scenes[0].metadata);
     expect(story.scenes[0]?.media).toEqual(authored.scenes[0].media);

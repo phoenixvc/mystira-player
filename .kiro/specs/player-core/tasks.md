@@ -42,11 +42,11 @@ Tasks are grouped by implementation boundary. Checked items are present in the c
   - [x] 5.6 Add visible, keyboard-operable Next and conditional Back.
   - [x] 5.7 Test renderer components and fallback paths.
   - Requirements: 9–12
-- [ ] 6. Add grown-up notes, age density and audio lifecycle.
+- [x] 6. Add grown-up notes, age density and audio lifecycle.
   - [x] 6.1 Show rationale notes only in permitted grown-up/demo contexts.
   - [x] 6.2 Apply age-group sizing and narration defaults.
-  - [ ] 6.3 Stop audio, speech, video and requests on node change or unmount.
-  - [ ] 6.4 Test visibility, density and cleanup.
+  - [x] 6.3 Stop audio, speech and video on node change or unmount; abort in-flight Engine requests on unmount or session switch.
+  - [x] 6.4 Test visibility, density and cleanup.
   - Requirements: 16–18
 - [ ] 7. Add demo controls and the Manor visual system.
   - [ ] 7.1 Add local-demo profile/entry-point switches and notes toggle.

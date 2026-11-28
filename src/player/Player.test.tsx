@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { Player } from './Player';
 import type { Engine, Step } from '../engine/types';
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 const first: Step = {
   sessionId: 's1', version: '1', ageGroupId: '6-9', players: [], canGoBack: false,
@@ -24,10 +24,10 @@ describe('Player', () => {
     expect(screen.getByText('A different way in.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() => expect(screen.getByRole('heading', { name: 'In the hall' })).toBeTruthy());
-    expect(respond).toHaveBeenNthCalledWith(1, 's1', expect.objectContaining({ version: '1', nodeId: 'gate', answer: { kind: 'continue' } }));
+    expect(respond).toHaveBeenNthCalledWith(1, 's1', expect.objectContaining({ version: '1', nodeId: 'gate', answer: { kind: 'continue' } }), expect.objectContaining({ signal: expect.any(AbortSignal) }));
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     await waitFor(() => expect(screen.getByRole('heading', { name: 'At the gate' })).toBeTruthy());
-    expect(respond).toHaveBeenNthCalledWith(2, 's1', expect.objectContaining({ version: '2', nodeId: 'hall', answer: { kind: 'back' } }));
+    expect(respond).toHaveBeenNthCalledWith(2, 's1', expect.objectContaining({ version: '2', nodeId: 'hall', answer: { kind: 'back' } }), expect.objectContaining({ signal: expect.any(AbortSignal) }));
   });
 
   it('keeps grown-up notes hidden outside demo mode', async () => {
@@ -54,6 +54,77 @@ describe('Player', () => {
     finishResponse(second);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'New story' })).toBeTruthy());
     expect(onStep).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps navigation live when a media control is used during a pending response', async () => {
+    let finishResponse!: (step: Step) => void;
+    const engine: Engine = {
+      startSession: vi.fn().mockResolvedValue(first), resumeSession: vi.fn(),
+      respond: vi.fn().mockImplementation(() => new Promise<Step>((resolve) => { finishResponse = resolve; })),
+    };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Replay line' }));
+    finishResponse(second);
+    await screen.findByRole('heading', { name: 'In the hall' });
+    expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('does not speak a cancelled audio fallback after unmount', async () => {
+    let rejectPlay!: (error: Error) => void;
+    const speak = vi.fn();
+    vi.stubGlobal('speechSynthesis', { speak, cancel: vi.fn() });
+    vi.stubGlobal('SpeechSynthesisUtterance', class { constructor(_text: string) {} });
+    vi.stubGlobal('Audio', class {
+      play() { return new Promise<void>((_resolve, reject) => { rejectPlay = reject; }); }
+      pause() { /* stopped on unmount */ }
+    });
+    const narrated: Step = { ...first, node: { ...first.node, lines: [{ speakerId: 'narrator', text: 'Welcome.', audioUrl: '/welcome.mp3' }] } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(narrated), resumeSession: vi.fn(), respond: vi.fn() };
+    const view = render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    await waitFor(() => expect(rejectPlay).toBeTypeOf('function'));
+    view.unmount();
+    rejectPlay(new Error('Playback cancelled'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(speak).not.toHaveBeenCalled();
+  });
+
+  it('aborts an in-flight Engine request on unmount', async () => {
+    const respond = vi.fn().mockImplementation(() => new Promise<Step>(() => { /* pending transport */ }));
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(first), resumeSession: vi.fn(), respond };
+    const view = render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    const options = respond.mock.calls[0]?.[2] as { signal: AbortSignal };
+    expect(options.signal.aborted).toBe(false);
+    view.unmount();
+    expect(options.signal.aborted).toBe(true);
+  });
+
+  it('stops video when the player unmounts', async () => {
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const withVideo: Step = { ...first, node: { ...first.node, media: { video: { url: '/gate.mp4', onEnd: 'stop', skippable: true } } } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(withVideo), resumeSession: vi.fn(), respond: vi.fn() };
+    const view = render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    view.unmount();
+    expect(pause).toHaveBeenCalled();
+    pause.mockRestore();
+  });
+
+  it.each([
+    ['1-2', '64px', 'true'],
+    ['6-9', '48px', 'true'],
+    ['13-18', '44px', 'false'],
+  ] as const)('sets age %s density and narration defaults', async (ageGroupId, target, pressed) => {
+    const aged: Step = { ...first, ageGroupId };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(aged), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    expect(screen.getByRole('region', { name: 'Story player' }).getAttribute('style')).toContain(`--mp-min-target: ${target}`);
+    expect(screen.getByRole('button', { name: /Narration/ }).getAttribute('aria-pressed')).toBe(pressed);
   });
 
   it('keeps the end view usable when restarting the story fails', async () => {
@@ -94,7 +165,7 @@ describe('Player', () => {
     expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
     expect(respond).not.toHaveBeenCalled();
     played[0]!.onended?.();
-    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'continue' } })));
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'continue' } }), expect.objectContaining({ signal: expect.any(AbortSignal) })));
     expect(played[0]!.pause).toHaveBeenCalled();
   });
 

@@ -1021,13 +1021,14 @@ export type Home = {
 export interface Engine {
   listProfiles?(): Promise<Profile[]>;
   getHome?(profileId: string): Promise<Home>;
-  startSession(req: StartSessionRequest): Promise<Step>;
-  resumeSession(sessionId: string): Promise<Step>;
-  respond(sessionId: string, r: AnswerSubmission): Promise<Step>;
+  startSession(req: StartSessionRequest, options?: { signal?: AbortSignal }): Promise<Step>;
+  resumeSession(sessionId: string, options?: { signal?: AbortSignal }): Promise<Step>;
+  respond(sessionId: string, r: AnswerSubmission, options?: { signal?: AbortSignal }): Promise<Step>;
 }
 ```
 
 **Design note**: The `Node` type is inferred from the Zod schema in `src/schema/node.ts` and imported here. This avoids a parallel type definition. The engine types reference `Node` but do not re-define it.
+The optional request signal lets network-backed engines abort transport work when the player unmounts or switches sessions. LocalEngine may complete synchronously and ignore the signal; the player still rejects stale responses by session generation.
 
 ### 4. LocalEngine (core path; Requirements 5–8)
 

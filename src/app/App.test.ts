@@ -49,6 +49,6 @@ describe('core preview', () => {
     await screen.findByRole('heading', { name: 'Base scene' });
     fireEvent.change(screen.getByLabelText('Child'), { target: { value: 'b' } });
     await screen.findByRole('heading', { name: 'Other scene' });
-    expect(startSession).toHaveBeenLastCalledWith(expect.objectContaining({ players: [{ type: 'Profile', profileId: 'b' }], startNodeId: 'other-scene' }));
+    expect(startSession).toHaveBeenLastCalledWith(expect.objectContaining({ players: [{ type: 'Profile', profileId: 'b' }], startNodeId: 'other-scene' }), expect.objectContaining({ signal: expect.any(AbortSignal) }));
   });
 });

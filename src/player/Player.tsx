@@ -28,6 +28,8 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
   const video = useRef<HTMLVideoElement>(null);
   const request = useRef<{ key: string; id: string; answer: Answer } | undefined>(undefined);
   const generation = useRef(0);
+  const requestGeneration = useRef(0);
+  const inFlight = useRef<AbortController | undefined>(undefined);
   const busyRef = useRef(false);
   const autoAdvanced = useRef<string | undefined>(undefined);
   const reactionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -39,6 +41,13 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     video.current?.pause();
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
     if (reactionTimer.current) clearTimeout(reactionTimer.current);
+  }, []);
+
+  const beginRequest = useCallback(() => {
+    inFlight.current?.abort();
+    const controller = new AbortController();
+    inFlight.current = controller;
+    return controller;
   }, []);
 
   const playReaction = useCallback(() => {
@@ -66,19 +75,21 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
 
   useEffect(() => {
     let active = true;
+    requestGeneration.current += 1;
     stopMedia();
     setStep(undefined);
     setError(undefined);
     setBusy(true);
     busyRef.current = true;
     request.current = undefined;
-    engine.startSession(startRequest).then((next) => {
+    const controller = beginRequest();
+    engine.startSession(startRequest, { signal: controller.signal }).then((next) => {
       if (active) { setStep(next); onStep?.(next); }
     }).catch((cause: unknown) => {
       if (active) setError(cause instanceof Error ? cause.message : 'Could not start the story.');
-    }).finally(() => { if (active) { setBusy(false); busyRef.current = false; } });
-    return () => { active = false; stopMedia(); };
-  }, [engine, startRequest, stopMedia, onStep]);
+    }).finally(() => { if (inFlight.current === controller) inFlight.current = undefined; if (active) { setBusy(false); busyRef.current = false; } });
+    return () => { active = false; requestGeneration.current += 1; inFlight.current?.abort(); controller.abort(); stopMedia(); };
+  }, [engine, startRequest, stopMedia, onStep, beginRequest]);
 
   useEffect(() => {
     stopMedia();
@@ -90,7 +101,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
   const answer = useCallback(async (value: Answer) => {
     if (!step || busyRef.current) return;
     stopMedia();
-    const token = generation.current;
+    const token = requestGeneration.current;
     busyRef.current = true;
     setBusy(true);
     setError(undefined);
@@ -98,40 +109,43 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     if (request.current?.key !== key || JSON.stringify(request.current.answer) !== JSON.stringify(value)) {
       request.current = { key, id: crypto.randomUUID(), answer: value };
     }
+    const controller = beginRequest();
     try {
       const next = await engine.respond(step.sessionId, {
         answerRequestId: request.current.id, version: step.version, nodeId: step.node.id,
         answer: value, playerId: step.activePlayerId,
-      });
-      if (token !== generation.current) return;
+      }, { signal: controller.signal });
+      if (token !== requestGeneration.current) return;
       setStep(next);
       onStep?.(next);
     } catch (cause) {
-      if (token !== generation.current) return;
+      if (token !== requestGeneration.current) return;
       if (cause instanceof EngineError && cause.kind === 'conflict' && cause.currentStep) {
         setStep(cause.currentStep);
         onStep?.(cause.currentStep);
       } else setError(cause instanceof Error ? cause.message : 'Could not change scenes.');
-    } finally { if (token === generation.current) { busyRef.current = false; setBusy(false); } }
-  }, [engine, onStep, step, stopMedia]);
+    } finally { if (inFlight.current === controller) inFlight.current = undefined; if (token === requestGeneration.current) { busyRef.current = false; setBusy(false); } }
+  }, [engine, onStep, step, stopMedia, beginRequest]);
 
   const playAgain = useCallback(async () => {
     if (busyRef.current) return;
+    requestGeneration.current += 1;
     stopMedia();
-    const token = generation.current;
+    const token = requestGeneration.current;
     busyRef.current = true;
     setBusy(true);
     setError(undefined);
     request.current = undefined;
+    const controller = beginRequest();
     try {
-      const next = await engine.startSession(startRequest);
-      if (token !== generation.current) return;
+      const next = await engine.startSession(startRequest, { signal: controller.signal });
+      if (token !== requestGeneration.current) return;
       setStep(next);
       onStep?.(next);
     } catch (cause) {
-      if (token === generation.current) setError(cause instanceof Error ? cause.message : 'Could not restart the story.');
-    } finally { if (token === generation.current) { busyRef.current = false; setBusy(false); } }
-  }, [engine, onStep, startRequest, stopMedia]);
+      if (token === requestGeneration.current) setError(cause instanceof Error ? cause.message : 'Could not restart the story.');
+    } finally { if (inFlight.current === controller) inFlight.current = undefined; if (token === requestGeneration.current) { busyRef.current = false; setBusy(false); } }
+  }, [engine, onStep, startRequest, stopMedia, beginRequest]);
 
   const playLines = useCallback((from: number) => {
     if (!step) return;
@@ -153,7 +167,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       const speaker = step.node.speakers.find((item) => item.id === line.speakerId);
       let fallbackStarted = false;
       const speech = () => {
-        if (fallbackStarted) return;
+        if (fallbackStarted || token !== generation.current) return;
         fallbackStarted = true;
         if (typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') return;
         const utterance = new SpeechSynthesisUtterance(line.text);
