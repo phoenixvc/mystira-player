@@ -5,13 +5,13 @@ import { EngineError } from '../types';
 
 const FALLBACK_COLOUR = '#A9C0DC';
 
-export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: InteractionType[] = [], profileId?: string): Node {
+export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: InteractionType[] = [], profileId?: string, sequenceOrder?: string[]): Node {
   if (scene.type === 'roll' || scene.type === 'special' || (scene.media.stage3d != null && scene.media.image == null && scene.media.video == null)) {
     throw new EngineError('unsupported', `Scene '${scene.id}' uses an unsupported 3D or special presentation.`);
   }
   const interactionKind = typeof scene.interaction === 'object' && scene.interaction !== null && 'kind' in scene.interaction
     ? scene.interaction.kind : undefined;
-  if (interactionKind !== undefined) {
+  if (interactionKind !== undefined && interactionKind !== 'sequence') {
     throw new EngineError('unsupported', `Scene '${scene.id}' interaction '${String(interactionKind)}' is not implemented yet.`);
   }
 
@@ -37,7 +37,7 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   const piece = story.lesson?.pieces.find((candidate) => candidate.scenes?.includes(scene.id) || candidate.versions?.some((version) => version.scenes.includes(scene.id)));
   const differsByProfile = piece !== undefined && new Set((story.demo?.profiles ?? []).map((candidate) => candidate.versions?.[piece.id] ?? piece.versions?.[0]?.id ?? '')).size > 1;
   const rationaleText = piece ? profile?.rationale?.[piece.id] : undefined;
-  const interaction = buildInteraction(scene);
+  const interaction = buildInteraction(scene, sequenceOrder);
   const node = {
     type: 'scene' as const, id: scene.id, title: scene.title,
     media: {
@@ -60,7 +60,23 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   return parsed.data;
 }
 
-function buildInteraction(scene: SceneYaml) {
+function buildInteraction(scene: SceneYaml, sequenceOrder?: string[]) {
+  if (scene.interaction?.kind === 'sequence') {
+    if (scene.branches.length) throw new EngineError('server', `Scene '${scene.id}' cannot mix sequence items and branches.`);
+    const authored = scene.interaction.items;
+    const ids = authored.map((item) => item.id);
+    const order = sequenceOrder ?? ids;
+    if (order.length !== ids.length || new Set(order).size !== ids.length || order.some((id) => !ids.includes(id))) {
+      throw new EngineError('server', `Scene '${scene.id}' has an invalid Engine-supplied sequence order.`);
+    }
+    const items = order.map((id) => {
+      const item = authored.find((entry) => entry.id === id)!;
+      return { id: item.id, label: item.label, ...(item.image ? { imageUrl: item.image, alt: item.alt } : {}) };
+    });
+    const practiceOrder = scene.practice?.answer.order;
+    const local = practiceOrder ? { order: practiceOrder, ...(feedbackFor(scene) ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+    return { type: 'sequence' as const, items, ...(local ? { local } : {}) };
+  }
   const branches = scene.branches;
   if (branches.length) {
     const answer = scene.practice?.answer;
@@ -75,13 +91,15 @@ function buildInteraction(scene: SceneYaml) {
         if (x === undefined || y === undefined || w === undefined || h === undefined) throw new EngineError('server', `Scene '${scene.id}' has invalid bounds.`);
         return { id: branch.object_id, label: object.label ?? branch.choice, region: { shape: 'rect' as const, x, y, w, h }, ...(object.reveal ? { reveal: { text: object.reveal.text, ...(object.reveal.image ? { imageUrl: object.reveal.image } : {}) } } : {}) };
       });
-      const local = answer?.object ? { correctId: answer.object, ...(scene.practice?.hint ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+      const outcomes = outcomesFor(scene, spots.map((spot) => spot.id), answer?.object, true);
+      const local = answer?.object ? { correctId: answer.object, ...(feedbackFor(scene) ? { feedback: feedbackFor(scene) } : {}), ...(outcomes ? { outcomes } : {}) } : undefined;
       return { type: 'hotspots' as const, spots, ...(local ? { local } : {}) };
     }
     const options = branches.map((branch, index) => ({ id: branch.id ?? `choice-${index + 1}`, label: branch.choice }));
     const correctId = answer?.branch ? options.find((option) => option.id === answer.branch)?.id : undefined;
     if (answer?.branch && !correctId) throw new EngineError('server', `Scene '${scene.id}' practice answer refers to missing branch '${answer.branch}'.`);
-    const local = correctId ? { correctId, ...(scene.practice?.hint ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+    const outcomes = outcomesFor(scene, options.map((option) => option.id), correctId, false);
+    const local = correctId ? { correctId, ...(feedbackFor(scene) ? { feedback: feedbackFor(scene) } : {}), ...(outcomes ? { outcomes } : {}) } : undefined;
     return { type: 'choices' as const, options, ...(local ? { local } : {}) };
   }
   return { type: 'continue' as const };
@@ -89,10 +107,30 @@ function buildInteraction(scene: SceneYaml) {
 
 function feedbackFor(scene: SceneYaml) {
   const practice = scene.practice;
-  if (!practice?.hint) return undefined;
+  if (!practice || (!practice.hint && !practice.on_wrong && practice.reveal_after === undefined)) return undefined;
   return {
-    hint: { text: practice.hint.text, ...(practice.hint.audio ? { audioUrl: practice.hint.audio } : {}) },
+    ...(practice.hint ? { hint: { text: practice.hint.text, ...(practice.hint.audio ? { audioUrl: practice.hint.audio } : {}) } } : {}),
     ...(practice.on_wrong ? { onWrong: practice.on_wrong.map((item) => ({ text: item.text, ...(item.audio ? { audioUrl: item.audio } : {}) })) } : {}),
     ...(practice.reveal_after === undefined ? {} : { revealAfter: practice.reveal_after }),
   };
+}
+
+function outcomesFor(scene: SceneYaml, ids: string[], correctId: string | undefined, hotspot: boolean) {
+  const authored = scene.practice?.outcomes;
+  if (!authored) return undefined;
+  if (!correctId || new Set(ids).size !== ids.length || scene.branches.some((branch) => !branch.id && !hotspot)) {
+    throw new EngineError('server', `Scene '${scene.id}' practice outcomes require stable, unique answer IDs.`);
+  }
+  const outcomes: Record<string, { onWrong: { text: string; audioUrl?: string } } | { onCorrect: { image?: { imageUrl: string; alt: string }; line: { text: string; audioUrl?: string } } }> = {};
+  for (const [id, outcome] of Object.entries(authored)) {
+    if (!ids.includes(id)) throw new EngineError('server', `Scene '${scene.id}' outcome '${id}' is not a selectable answer.`);
+    if ('on_wrong' in outcome) {
+      if (id === correctId) throw new EngineError('server', `Scene '${scene.id}' gives wrong feedback for its correct answer.`);
+      outcomes[id] = { onWrong: { text: outcome.on_wrong.text, ...(outcome.on_wrong.audio ? { audioUrl: outcome.on_wrong.audio } : {}) } };
+    } else {
+      if (hotspot || id !== correctId) throw new EngineError('server', `Scene '${scene.id}' gives a correct presentation for an invalid choice.`);
+      outcomes[id] = { onCorrect: { ...(outcome.on_correct.image ? { image: { imageUrl: outcome.on_correct.image.src, alt: outcome.on_correct.image.alt } } : {}), line: { text: outcome.on_correct.line.text, ...(outcome.on_correct.line.audio ? { audioUrl: outcome.on_correct.line.audio } : {}) } } };
+    }
+  }
+  return outcomes;
 }

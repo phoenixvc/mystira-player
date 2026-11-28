@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Product target approved; implementation after the four core interaction gates |
+| Status | Product target approved; each new interaction has an acceptance gate after the four core interaction gates |
 | Decision | All seven interaction types belong in the supported Mystira Player, without making all seven a Kiroween submission requirement |
 | Primary PRD | [Mystira Player PRD](./prd.md) |
 | Technical spec | [Spec 7: seven interaction coverage](../.kiro/specs/seven-interactions/requirements.md) |
@@ -16,9 +16,9 @@ Success means a host can enable each of the seven types in open, practice and ch
 ## Scope and sequencing
 
 1. Complete and accept Specs 1–4: continue navigation plus choices, hotspots, sequence and inspect. Spec 2 owns the shared open/practice/check, feedback and assessment flow.
-2. Add pattern, keypad and count in that order under Spec 7. Each type has an independent enablement and acceptance gate; a host may support four, five, six or seven types.
+2. Prioritize keypad, then pattern and count under Spec 7. Keypad is targeted for the Kiroween fire-safety lesson if its independent acceptance gate passes. The lesson must also have an explicitly authored core-interaction path; an unfinished keypad does not block the submission. A host may support four, five, six or seven types.
 3. Use Spec 5 to prove legacy Mystira story playback and Spec 6 to prove third-party embedding. Their gates remain separate from interaction coverage.
-4. The Kiroween scope and cut order in [the primary PRD](./prd.md) do not expand automatically. A release that promises seven types must pass all seven gates.
+4. The Kiroween scope and cut order in [the primary PRD](./prd.md) do not expand automatically beyond the targeted keypad addition. A release that promises seven types must pass all seven gates.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ Success means a host can enable each of the seven types in open, practice and ch
 | P7-04 | Keypad accepts a bounded digit sequence with correction before Done. A displayed "Call" control is pretend and never starts a phone call, opens a URI or requests contact access. |
 | P7-05 | Count asks the child to find and select multiple scene objects, shows progress without revealing correctness on a check, permits correction before Done, and submits stable selected IDs. |
 | P7-06 | The Engine supplies prompts, candidate order and progression. The player does not infer a child's profile, choose a teaching method, score a check or invent an answer. |
-| P7-07 | A type absent from `interactions.enabled` produces a clear unsupported state at validation and runtime. The player never silently substitutes another interaction. |
+| P7-07 | A type absent from `interactions.enabled` produces a clear unsupported state at validation and runtime. The player never silently substitutes another interaction. A fallback is a separately authored core-interaction version selected by the Engine, not a renderer substitution. |
 | P7-08 | Input, focus, selected state, feedback and completion are understandable without sound or colour, respect reduced motion and the age-density target, and do not trap a child when audio is unavailable. |
 | P7-09 | Each type has schema, component, keyboard, accessibility and end-to-end coverage in open, practice and check modes. Check nodes contain no private answer field. |
 

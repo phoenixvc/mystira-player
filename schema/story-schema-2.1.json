@@ -981,6 +981,11 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "alt": {
+                          "type": "string",
+                          "minLength": 1,
+                          "pattern": "\\S"
                         }
                       }
                     }
@@ -1147,6 +1152,45 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 5
+              },
+              "outcomes": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["on_wrong"],
+                      "properties": {
+                        "on_wrong": {
+                          "type": "object", "additionalProperties": false, "required": ["text"],
+                          "properties": { "text": { "type": "string", "minLength": 1, "pattern": "\\S" }, "audio": { "type": ["string", "null"] } }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["on_correct"],
+                      "properties": {
+                        "on_correct": {
+                          "type": "object", "additionalProperties": false, "required": ["line"],
+                          "properties": {
+                            "image": {
+                              "type": "object", "additionalProperties": false, "required": ["src", "alt"],
+                              "properties": { "src": { "type": "string", "minLength": 1, "pattern": "\\S" }, "alt": { "type": "string", "minLength": 1, "pattern": "\\S" } }
+                            },
+                            "line": {
+                              "type": "object", "additionalProperties": false, "required": ["text"],
+                              "properties": { "text": { "type": "string", "minLength": 1, "pattern": "\\S" }, "audio": { "type": ["string", "null"] } }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },

@@ -4,7 +4,7 @@
 
 This spec adds pattern, keypad and count to the four interaction families in Specs 1–4. It follows [PRD 07](../../../docs/prd-07-seven-interactions.md). Spec 2 owns shared modes, feedback, check confirmation, research and answer submission. Spec 7 reuses those contracts. Specs 5 and 6 separately own legacy playback and portable embedding.
 
-The three new types are a post-core product target. They do not expand the Kiroween submission gate without a recorded scope change.
+The three new types are a post-core product target. Jurie targeted keypad for the Kiroween fire-safety lesson on 2026-11-28, with a separately authored core-interaction fallback; keypad is not a submission blocker. Pattern and count remain after the contest minimum. No new type is enabled before all four core gates and its own acceptance gate pass.
 
 ## Requirements
 

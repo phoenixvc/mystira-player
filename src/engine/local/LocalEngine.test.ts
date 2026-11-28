@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { LocalEngine } from './LocalEngine';
 import type { StoryYaml } from '../../schema/story-yaml';
+import { StoryYamlSchema } from '../../schema/story-yaml';
+import { parse } from 'yaml';
+import pumpkinGate from '../../../content/manor/pumpkin-gate.story.yaml?raw';
 
 const story = {
   title: 'Demo', description: '', image: '', tags: [], difficulty: 'Easy', session_length: 'Short',
@@ -115,13 +118,108 @@ describe('LocalEngine', () => {
     expect(await engine.resumeSession(first.sessionId)).toEqual(first);
   });
 
-  it('does not advance from lesson pieces to a result while a check is unimplemented', async () => {
-    const withCheck: StoryYaml = { ...story, lesson: { ...story.lesson!, checks: [{ id: 'assessment', questions: [{ id: 'q1', scene: 'alternate', answer: { branch: 'yes' } }] }], result: { scene: 'alternate' } } };
-    const engine = new LocalEngine(withCheck, ['choices']);
-    const first = await start(engine, 'alternate-profile');
-    await expect(engine.respond(first.sessionId, { answerRequestId: 'end', version: first.version, nodeId: first.node.id, answer: { kind: 'continue' } }))
-      .rejects.toMatchObject({ kind: 'unsupported', message: expect.stringContaining('cannot be skipped') });
-    expect((await engine.resumeSession(first.sessionId)).node.id).toBe('alternate');
+  it('keeps check answers private, scores only the first try, and returns through research', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: 'assessment' });
+    expect(first.node).toMatchObject({ id: 'q1_free_coins', type: 'check', attempt: 1, scored: true });
+    expect(first.progress).toEqual({ done: 0, total: 6 });
+    expect(first.canGoBack).toBe(false);
+    expect(JSON.stringify(first.node)).not.toContain('correctId');
+    expect(JSON.stringify(first.node)).not.toContain('"answer"');
+    const wrong = await engine.respond(first.sessionId, { answerRequestId: 'wrong', version: first.version, nodeId: first.node.id, answer: { kind: 'choice', choiceId: 'likes' } });
+    expect(wrong.node).toMatchObject({ type: 'research', step: 'where', yourAnswer: 'How many likes it has' });
+    let current = wrong;
+    for (const answer of [{ kind: 'choice', choiceId: 'channel' }, { kind: 'hotspot', hotspotId: 'channel_name' }, { kind: 'continue' }, { kind: 'continue' }] as const) {
+      current = await engine.respond(current.sessionId, { answerRequestId: `research-${current.node.id}`, version: current.version, nodeId: current.node.id, answer });
+    }
+    expect(current.node).toMatchObject({ type: 'check', attempt: 2, scored: false });
+    expect(current.canGoBack).toBe(false);
+    const result = await engine.respond(current.sessionId, { answerRequestId: 'follow-up', version: current.version, nodeId: current.node.id, answer: { kind: 'choice', choiceId: 'who' } });
+    expect(result.node).toMatchObject({ type: 'result', correctFirstTry: 0, total: 1 });
+    expect(await engine.respond(current.sessionId, { answerRequestId: 'follow-up', version: current.version, nodeId: current.node.id, answer: { kind: 'choice', choiceId: 'who' } })).toEqual(result);
+    const direct = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: 'assessment' });
+    const scored = await engine.respond(direct.sessionId, { answerRequestId: 'correct', version: direct.version, nodeId: direct.node.id, answer: { kind: 'choice', choiceId: 'who' } });
+    expect(scored.node).toMatchObject({ type: 'result', correctFirstTry: 1, total: 1 });
+  });
+
+  it('offers an unscored second try when a check has no research scenes', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const noResearch: StoryYaml = { ...gate, lesson: { ...gate.lesson!, checks: gate.lesson!.checks!.map((check) => ({ ...check, questions: check.questions.map((question) => ({ ...question, research: [] })) })) } };
+    const engine = new LocalEngine(noResearch, ['choices', 'hotspots']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: 'assessment' });
+    const followUp = await engine.respond(first.sessionId, { answerRequestId: 'wrong-no-research', version: first.version, nodeId: first.node.id, answer: { kind: 'choice', choiceId: 'likes' } });
+    expect(followUp.node).toMatchObject({ id: first.node.id, type: 'check', attempt: 2, scored: false });
+  });
+
+  it('keeps every question unscored in a direct follow-up session', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const question = gate.lesson!.checks![0]!.questions[0]!;
+    const secondScene = { ...gate.scenes.find((scene) => scene.id === question.scene)!, id: 'q2_free_coins' };
+    const twoQuestions: StoryYaml = { ...gate, scenes: [...gate.scenes, secondScene], lesson: { ...gate.lesson!, checks: [{ ...gate.lesson!.checks![0]!, questions: [question, { ...question, id: 'q2', scene: secondScene.id, research: [] }] }] } };
+    const engine = new LocalEngine(twoQuestions, ['choices', 'hotspots']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: 'follow-up' });
+    expect(first.node).toMatchObject({ type: 'check', attempt: 2, scored: false });
+    const next = await engine.respond(first.sessionId, { answerRequestId: 'q1', version: first.version, nodeId: first.node.id, answer: { kind: 'choice', choiceId: 'who' } });
+    expect(next.node).toMatchObject({ id: 'q2_free_coins', type: 'check', attempt: 2, scored: false });
+    const result = await engine.respond(next.sessionId, { answerRequestId: 'q2', version: next.version, nodeId: next.node.id, answer: { kind: 'choice', choiceId: 'who' } });
+    expect(result.node).toMatchObject({ type: 'result', correctFirstTry: 0, total: 2 });
+  });
+
+  it('completes the fixed-profile choice and hotspot preview before an unsupported inspect scene', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: engine.demoPracticeEntry() });
+    const hotspot = await engine.respond(first.sessionId, { answerRequestId: 'choice', version: first.version, nodeId: first.node.id, answer: { kind: 'choice', choiceId: 'video' } });
+    expect(hotspot.node.id).toBe('how_know_find');
+    const end = await engine.respond(hotspot.sessionId, { answerRequestId: 'hotspot', version: hotspot.version, nodeId: hotspot.node.id, answer: { kind: 'hotspot', hotspotId: 'crow' } });
+    expect(end.node).toMatchObject({ id: 'story-end', type: 'result' });
+  });
+
+  it('mixes sequence items once per session, rejects malformed answers, and completes the chosen piece', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots', 'sequence']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: 'how_know_teach' });
+    expect(first.node.interaction.type).toBe('sequence');
+    if (first.node.interaction.type !== 'sequence') throw new Error('Expected sequence');
+    const displayed = first.node.interaction.items.map((item) => item.id);
+    expect(displayed).not.toEqual(['eye', 'book', 'ear']);
+    expect((await engine.resumeSession(first.sessionId)).node.interaction).toEqual(first.node.interaction);
+    await expect(engine.respond(first.sessionId, { answerRequestId: 'duplicate', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'eye', 'ear'] } })).rejects.toMatchObject({ kind: 'unsupported' });
+    const wrong = await engine.respond(first.sessionId, { answerRequestId: 'wrong', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['ear', 'book', 'eye'] } });
+    expect(wrong.node.id).toBe(first.node.id);
+    const done = await engine.respond(first.sessionId, { answerRequestId: 'correct', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'book', 'ear'] } });
+    expect(done.node).toMatchObject({ type: 'result', title: 'Piece complete' });
+  });
+
+  it('keeps sequence check answers private and scores only the first confirmed try', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const original = gate.scenes.find((scene) => scene.id === 'q1_free_coins')!;
+    const sequenceScene: StoryYaml['scenes'][number] = { ...original, branches: [], practice: undefined, interaction: { kind: 'sequence', items: [
+      { id: 'eye', label: 'Saw it' }, { id: 'book', label: 'Read it' }, { id: 'ear', label: 'Heard it' },
+    ] } };
+    const sequenceStory: StoryYaml = { ...gate, scenes: gate.scenes.map((scene) => scene.id === original.id ? sequenceScene : scene), lesson: { ...gate.lesson!, checks: [{ ...gate.lesson!.checks![0]!, questions: [{ id: 'q1', scene: original.id, answer: { order: ['eye', 'book', 'ear'] }, research: [] }] }] } };
+    const engine = new LocalEngine(sequenceStory, ['choices', 'hotspots', 'sequence']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: 'assessment' });
+    expect(first.node).toMatchObject({ type: 'check', attempt: 1, scored: true });
+    expect(JSON.stringify(first.node)).not.toContain('"answer"');
+    expect(JSON.stringify(first.node)).not.toContain('"order"');
+    const retry = await engine.respond(first.sessionId, { answerRequestId: 'wrong', version: first.version, nodeId: first.node.id, answer: { kind: 'sequence', itemIds: ['ear', 'book', 'eye'] } });
+    expect(retry.node).toMatchObject({ type: 'check', attempt: 2, scored: false });
+    const result = await engine.respond(retry.sessionId, { answerRequestId: 'correct-second', version: retry.version, nodeId: retry.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'book', 'ear'] } });
+    expect(result.node).toMatchObject({ type: 'result', correctFirstTry: 0, total: 1 });
+    const direct = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: 'assessment' });
+    const scored = await engine.respond(direct.sessionId, { answerRequestId: 'correct-first', version: direct.version, nodeId: direct.node.id, answer: { kind: 'sequence', itemIds: ['eye', 'book', 'ear'] } });
+    expect(scored.node).toMatchObject({ type: 'result', correctFirstTry: 1, total: 1 });
+  });
+
+  it('finishes a child-chosen piece when its authored next scene belongs to a different profile version', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: engine.demoPracticeEntry() });
+    expect(first.node.id).toBe('who_said_it');
+    const completed = await engine.respond(first.sessionId, { answerRequestId: 'piece-done', version: first.version, nodeId: first.node.id, answer: { kind: 'choice', choiceId: 'video' }, wrongTries: 1 });
+    expect(completed.node).toMatchObject({ type: 'result', title: 'Piece complete' });
   });
 
   it('finishes a continue-only path and allows Back from the end view', async () => {

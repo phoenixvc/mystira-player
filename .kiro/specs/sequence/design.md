@@ -45,7 +45,7 @@ The exact comparison for practice uses `local.order`. A wrong answer calls the s
 
 ## Accessibility and presentation
 
-Use the active density tokens for minimum target size, spacing and text sizing. Item images require meaningful alt text when informative and empty alt text when decorative. Text labels remain present even when an image is supplied. Respect reduced motion. Sequence controls remain active while speech plays; interaction activation cancels speech through the core audio lifecycle.
+Use the active density tokens for minimum target size, spacing and text sizing. Authored item images require non-blank alt text; authors can omit an image when the text label is sufficient. Text labels remain present even when an image is supplied. Respect reduced motion. Sequence controls remain active while speech plays; interaction activation cancels speech through the core audio lifecycle.
 
 ## Testing strategy
 
