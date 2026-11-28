@@ -29,7 +29,8 @@ const piecePositions: Record<string, { left: number; bottom: number; width: numb
 const draftScenes: Scene[] = draft.scenes.map((scene) => {
   const instruction = scene.metadata?.creative_instruction ?? '';
   const pieces = instruction.split('Pieces:')[1] ?? '';
-  const usedPieces = Object.keys(piecePositions).filter((name) => new RegExp(`\\b${name}\\b`).test(pieces));
+  const usedPieces = Object.keys(piecePositions).filter((name) => new RegExp(`\\b${name}\\b`).test(pieces))
+    .filter((name) => !(name === 'smoke-alarm' && /(?:party-room|pootions-shop)\.jpg$/.test(scene.media.image ?? '')));
   const pathForPiece = (name: string) => name.startsWith('smoke-') ? `effects/${name}.png` :
     name.startsWith('arrow-') || name === 'meet-here-sign' ? `svg/${name}.svg` : `pieces/${name}.png`;
   const smokeName = usedPieces.find((name) => name.startsWith('smoke-'));
@@ -44,8 +45,8 @@ const draftScenes: Scene[] = draft.scenes.map((scene) => {
       if (!character?.image) return [];
       const base = toPreviewPath(character.image);
       const path = member.pose ? `poses/${base.split('/').at(-1)?.replace('.png', '')}/${base.split('/').at(-1)?.replace('.png', '')}-${member.pose}.png` : base;
-      const left = member.slot === 'left' ? 2 : member.slot === 'right' ? 71 : 36.5;
-      return [{ path, alt: character.id, left, bottom: 2, width: 18 }];
+      const left = member.slot === 'left' ? 8.5 : member.slot === 'right' ? 64.5 : 36.5;
+      return [{ path, alt: character.id, left, bottom: 1, width: 27 }];
     }),
     props: usedPieces.filter((name) => !name.startsWith('smoke-') && !(scene.id === 'max_s1_03' && name === 'sofa')).map((name) => ({ path: pathForPiece(name), alt: name.replaceAll('-', ' '), ...piecePositions[name]! })),
     smoke: smokeName ? pathForPiece(smokeName) : undefined,

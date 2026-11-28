@@ -5,7 +5,7 @@ export const RegionSchema = z.union([
 ]);
 export type Region = z.infer<typeof RegionSchema>;
 export const NarrationSchema = z.object({ text: z.string(), audioUrl: z.string().optional(), wordTimings: z.array(z.object({ word: z.string(), startMs: z.number(), endMs: z.number() })).optional() });
-export const StageLayerSchema = z.object({ id: z.string(), imageUrl: z.string(), alt: z.string(), left: z.number().min(0).max(100), bottom: z.number().min(0).max(100), width: z.number().min(0).max(100), height: z.number().min(0).max(100).optional() });
+export const StageLayerSchema = z.object({ id: z.string(), imageUrl: z.string(), alt: z.string(), left: z.number().min(0).max(100), bottom: z.number().min(0).max(100), width: z.number().min(0).max(100), height: z.number().min(0).max(100).optional(), overlay: z.boolean().optional() });
 export type StageLayer = z.infer<typeof StageLayerSchema>;
 export const SceneBaseSchema = z.object({
   id: z.string(), title: z.string().optional(),

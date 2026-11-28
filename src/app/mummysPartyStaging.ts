@@ -36,17 +36,19 @@ export function stageMummysParty(scene: SceneYaml): SceneStaging {
   const instruction = scene.metadata && typeof scene.metadata === 'object' && 'creative_instruction' in scene.metadata
     ? String(scene.metadata.creative_instruction ?? '') : '';
   const pieces = instruction.split('Pieces:')[1] ?? '';
+  const paintedAlarm = /(?:party-room|pootions-shop)\.jpg$/.test(scene.media.image ?? '');
   const layers: StageLayer[] = Object.keys(positions).filter((name) => new RegExp(`\\b${name}\\b`).test(pieces))
+    .filter((name) => !(paintedAlarm && name === 'smoke-alarm'))
     .filter((name) => !(scene.id === 'max_s1_03' && name === 'sofa'))
     .map((name) => {
       const position = { ...positions[name]! };
       if (name === 'sofa' && /sofa (?:pushed away|clear of)/.test(pieces)) position.left = 54;
       if (name === 'paper-bats' && /paper-bats (?:moved from the lamp to|on) the wall/.test(pieces)) { position.left = 31; position.bottom = 68; }
-      return { id: name, imageUrl: `${mediaRoot}${pathForPiece(name)}`, alt: '', ...position };
+      return { id: name, imageUrl: `${mediaRoot}${pathForPiece(name)}`, alt: '', ...position, ...(name.startsWith('smoke-') ? { overlay: true } : {}) };
     });
   for (const member of scene.cast ?? []) {
     if (member.character_id !== 'ghost') continue;
-    const left = member.slot === 'left' ? 2 : member.slot === 'right' ? 71 : 36.5;
+    const left = member.slot === 'left' ? 8.5 : member.slot === 'right' ? 64.5 : 36.5;
     const glow = member.pose ? `poses/ghost/ghost-${member.pose}-glow.svg` : 'characters/ghost-glow.svg';
     layers.push({ id: 'ghost-glow', imageUrl: `${mediaRoot}${glow}`, alt: '', left, bottom: 1, width: 27, height: 65 });
   }
