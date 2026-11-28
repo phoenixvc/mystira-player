@@ -355,7 +355,7 @@ export class LocalEngine implements Engine {
   demoInspectProfileIds(): string[] {
     const sceneId = this.inspectSceneId();
     return sceneId ? (this.story.demo?.profiles ?? [])
-      .filter((profile) => this.getSceneIds(profile.id).includes(sceneId))
+      .filter((profile) => this.getSceneIds(profile.id, sceneId).includes(sceneId))
       .map((profile) => profile.id) : [];
   }
 

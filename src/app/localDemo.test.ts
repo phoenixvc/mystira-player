@@ -40,6 +40,7 @@ describe('local demo bootstrap', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['inspect'] } }) }));
     const demo = await loadLocalDemo();
     expect(demo.assessment?.entries).toEqual({ inspect: 'demo:inspect' });
+    expect(demo.assessment?.inspectProfiles.map((profile) => profile.profileId)).toEqual(['demo_lerato', 'demo_daan']);
     const first = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: demo.assessment!.entries.inspect });
     expect(first.node.interaction.type).toBe('inspect');
     if (first.node.interaction.type !== 'inspect') throw new Error('Expected inspect');
