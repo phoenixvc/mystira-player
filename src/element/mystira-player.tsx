@@ -10,7 +10,7 @@ const elementCss = `
 :host([theme="mystira-dark"]) { --mp-bg:#151927; --mp-surface:#272e42; --mp-text:#f6f6fa; --mp-muted:#c4ccdc; --mp-accent:#c8a8ff; --mp-overlay:#202637; --mp-glow:0 2px 18px #0008; }
 :host([theme="mystira-bright"]) { --mp-bg:#fff7d9; --mp-surface:#fff; --mp-text:#262044; --mp-muted:#51486f; --mp-accent:#7032a0; --mp-overlay:#fff; --mp-glow:0 2px 14px #7032a033; }
 *,*::before,*::after { box-sizing:border-box; }
-[part="player"] { min-height:100%; }
+[part="player"] { min-height:100%; height:100%; }
 [part="end-cta"] { display:none; }
 :host([data-complete]) [part="end-cta"] { display:block; }
 ${playerCss.replace(/min-height:100vh/g, 'min-height:100%')}`;
