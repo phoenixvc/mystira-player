@@ -328,6 +328,7 @@ export class LocalEngine implements Engine {
     const interaction = node.interaction;
     switch (interaction.type) {
       case 'continue': return answer.kind === 'continue';
+      case 'terminal': return false;
       case 'choices': return answer.kind === 'choice' && interaction.options.some((option) => option.id === answer.choiceId);
       case 'hotspots': return answer.kind === 'hotspot' && interaction.spots.some((spot) => spot.id === answer.hotspotId);
       case 'sequence': return answer.kind === 'sequence' && answer.itemIds.length === interaction.items.length && new Set(answer.itemIds).size === interaction.items.length && answer.itemIds.every((id) => interaction.items.some((item) => item.id === id));

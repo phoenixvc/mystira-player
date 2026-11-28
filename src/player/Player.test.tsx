@@ -13,6 +13,16 @@ const first: Step = {
 const second: Step = { ...first, version: '2', canGoBack: true, progress: { done: 1, total: 2 }, node: { ...first.node, id: 'hall', title: 'In the hall' } };
 
 describe('Player', () => {
+  it('shows a generic story ending without a score or submission control', async () => {
+    const terminal: Step = { ...first, node: { ...first.node, type: 'terminal', title: 'The story ends', interaction: { type: 'terminal' }, lines: [{ speakerId: 'narrator', text: 'Everyone is safe.' }] } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(terminal), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} muted />);
+    expect(await screen.findByRole('heading', { name: 'The story ends' })).toBeTruthy();
+    expect(screen.getByText('Everyone is safe.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
+    expect(screen.queryByText(/correct on the first try/i)).toBeNull();
+    expect(engine.respond).not.toHaveBeenCalled();
+  });
   it('asks the host to roll once, displays its resolved outcome, then continues without deciding success', async () => {
     const ready: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'roll', state: 'ready', target: 3 } } };
     const resolved: Step = { ...ready, version: '2', node: { ...ready.node, interaction: { type: 'roll', state: 'resolved', target: 3, result: { value: 2, success: false, message: 'A gentle miss.' } } } };

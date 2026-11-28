@@ -8,14 +8,17 @@ const SceneNodeSchema = z.object({ type: z.literal('scene'), interaction: Intera
 const CheckNodeSchema = z.object({ type: z.literal('check'), question: NarrationSchema, interaction: InteractionSchema, attempt: z.union([z.literal(1), z.literal(2)]), scored: z.boolean() }).merge(SceneBaseSchema).extend({ task: z.never().optional(), reveal: z.never().optional() });
 const ResearchNodeSchema = z.object({ type: z.literal('research'), step: z.enum(['where', 'find', 'verify', 'use']), source: z.object({ kind: z.enum(['character', 'picture', 'clip', 'chart', 'page']), label: z.string() }).optional(), yourAnswer: z.string().optional(), interaction: InteractionSchema }).merge(SceneBaseSchema);
 const ResultNodeSchema = z.object({ type: z.literal('result'), correctFirstTry: z.number().int(), total: z.number().int(), key: z.object({ label: z.string(), iconUrl: z.string() }).optional(), interaction: InteractionSchema }).merge(SceneBaseSchema);
-const NodeUnionSchema = z.discriminatedUnion('type', [SceneNodeSchema, CheckNodeSchema, ResearchNodeSchema, ResultNodeSchema]);
+const TerminalNodeSchema = z.object({ type: z.literal('terminal'), interaction: InteractionSchema }).merge(SceneBaseSchema);
+const NodeUnionSchema = z.discriminatedUnion('type', [SceneNodeSchema, CheckNodeSchema, ResearchNodeSchema, ResultNodeSchema, TerminalNodeSchema]);
 export type Node = z.infer<typeof NodeUnionSchema>;
 export type SceneNode = z.infer<typeof SceneNodeSchema>;
 export type CheckNode = z.infer<typeof CheckNodeSchema>;
 export type ResearchNode = z.infer<typeof ResearchNodeSchema>;
 export type ResultNode = z.infer<typeof ResultNodeSchema>;
+export type TerminalNode = z.infer<typeof TerminalNodeSchema>;
 
 function addNodeInvariants(node: Node, ctx: z.RefinementCtx): void {
+  if ((node.type === 'terminal') !== (node.interaction.type === 'terminal')) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'type'], message: 'Terminal interaction is only valid on a terminal node' });
   if (node.interaction.type === 'roll') {
     if (node.interaction.state === 'resolved' && !node.interaction.result) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'result'], message: 'Resolved roll needs a result' });
     if (node.interaction.state === 'ready' && node.interaction.result) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'result'], message: 'Ready roll cannot carry a result' });
@@ -67,7 +70,7 @@ function addNodeInvariants(node: Node, ctx: z.RefinementCtx): void {
 export const NodeSchema = NodeUnionSchema.superRefine(addNodeInvariants);
 export const validateNode = NodeSchema;
 export function createNodeValidator(enabled: InteractionType[]) {
-  const allowed = new Set<InteractionType>(['continue', ...enabled]);
+  const allowed = new Set<InteractionType>(['continue', 'terminal', ...enabled]);
   return NodeSchema.superRefine((node, ctx) => {
     if (!allowed.has(node.interaction.type)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'type'], message: `Unsupported interaction: ${node.interaction.type}` });
   });
