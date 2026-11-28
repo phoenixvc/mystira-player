@@ -2375,30 +2375,30 @@ scenes:
     label: The shop cat
     geometry:
       bounds:
-      - 0.08
-      - 0.28
-      - 0.28
-      - 0.67
+      - 0.365
+      - 0.35
+      - 0.27
+      - 0.63
     reveal:
       text: Meow. I only check if my food bowl is full.
   - id: witch
     label: The potion witch
     geometry:
       bounds:
-      - 0.36
-      - 0.28
-      - 0.28
-      - 0.67
+      - 0.645
+      - 0.35
+      - 0.27
+      - 0.63
     reveal:
       text: My table looks fine to me. But I never checked.
   - id: poster
     label: The fire safety poster on the wall
     geometry:
       bounds:
-      - 0.045
-      - 0.15
-      - 0.16
-      - 0.55
+      - 0.06
+      - 0.39
+      - 0.12
+      - 0.18
     reveal:
       text: The fire service made this poster. They know!
   next_scene: null

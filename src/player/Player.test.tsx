@@ -343,7 +343,7 @@ describe('Player', () => {
     const practice: Step = { ...first, node: { ...first.node, lines: [{ speakerId: 'narrator', text: 'First line.' }, { speakerId: 'narrator', text: 'Second line.' }], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }], local: { correctId: 'yes', outcomes: { yes: { onCorrect: { line: { text: 'Explanation.', audioUrl: '/why.mp3' } } } } } } } };
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond: vi.fn() };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
-    const nextLine = await screen.findByRole('button', { name: 'Show next line' });
+    const nextLine = await screen.findByRole('button', { name: 'Next sentence' });
     expect(nextLine.hasAttribute('disabled')).toBe(false);
     fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
     expect(nextLine.hasAttribute('disabled')).toBe(true);

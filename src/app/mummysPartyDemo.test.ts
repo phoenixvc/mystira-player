@@ -36,6 +36,24 @@ describe("Mummy's Party draft", () => {
       expect(existsSync(resolve('public/mummys-party', scene.task!.audio!.replace('assets/', '')))).toBe(true);
     }
   });
+  it('keeps painted-object targets inside the artwork and aligned with the later cast', () => {
+    const textChoices = new Set(['zoe_s2_05', 'q1_find', 'q3_where', 'q3_verify']);
+    for (const scene of story.scenes.filter((item) => item.objects?.length && !textChoices.has(item.id))) {
+      for (const object of scene.objects ?? []) {
+        const [x, y, width, height] = object.geometry?.bounds ?? [];
+        expect(x, `${scene.id}/${object.id} x`).toBeGreaterThanOrEqual(0);
+        expect(y, `${scene.id}/${object.id} y`).toBeGreaterThanOrEqual(0);
+        expect(width, `${scene.id}/${object.id} width`).toBeGreaterThan(0);
+        expect(height, `${scene.id}/${object.id} height`).toBeGreaterThan(0);
+        expect(x! + width!, `${scene.id}/${object.id} right`).toBeLessThanOrEqual(1);
+        expect(y! + height!, `${scene.id}/${object.id} bottom`).toBeLessThanOrEqual(1);
+      }
+    }
+    const where = story.scenes.find((scene) => scene.id === 'q1_where')!;
+    expect(where.objects?.find((object) => object.id === 'cat')?.geometry?.bounds?.[0]).toBeGreaterThan(.35);
+    expect(where.objects?.find((object) => object.id === 'witch')?.geometry?.bounds?.[0]).toBeGreaterThan(.64);
+    expect(where.objects?.find((object) => object.id === 'poster')?.geometry?.bounds?.[1]).toBeGreaterThan(.35);
+  });
   it('has real art, cast poses, and staged pieces for every authored scene', () => {
     const missing: string[] = [];
     const check = (sceneId: string, url: string) => {
