@@ -491,6 +491,18 @@ describe('Player', () => {
     pause.mockRestore();
   });
 
+  it('keeps video playback separate from line narration', async () => {
+    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const withVideo: Step = { ...first, node: { ...first.node, media: { video: { url: '/gate.mp4', onEnd: 'stop', skippable: true } }, lines: [{ speakerId: 'narrator', text: 'Spoken in the video.', audioUrl: '/duplicate.mp3' }] } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(withVideo), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    expect(await screen.findByText('Spoken in the video.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Skip video' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Replay line' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Narration/ })).toBeNull();
+    expect(pause).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['1-2', '64px', 'true'],
     ['6-9', '48px', 'true'],

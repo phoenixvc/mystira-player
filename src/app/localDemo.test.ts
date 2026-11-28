@@ -79,6 +79,43 @@ describe('local demo bootstrap', () => {
     expect(step.node.interaction.type).toBe('inspect');
   });
 
+  it('serves generated Ghost audio on the first non-video Mummy’s Party scene', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence', 'inspect'] } }) }));
+    const demo = await loadLocalDemo('mummys-party');
+    const opening = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_zoe' }] });
+    expect(opening.node.id).toBe('opening_video');
+    expect(opening.node.media.video?.url).toContain('/mummys-party/videos/opening_video.mp4');
+    expect(opening.node.lines[0]?.audioUrl).toBeUndefined();
+    const table = await demo.engine.respond(opening.sessionId, { answerRequestId: 'voice-opening', version: opening.version, nodeId: opening.node.id, answer: { kind: 'continue' } });
+    expect(table.node.id).toBe('spot_table');
+    expect(table.node.lines[0]?.audioUrl).toMatch(/\/mummys-party\/audio\/en\/ghost-[a-f0-9]+\.mp3$/);
+  });
+
+  it.each(['demo_zoe', 'demo_max'])('plays the complete first lesson in Afrikaans for %s', async (profileId) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence', 'inspect'] } }) }));
+    const demo = await loadLocalDemo('mummys-party', 'af');
+    let step = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId }] });
+    const visited: string[] = [];
+    for (let index = 0; index < 12 && step.node.id !== 'story-end'; index++) {
+      visited.push(step.node.id);
+      expect(step.node.title).not.toMatch(/^The |^What changes$/);
+      if (step.node.id !== 'opening_video') {
+        const audio = step.node.lines[0]?.audioUrl;
+        expect(audio).toMatch(/\/mummys-party\/audio\/af\/(ghost|mummy)-[a-f0-9]+\.mp3$/);
+      }
+      if (step.node.id === 'spot_table') expect(step.node.lines[0]?.text).toMatch(/brandgevaar/i);
+      if (step.node.id === 'max_s1_01') expect(step.node.lines[0]?.text).toContain('brandgevare');
+      const interaction = step.node.interaction;
+      const answer = interaction.type === 'hotspots' ? { kind: 'hotspot' as const, hotspotId: interaction.local!.correctId }
+        : interaction.type === 'choices' ? { kind: 'choice' as const, choiceId: interaction.local!.correctId }
+          : { kind: 'continue' as const };
+      step = await demo.engine.respond(step.sessionId, { answerRequestId: `${profileId}-af-${index}`, version: step.version, nodeId: step.node.id, answer });
+    }
+    expect(visited).toHaveLength(10);
+    expect(step.node.id).toBe('story-end');
+    expect(visited).not.toContain(profileId === 'demo_zoe' ? 'zoe_s2_03' : 'max_s2_06');
+  });
+
   it('keeps Mummy’s Party assessment entries on the same story with partial capabilities', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots'] } }) }));
     const demo = await loadLocalDemo('mummys-party');

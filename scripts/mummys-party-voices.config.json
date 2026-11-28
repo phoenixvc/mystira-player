@@ -1,0 +1,11 @@
+{
+  "locale": "en",
+  "model": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "maxNewCharacters": 1000,
+  "pieceCount": 2,
+  "voices": {
+    "mummy": "k2K7cKi3Pzxn7PPiAZIL",
+    "ghost": "87zXgLedSRmWESe7JwXe"
+  }
+}
