@@ -15,12 +15,12 @@ const draft = parse(fireDoorYaml) as DraftStory;
 const toPreviewPath = (path: string) => path.replace(/^assets\//, '').replace(/^([^/]+\.mp4)$/, 'videos/$1');
 
 const piecePositions: Record<string, { left: number; bottom: number; width: number }> = {
-  'pumpkin-lantern': { left: 52, bottom: 12, width: 10 }, 'candle-battery': { left: 53, bottom: 19, width: 7 },
-  'paper-bats': { left: 46, bottom: 69, width: 14 }, sofa: { left: 42, bottom: 0, width: 27 },
-  'plugs-six': { left: 73, bottom: 20, width: 8 }, 'plugs-two': { left: 73, bottom: 20, width: 8 },
+  'pumpkin-lantern': { left: 35, bottom: 29, width: 7 }, 'candle-battery': { left: 36, bottom: 35, width: 3 },
+  'paper-bats': { left: 16, bottom: 55, width: 10 }, sofa: { left: 70, bottom: 12, width: 24 },
+  'plugs-six': { left: 12, bottom: 24, width: 7 }, 'plugs-two': { left: 12, bottom: 24, width: 7 },
   'smoke-alarm': { left: 63, bottom: 82, width: 7 }, 'meet-here-sign': { left: 60, bottom: 39, width: 13 },
   'arrow-left': { left: 29, bottom: 25, width: 11 }, 'arrow-right': { left: 61, bottom: 25, width: 11 },
-  'fire-engine': { left: 55, bottom: 2, width: 27 }, 'fire-poster': { left: 65, bottom: 44, width: 12 },
+  'fire-engine': { left: 80, bottom: 8, width: 19 }, 'fire-poster': { left: 65, bottom: 44, width: 12 },
   'potion-boilover': { left: 45, bottom: 10, width: 15 }, 'bag-of-sweets': { left: 45, bottom: 2, width: 11 },
   'blackened-pan': { left: 42, bottom: 8, width: 12 }, 'smoke-door': { left: 0, bottom: 0, width: 100 },
   'smoke-ceiling': { left: 0, bottom: 0, width: 100 },
@@ -44,7 +44,7 @@ const draftScenes: Scene[] = draft.scenes.map((scene) => {
       if (!character?.image) return [];
       const base = toPreviewPath(character.image);
       const path = member.pose ? `poses/${base.split('/').at(-1)?.replace('.png', '')}/${base.split('/').at(-1)?.replace('.png', '')}-${member.pose}.png` : base;
-      const left = member.slot === 'left' ? 8 : member.slot === 'right' ? 75 : 42;
+      const left = member.slot === 'left' ? 2 : member.slot === 'right' ? 71 : 36.5;
       return [{ path, alt: character.id, left, bottom: 2, width: 18 }];
     }),
     props: usedPieces.filter((name) => !name.startsWith('smoke-') && !(scene.id === 'max_s1_03' && name === 'sofa')).map((name) => ({ path: pathForPiece(name), alt: name.replaceAll('-', ' '), ...piecePositions[name]! })),
@@ -54,18 +54,18 @@ const draftScenes: Scene[] = draft.scenes.map((scene) => {
 
 const scenes: Scene[] = [
   { title: 'Getting ready', background: 'backgrounds/party-room.jpg', description: 'Mummy and Ghost in the party room.', cast: [
-    { path: 'poses/mummy/mummy-pushing.png', alt: 'Mummy pushing furniture', left: 16, bottom: 1, width: 18 },
-    { path: 'poses/ghost/ghost-worried.png', alt: 'Worried ghost', left: 72, bottom: 7, width: 14 },
+    { path: 'poses/mummy/mummy-pushing.png', alt: 'Mummy pushing furniture', left: 69, bottom: 1, width: 20 },
+    { path: 'poses/ghost/ghost-worried.png', alt: 'Worried ghost', left: 16, bottom: 4, width: 22 },
   ], props: [
-    { path: 'pieces/sofa.png', alt: 'Sofa', left: 38, bottom: 0, width: 29 },
-    { path: 'pieces/pumpkin-lantern.png', alt: 'Pumpkin lantern', left: 65, bottom: 6, width: 9 },
-    { path: 'pieces/paper-bats.png', alt: 'Paper bats', left: 44, bottom: 68, width: 12 },
+    { path: 'pieces/sofa.png', alt: 'Sofa', left: 71, bottom: 11, width: 24 },
+    { path: 'pieces/pumpkin-lantern.png', alt: 'Pumpkin lantern', left: 35, bottom: 29, width: 7 },
+    { path: 'pieces/paper-bats.png', alt: 'Paper bats', left: 16, bottom: 55, width: 10 },
   ] },
   { title: 'Spot the hazards', background: 'backgrounds/party-room-full.jpg', description: 'A crowded room with things to inspect.', cast: [
     { path: 'characters/ghost.png', alt: 'Ghost', left: 7, bottom: 5, width: 15 },
     { path: 'poses/mummy/mummy-shocked.png', alt: 'Surprised mummy', left: 77, bottom: 2, width: 17 },
   ], props: [
-    { path: 'pieces/plugs-six.png', alt: 'Overfilled socket', left: 47, bottom: 1, width: 10 },
+    { path: 'pieces/plugs-six.png', alt: 'Overfilled socket', left: 12, bottom: 24, width: 7 },
     { path: 'pieces/smoke-alarm.png', alt: 'Smoke alarm', left: 65, bottom: 76, width: 7 },
     { path: 'pieces/bag-of-sweets.png', alt: 'Bag of sweets', left: 36, bottom: 3, width: 10 },
   ] },
@@ -92,7 +92,7 @@ const scenes: Scene[] = [
     { path: 'poses/skeleton/skeleton-crawling.png', alt: 'Skeleton crawling', left: 43, bottom: 2, width: 20 },
     { path: 'poses/ghost/ghost-pleased.png', alt: 'Pleased ghost', left: 75, bottom: 4, width: 15 },
   ], props: [
-    { path: 'pieces/fire-engine.png', alt: 'Fire engine', left: 57, bottom: 23, width: 27 },
+    { path: 'pieces/fire-engine.png', alt: 'Fire engine', left: 80, bottom: 8, width: 19 },
     { path: 'svg/arrow-left.svg', alt: 'Arrow left', left: 9, bottom: 28, width: 10 },
   ] },
   { title: 'Witch’s shop', background: 'backgrounds/pootions-shop.jpg', description: 'A separate assessment setting.', cast: [
@@ -113,7 +113,7 @@ const scenes: Scene[] = [
     { path: 'characters/firefighter.png', alt: 'Firefighter', left: 24, bottom: 2, width: 20 },
     { path: 'poses/mummy/mummy-proud.png', alt: 'Proud mummy', left: 69, bottom: 2, width: 18 },
   ], props: [
-    { path: 'pieces/fire-engine.png', alt: 'Fire engine', left: 44, bottom: 2, width: 25 },
+    { path: 'pieces/fire-engine.png', alt: 'Fire engine', left: 80, bottom: 8, width: 19 },
   ] },
 ];
 

@@ -1,11 +1,14 @@
 import { createNodeValidator, type Node } from '../../schema/node';
 import type { InteractionType } from '../../schema/interactions';
 import type { SceneYaml, StoryYaml } from '../../schema/story-yaml';
+import type { StageLayer } from '../../schema/node-base';
 import { EngineError } from '../types';
 
 const FALLBACK_COLOUR = '#A9C0DC';
 
-export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: InteractionType[] = [], profileId?: string, sequenceOrder?: string[]): Node {
+export type SceneStaging = { layers?: StageLayer[]; imageForCast?: (imageUrl: string, pose?: string) => string };
+
+export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: InteractionType[] = [], profileId?: string, sequenceOrder?: string[], staging?: SceneStaging): Node {
   if (scene.type === 'roll' || scene.type === 'special' || (scene.media.stage3d != null && scene.media.image == null && scene.media.video == null)) {
     throw new EngineError('unsupported', `Scene '${scene.id}' uses an unsupported 3D or special presentation.`);
   }
@@ -18,7 +21,7 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   const cast = (scene.cast ?? []).flatMap((member) => {
     const character = story.characters.find((entry) => entry.id === member.character_id);
     if (!character || !character.image) return [];
-    return [{ id: character.id, imageUrl: character.image, alt: character.name, position: member.slot, ...(member.pose ? { pose: member.pose } : {}), ...(member.reactions ? { reactions: member.reactions } : {}) }];
+    return [{ id: character.id, imageUrl: staging?.imageForCast?.(character.image, member.pose ?? undefined) ?? character.image, alt: character.name, position: member.slot, ...(member.pose ? { pose: member.pose } : {}), ...(member.reactions ? { reactions: member.reactions } : {}) }];
   });
   const speakers = story.characters.map((character) => ({
     id: character.id, name: character.name, colour: character.colour ?? FALLBACK_COLOUR,
@@ -43,6 +46,7 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
     media: {
       ...(scene.media.image ? { imageUrl: scene.media.image, alt: scene.title } : {}),
       ...(scene.media.video ? { video: { url: scene.media.video, onEnd: 'stop' as const, skippable: true } } : {}),
+      ...(staging?.layers?.length ? { layers: staging.layers } : {}),
     },
     characters: cast, speakers, lines, ...(task ? { task } : {}), overlays,
     ...(scene.exit_allowed === undefined ? {} : { exitAllowed: scene.exit_allowed }),

@@ -3159,17 +3159,25 @@ lesson:
     - id: hunt_alone
       scenes:
       - spot_table
+      - spot_table_after
       - spot_corner
+      - spot_corner_after
       - spot_backdoor
+      - spot_backdoor_after
       - spot_lights
+      - spot_lights_after
       - zoe_s1_02
       method: 'tap the picture (stretch: count)'
     - id: help_the_mummy
       scenes:
       - max_s1_01
+      - max_s1_01_after
       - max_s1_02
+      - max_s1_02_after
       - max_s1_03
+      - max_s1_03_after
       - max_s1_04
+      - max_s1_04_after
       - max_s1_05
       method: choices
   - id: plan_it
@@ -3178,16 +3186,23 @@ lesson:
     - id: find_it_yourself
       scenes:
       - zoe_s2_03
+      - zoe_s2_03_after
       - zoe_s2_04
+      - zoe_s2_04_after
       - zoe_s2_05
+      - zoe_s2_05_after
       - zoe_s2_06
       method: tap the picture
     - id: fix_the_sign
       scenes:
       - max_s2_06
+      - max_s2_06_after
       - max_s2_07
+      - max_s2_07_after
       - max_s2_08
+      - max_s2_08_after
       - max_s2_09
+      - max_s2_09_after
       - max_s2_10
       method: inspect, then choices
   - id: get_out
@@ -3196,19 +3211,30 @@ lesson:
     - id: decide_each_move
       scenes:
       - zoe_s3_07
+      - zoe_s3_07_after
       - zoe_s3_08
+      - zoe_s3_08_after
       - zoe_s3_09
+      - zoe_s3_09_after
       - zoe_s3_10
+      - zoe_s3_10_after
       - zoe_s3_11
+      - zoe_s3_11_after
       - zoe_s3_12
+      - zoe_s3_12_after
       method: 'choices (stretch: keypad)'
     - id: give_the_order
       scenes:
       - max_s3_11
+      - max_s3_11_after
       - max_s3_12
+      - max_s3_12_after
       - max_s3_13
+      - max_s3_13_after
       - max_s3_14
+      - max_s3_14_after
       - max_s3_15
+      - max_s3_15_after
       method: 'put in order (stretch: pattern, keypad)'
   - id: fire_engine
     title: The fire engine

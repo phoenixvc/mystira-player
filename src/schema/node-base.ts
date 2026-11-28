@@ -5,9 +5,11 @@ export const RegionSchema = z.union([
 ]);
 export type Region = z.infer<typeof RegionSchema>;
 export const NarrationSchema = z.object({ text: z.string(), audioUrl: z.string().optional(), wordTimings: z.array(z.object({ word: z.string(), startMs: z.number(), endMs: z.number() })).optional() });
+export const StageLayerSchema = z.object({ id: z.string(), imageUrl: z.string(), alt: z.string(), left: z.number().min(0).max(100), bottom: z.number().min(0).max(100), width: z.number().min(0).max(100), height: z.number().min(0).max(100).optional() });
+export type StageLayer = z.infer<typeof StageLayerSchema>;
 export const SceneBaseSchema = z.object({
   id: z.string(), title: z.string().optional(),
-  media: z.object({ imageUrl: z.string().optional(), alt: z.string().optional(), video: z.object({ url: z.string(), posterUrl: z.string().optional(), onEnd: z.enum(['advance', 'stop']), skippable: z.boolean() }).optional() }),
+  media: z.object({ imageUrl: z.string().optional(), alt: z.string().optional(), video: z.object({ url: z.string(), posterUrl: z.string().optional(), onEnd: z.enum(['advance', 'stop']), skippable: z.boolean() }).optional(), layers: z.array(StageLayerSchema).optional() }),
   characters: z.array(z.object({ id: z.string(), imageUrl: z.string(), alt: z.string(), position: z.enum(['left', 'center', 'right']), pose: z.string().optional(), reactions: z.array(z.enum(['jump', 'startle', 'wave'])).optional() })),
   speakers: z.array(z.object({ id: z.string(), name: z.string(), avatarUrl: z.string().optional(), colour: z.string().regex(/^#[0-9A-Fa-f]{6}$/), voice: z.object({ pitch: z.number(), rate: z.number() }).optional() })),
   lines: z.array(z.object({ speakerId: z.union([z.string(), z.literal('narrator')]), text: z.string(), audioUrl: z.string().optional(), wordTimings: z.array(z.object({ word: z.string(), startMs: z.number(), endMs: z.number() })).optional() })),

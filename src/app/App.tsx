@@ -5,6 +5,7 @@ import { loadLocalDemo } from './localDemo';
 import styles from './App.module.css';
 
 export function App() {
+  const mummyParty = new URLSearchParams(window.location.search).get('story') === 'mummys-party';
   const [demo, setDemo] = useState<{ engine: Engine; activityId: string; isDemoMode?: boolean; fullLesson?: boolean; sceneForProfile?: (sceneId: string, profileId: string) => string | undefined; piecesForProfile?: (profileId: string) => { id: string; title: string; startSceneId: string }[]; assessment?: { engine: Engine; activityId: string; profiles: Profile[]; sequenceProfiles: Profile[]; entries: { practice?: string; assessment?: string; followUp?: string; sequence?: string; inspect?: string } } }>();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [profileId, setProfileId] = useState<string>();
@@ -19,7 +20,7 @@ export function App() {
 
   useEffect(() => {
     let active = true;
-    loadLocalDemo().then(async (loaded) => {
+    loadLocalDemo(mummyParty ? 'mummys-party' : 'pumpkin-gate').then(async (loaded) => {
       const available = await loaded.engine.listProfiles?.() ?? [];
       if (!active) return;
       setDemo(loaded);
@@ -27,7 +28,7 @@ export function App() {
       setProfileId(available[0]?.profileId);
     }).catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : 'Could not load the preview.'); });
     return () => { active = false; };
-  }, []);
+  }, [mummyParty]);
 
   const assessmentMode = entryPoint !== 'lesson' && demo?.assessment;
   const activeEngine = assessmentMode ? demo.assessment!.engine : demo?.engine;
@@ -50,9 +51,9 @@ export function App() {
     </aside>}
     {!started ? <section className={styles.welcome}>
       <p className={styles.kicker}>Mystira Player</p>
-      <h1>The Pumpkin Gate</h1>
-      <p>{demo?.fullLesson ? 'Learn five ways to check what is true.' : 'A welcoming path through the Manor.'}</p>
-      <button type="button" disabled={!demo || (pieceChoices.length > 0 && !startNodeId)} onClick={() => setStarted(true)}>{demo?.fullLesson ? 'Start lesson' : 'Start preview'}</button>
+      <h1>{mummyParty ? 'The Mummy’s Party' : 'The Pumpkin Gate'}</h1>
+      <p>{mummyParty ? 'Spot fire hazards, make a plan, and get out safely.' : demo?.fullLesson ? 'Learn five ways to check what is true.' : 'A welcoming path through the Manor.'}</p>
+      <button type="button" disabled={!demo || (pieceChoices.length > 0 && !startNodeId && !mummyParty)} onClick={() => setStarted(true)}>{demo?.fullLesson ? 'Start lesson' : 'Start preview'}</button>
       {error && <p role="alert">{error}</p>}
     </section> : demo && activeEngine && startRequest && <Player key={sessionKey} engine={activeEngine} startRequest={startRequest} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} initialGesture onStep={(step) => { setCurrentStep(step); if (entryPoint === 'lesson' && step.node.id === 'story-end' && startNodeId) { const piece = pieceChoices.find((item) => item.startSceneId === startNodeId); if (piece) setCompletedPieces((done) => done.includes(piece.id) ? done : [...done, piece.id]); } }} />}
   </main>;
