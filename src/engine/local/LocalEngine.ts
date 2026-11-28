@@ -4,6 +4,7 @@ import type { StoryYaml } from '../../schema/story-yaml';
 import type { Answer, AnswerSubmission, Engine, PlayerSeat, Profile, SessionPlayer, StartSessionRequest, Step } from '../types';
 import { EngineError } from '../types';
 import { compileScene } from './compiler';
+import { createNodeValidator } from '../../schema/node';
 
 type Session = {
   id: string;
@@ -15,6 +16,10 @@ type Session = {
   profileId: string;
   players: SessionPlayer[];
   responses: Map<string, Step>;
+  checkAttempts: Map<string, 1 | 2>;
+  scoredChecks: Set<string>;
+  correctFirstTry: number;
+  researchAnswer?: string;
 };
 
 export class LocalEngine implements Engine {
@@ -45,6 +50,19 @@ export class LocalEngine implements Engine {
       : []);
   }
 
+  /** Demo entry tokens keep check scene IDs and answer data inside the engine. */
+  demoAssessmentEntries(): { assessment?: string; followUp?: string } {
+    return this.story.lesson?.checks?.length && this.enabled.includes('choices') && this.enabled.includes('hotspots')
+      ? { assessment: 'assessment', followUp: 'follow-up' } : {};
+  }
+
+  /** Demo-only start for the first supported choice practice piece. */
+  demoPracticeEntry(): string | undefined {
+    if (!this.enabled.includes('choices')) return undefined;
+    const firstPiece = this.story.lesson?.pieces[0];
+    return firstPiece?.scenes?.find((id) => this.story.scenes.some((scene) => scene.id === id && scene.practice?.answer.branch && scene.branches.length >= 2));
+  }
+
   async startSession(request: StartSessionRequest): Promise<Step> {
     const expectedActivityId = this.story.lesson?.id ?? this.story.title;
     if (request.activityId !== expectedActivityId) throw new EngineError('notFound', `Activity '${request.activityId}' was not found.`);
@@ -56,12 +74,18 @@ export class LocalEngine implements Engine {
     if (profile?.order === 'child_chooses' && this.story.lesson && !request.startNodeId) {
       throw new EngineError('unsupported', 'Choose a lesson piece before starting this profile.');
     }
-    const sceneIds = this.getSceneIds(profileId, request.startNodeId);
+    const assessmentEntry = request.startNodeId === 'assessment' || request.startNodeId === 'follow-up';
+    if (assessmentEntry && !this.demoAssessmentEntries().assessment) throw new EngineError('unsupported', 'Assessment interactions are not enabled.');
+    const firstCheck = this.checkQuestions()[0]?.scene;
+    const availableSceneIds = this.getSceneIds(profileId, assessmentEntry ? undefined : request.startNodeId);
+    const assessmentIndex = availableSceneIds.indexOf(firstCheck ?? '');
+    if (assessmentEntry && assessmentIndex < 0) throw new EngineError('notFound', 'The assessment start scene is unavailable.');
+    const sceneIds = assessmentEntry ? availableSceneIds.slice(assessmentIndex) : availableSceneIds;
     if (sceneIds.length === 0) {
       if (request.startNodeId) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
       throw new EngineError('unsupported', 'This story has no playable lesson scenes yet.');
     }
-    const startIndex = request.startNodeId === undefined ? 0 : sceneIds.indexOf(request.startNodeId);
+    const startIndex = assessmentEntry ? 0 : request.startNodeId === undefined ? 0 : sceneIds.indexOf(request.startNodeId);
     if (startIndex < 0) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
     const players = request.players.length > 0 ? request.players : [{ type: 'Guest' as const, displayName: profile?.display_name ?? 'Guest' }];
     const session: Session = {
@@ -70,6 +94,8 @@ export class LocalEngine implements Engine {
       ageGroupId: this.story.age_group,
       players: players.map((seat) => this.toSessionPlayer(seat)),
       responses: new Map(),
+      checkAttempts: new Map(firstCheck && request.startNodeId === 'follow-up' ? [[firstCheck, 2]] : []),
+      scoredChecks: new Set(), correctFirstTry: 0,
     };
     const first = this.toStep(session);
     this.sessions.set(session.id, session);
@@ -91,6 +117,10 @@ export class LocalEngine implements Engine {
 
     let nextIndex: number;
     let nextHistory: number[];
+    const checkAttempts = new Map(session.checkAttempts);
+    const scoredChecks = new Set(session.scoredChecks);
+    let correctFirstTry = session.correctFirstTry;
+    let researchAnswer = session.researchAnswer;
     if (submission.answer.kind === 'back') {
       if (!current.canGoBack) throw new EngineError('conflict', 'Back navigation is not allowed from this scene.', current);
       nextIndex = session.history[session.history.length - 1]!;
@@ -101,14 +131,33 @@ export class LocalEngine implements Engine {
         session.responses.set(submission.answerRequestId, current);
         return current;
       }
-      nextIndex = this.nextSceneIndex(session, submission.answer);
+      const check = this.checkQuestions().find((question) => question.scene === current.node.id);
+      if (current.node.type === 'check' && check) {
+        const correct = this.checkAnswerMatches(check.answer, submission.answer);
+        if (current.node.attempt === 1 && !scoredChecks.has(check.scene)) {
+          scoredChecks.add(check.scene);
+          if (correct) correctFirstTry += 1;
+        }
+        if (current.node.attempt === 1 && !correct) {
+          checkAttempts.set(check.scene, 2);
+          researchAnswer = this.answerLabel(current.node, submission.answer);
+          nextIndex = check.research?.length ? session.sceneIds.indexOf(check.research[0]!) : session.index;
+        } else nextIndex = this.indexAfterCheck(session.sceneIds, check.scene);
+      } else if (current.node.type === 'research' && this.lastResearchScene(current.node.id)) {
+        const owner = this.checkQuestions().find((question) => question.research?.includes(current.node.id));
+        nextIndex = owner ? session.sceneIds.indexOf(owner.scene) : this.nextSceneIndex(session, submission.answer);
+      } else nextIndex = this.nextSceneIndex(session, submission.answer);
       nextHistory = [...session.history, session.index];
     }
-    const prospective = { ...session, index: nextIndex, history: nextHistory, version: session.version + 1 };
+    const prospective = { ...session, index: nextIndex, history: nextHistory, version: session.version + 1, checkAttempts, scoredChecks, correctFirstTry, researchAnswer };
     const next = this.toStep(prospective);
     session.index = nextIndex;
     session.history = nextHistory;
     session.version = prospective.version;
+    session.checkAttempts = checkAttempts;
+    session.scoredChecks = scoredChecks;
+    session.correctFirstTry = correctFirstTry;
+    session.researchAnswer = researchAnswer;
     session.responses.set(submission.answerRequestId, next);
     return next;
   }
@@ -129,10 +178,41 @@ export class LocalEngine implements Engine {
     if (!this.story.lesson) return this.story.scenes.map((scene) => scene.id);
     const pieces = this.pieceSceneIds(profileId);
     const profile = this.story.demo?.profiles.find((candidate) => candidate.id === profileId);
-    if (profile?.order === 'child_chooses') {
+    if (profile?.order === 'child_chooses' && startNodeId) {
       return pieces.find((piece) => piece.sceneIds.includes(startNodeId ?? ''))?.sceneIds ?? [];
     }
-    return pieces.flatMap((piece) => piece.sceneIds);
+    const lessonIds = profile?.order === 'child_chooses' ? [] : pieces.flatMap((piece) => piece.sceneIds);
+    const assessmentIds = this.checkQuestions().flatMap((question) => [question.scene, ...(question.research ?? [])]);
+    return [...lessonIds, ...assessmentIds, ...(this.story.lesson.result ? [this.story.lesson.result.scene] : [])];
+  }
+
+  private checkQuestions() {
+    return this.story.lesson?.checks?.flatMap((check) => check.questions) ?? [];
+  }
+
+  private indexAfterCheck(sceneIds: string[], checkSceneId: string): number {
+    const questions = this.checkQuestions();
+    const index = questions.findIndex((question) => question.scene === checkSceneId);
+    return sceneIds.indexOf(questions[index + 1]?.scene ?? this.story.lesson?.result?.scene ?? '') >= 0
+      ? sceneIds.indexOf(questions[index + 1]?.scene ?? this.story.lesson?.result?.scene ?? '') : sceneIds.length;
+  }
+
+  private lastResearchScene(sceneId: string): boolean {
+    return this.checkQuestions().some((question) => question.research?.at(-1) === sceneId);
+  }
+
+  private checkAnswerMatches(expected: { branch?: string; object?: string; order?: string[]; parts?: string[] }, actual: Answer): boolean {
+    if (actual.kind === 'choice') return actual.choiceId === expected.branch;
+    if (actual.kind === 'hotspot') return actual.hotspotId === expected.object;
+    if (actual.kind === 'sequence') return JSON.stringify(actual.itemIds) === JSON.stringify(expected.order);
+    if (actual.kind === 'inspect') return JSON.stringify([...actual.partIds].sort()) === JSON.stringify([...(expected.parts ?? [])].sort());
+    return false;
+  }
+
+  private answerLabel(node: Node, answer: Answer): string | undefined {
+    if (node.interaction.type === 'choices' && answer.kind === 'choice') return node.interaction.options.find((option) => option.id === answer.choiceId)?.label;
+    if (node.interaction.type === 'hotspots' && answer.kind === 'hotspot') return node.interaction.spots.find((spot) => spot.id === answer.hotspotId)?.label;
+    return undefined;
   }
 
   private nextSceneIndex(session: Session, answer: Answer): number {
@@ -151,21 +231,29 @@ export class LocalEngine implements Engine {
       const targetIndex = session.sceneIds.indexOf(target);
       if (targetIndex < 0) {
         const profile = this.story.demo?.profiles.find((candidate) => candidate.id === session.profileId);
-        if (profile?.order === 'child_chooses' && this.pieceSceneIds(session.profileId).some((piece) => piece.sceneIds.includes(target))) {
+        const mapped = this.demoSceneForProfile(target, session.profileId);
+        const mappedIndex = mapped ? session.sceneIds.indexOf(mapped) : -1;
+        const pieceFor = (id: string) => this.story.lesson?.pieces.find((piece) => piece.scenes?.includes(id) || piece.versions?.some((version) => version.scenes.includes(id)))?.id;
+        const crossesPiece = pieceFor(target) !== undefined && pieceFor(target) !== pieceFor(scene.id);
+        if (crossesPiece && mappedIndex >= 0) return mappedIndex;
+        if (profile?.order === 'child_chooses' && crossesPiece && mapped) {
           return session.sceneIds.length;
         }
         throw new EngineError('unsupported', `Scene '${scene.id}' points to unavailable scene '${target}'.`);
       }
       return targetIndex;
     }
+    if (this.lastResearchScene(scene.id)) {
+      const owner = this.checkQuestions().find((question) => question.research?.includes(scene.id));
+      if (owner) return session.sceneIds.indexOf(owner.scene);
+    }
+    if (this.checkQuestions().some((question) => question.scene === scene.id)) return this.indexAfterCheck(session.sceneIds, scene.id);
     if (answer.kind !== 'continue' && answer.kind !== 'choice' && answer.kind !== 'hotspot') {
       throw new EngineError('unsupported', `Navigation for '${answer.kind}' is not implemented yet.`);
     }
     if (session.index + 1 < session.sceneIds.length && this.story.lesson) return session.index + 1;
     const profile = this.story.demo?.profiles.find((candidate) => candidate.id === session.profileId);
-    if (this.story.lesson?.checks?.length && profile?.order !== 'child_chooses' && session.index + 1 >= session.sceneIds.length) {
-      throw new EngineError('unsupported', 'The lesson check requires the choices/hotspots spec; it cannot be skipped.');
-    }
+    if (this.story.lesson?.checks?.length && profile?.order !== 'child_chooses' && session.index + 1 >= session.sceneIds.length) return session.sceneIds.length;
     return session.sceneIds.length;
   }
 
@@ -195,11 +283,22 @@ export class LocalEngine implements Engine {
     const sceneId = session.sceneIds[session.index];
     const scene = this.story.scenes.find((candidate) => candidate.id === sceneId);
     if (!scene) throw new EngineError('notFound', `Scene '${sceneId ?? ''}' was not found in the story.`);
-    const node: Node = compileScene(scene, this.story, this.enabled, session.profileId);
+    const base = compileScene(scene, this.story, this.enabled, session.profileId);
+    const question = this.checkQuestions().find((item) => item.scene === scene.id);
+    let node: Node = base;
+    if (question) {
+      const attempt = session.checkAttempts.get(scene.id) ?? 1;
+      node = createNodeValidator(this.enabled).parse({ ...base, type: 'check', question: { text: scene.description }, attempt, scored: attempt === 1, task: undefined });
+    } else if (scene.research) {
+      node = createNodeValidator(this.enabled).parse({ ...base, type: 'research', step: scene.research.step, ...(scene.research.source ? { source: scene.research.source } : {}), ...(session.researchAnswer ? { yourAnswer: session.researchAnswer } : {}) });
+    } else if (this.story.lesson?.result?.scene === scene.id) {
+      const key = this.story.lesson.result.key;
+      node = createNodeValidator(this.enabled).parse({ ...base, type: 'result', correctFirstTry: session.correctFirstTry, total: this.checkQuestions().length, ...(key?.image ? { key: { label: key.label, iconUrl: key.image } } : {}) });
+    }
     return {
       sessionId: session.id, version: String(session.version), ageGroupId: session.ageGroupId,
-      players: session.players, node, canGoBack: session.history.length > 0,
-      progress: { done: session.index, total: session.sceneIds.length },
+      players: session.players, node, canGoBack: node.type !== 'check' && node.type !== 'research' && !(node.type === 'result' && this.checkQuestions().length > 0) && session.history.length > 0,
+      progress: { done: node.type === 'result' ? session.sceneIds.length : session.index, total: session.sceneIds.length },
     };
   }
 

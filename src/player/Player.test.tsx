@@ -13,6 +13,106 @@ const first: Step = {
 const second: Step = { ...first, version: '2', canGoBack: true, progress: { done: 1, total: 2 }, node: { ...first.node, id: 'hall', title: 'In the hall' } };
 
 describe('Player', () => {
+  it('keeps wrong practice choices local and submits the correct ID with wrongTries after the explanation', async () => {
+    const practice: Step = { ...first, node: { ...first.node, lines: [], autoAdvance: true, interaction: { type: 'choices', options: [{ id: 'yes', label: 'The video' }, { id: 'no', label: 'A friend' }], local: { correctId: 'yes', outcomes: {
+      no: { onWrong: { text: 'Kai heard a video.' } },
+      yes: { onCorrect: { image: { imageUrl: '/truth.webp', alt: 'Kai points at a video' }, line: { text: 'The video made the claim.' } } },
+    } } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('button', { name: 'A friend' });
+    fireEvent.click(screen.getByRole('button', { name: /Narration/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'A friend' }));
+    expect(screen.getByText('Kai heard a video.')).toBeTruthy();
+    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'The video' }));
+    expect(screen.getByRole('img', { name: 'Kai points at a video' })).toBeTruthy();
+    expect(screen.getByText('The video made the claim.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'choice', choiceId: 'yes' }, wrongTries: 1 }), expect.anything()));
+  });
+
+  it('requires confirmation on checks and reuses the request ID after a failed submission', async () => {
+    const check: Step = { ...first, node: { ...first.node, type: 'check', task: undefined, question: { text: 'Who said it?' }, attempt: 1, scored: true, interaction: { type: 'choices', options: [{ id: 'yes', label: 'The video' }, { id: 'no', label: 'A friend' }] } } };
+    const respond = vi.fn().mockRejectedValueOnce(new Error('Network interruption')).mockResolvedValueOnce(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(check), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    const confirm = await screen.findByRole('button', { name: "That's my answer" });
+    expect(confirm.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'The video' }));
+    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(confirm);
+    await screen.findByText('Network interruption');
+    fireEvent.click(confirm);
+    await waitFor(() => expect(respond).toHaveBeenCalledTimes(2));
+    expect(respond.mock.calls[0]?.[1].answerRequestId).toBe(respond.mock.calls[1]?.[1].answerRequestId);
+  });
+
+  it('renders accessible hotspot targets without marking a wrong location', async () => {
+    const hotspot: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'hotspots', spots: [
+      { id: 'crow', label: 'The crow', region: { shape: 'rect', x: .7, y: .1, w: .15, h: .2 } },
+      { id: 'dog', label: 'The dog', region: { shape: 'rect', x: .1, y: .6, w: .2, h: .25 } },
+    ], local: { correctId: 'crow', feedback: { revealAfter: 1 } } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(hotspot), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'The dog' }));
+    expect(screen.getByText('Not yet. Try again.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'The crow' }).getAttribute('class')).toContain('revealed');
+    expect(screen.getByRole('button', { name: 'The dog' }).getAttribute('class')).not.toContain('revealed');
+    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'The crow' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'hotspot', hotspotId: 'crow' }, wrongTries: 1 }), expect.anything()));
+  });
+
+  it('offers an explicit audio skip for a stalled correct-choice explanation', async () => {
+    vi.stubGlobal('Audio', class {
+      onended?: () => void;
+      onerror?: () => void;
+      play() { return new Promise<void>(() => { /* stalled media */ }); }
+      pause() { /* cancelled on skip */ }
+    });
+    const practice: Step = { ...first, node: { ...first.node, lines: [], autoAdvance: true, interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }], local: { correctId: 'yes', outcomes: { yes: { onCorrect: { line: { text: 'Here is why.', audioUrl: '/why.mp3' } } } } } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    expect(screen.getByText('Here is why.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(true);
+    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue without audio' }));
+    expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledTimes(1));
+  });
+
+  it('allows Next when explanation audio fails and speech is unavailable', async () => {
+    vi.stubGlobal('speechSynthesis', undefined);
+    vi.stubGlobal('SpeechSynthesisUtterance', undefined);
+    vi.stubGlobal('Audio', class {
+      onended?: () => void;
+      onerror?: () => void;
+      play() { return Promise.reject(new Error('audio failed')); }
+      pause() { /* unavailable media */ }
+    });
+    const practice: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }], local: { correctId: 'yes', outcomes: { yes: { onCorrect: { line: { text: 'Read this explanation.', audioUrl: '/bad.mp3' } } } } } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    expect(screen.getByText('Read this explanation.')).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false));
+  });
+
+  it('advances immediately on a correct practice choice without an authored outcome', async () => {
+    const practice: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }], local: { correctId: 'yes' } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'choice', choiceId: 'yes' }, wrongTries: 0 }), expect.anything()));
+  });
   it('renders a scene from Engine data and submits Next and Back with the current version', async () => {
     const respond = vi.fn().mockResolvedValueOnce(second).mockResolvedValueOnce(first);
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(first), resumeSession: vi.fn(), respond };

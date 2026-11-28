@@ -22,6 +22,23 @@ function addNodeInvariants(node: Node, ctx: z.RefinementCtx): void {
     slots.add(character.position);
   }
   if (node.characters.length > 3) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['characters'], message: 'A scene may have at most 3 characters' });
+  if (node.interaction.type === 'choices' || node.interaction.type === 'hotspots') {
+    const items = node.interaction.type === 'choices' ? node.interaction.options : node.interaction.spots;
+    const ids = items.map((item) => item.id);
+    if (new Set(ids).size !== ids.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction'], message: 'Answer IDs must be unique' });
+    if (node.interaction.local) {
+      if (!ids.includes(node.interaction.local.correctId)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local', 'correctId'], message: 'Correct ID must match an answer' });
+      for (const [id, outcome] of Object.entries(node.interaction.local.outcomes ?? {})) {
+        if (!ids.includes(id)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local', 'outcomes', id], message: 'Outcome ID must match an answer' });
+        if ('onCorrect' in outcome && id !== node.interaction.local.correctId) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local', 'outcomes', id], message: 'Correct presentation must match the correct answer' });
+        if ('onWrong' in outcome && id === node.interaction.local.correctId) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local', 'outcomes', id], message: 'Wrong feedback cannot match the correct answer' });
+      }
+    }
+    if (node.interaction.type === 'hotspots') for (const spot of node.interaction.spots) {
+      if (spot.region.shape === 'rect' && (spot.region.x + spot.region.w > 1 || spot.region.y + spot.region.h > 1 || spot.region.w <= 0 || spot.region.h <= 0)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'spots'], message: 'Hotspot bounds must be inside the image' });
+      if (spot.region.shape === 'circle' && (spot.region.x - spot.region.r < 0 || spot.region.y - spot.region.r < 0 || spot.region.x + spot.region.r > 1 || spot.region.y + spot.region.r > 1 || spot.region.r <= 0)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'spots'], message: 'Hotspot circle must be inside the image' });
+    }
+  }
   if (node.type !== 'check') return;
   if ('local' in node.interaction && node.interaction.local !== undefined) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local'], message: 'Check nodes must not carry a local answer block' });
   if (node.interaction.type === 'hotspots' && node.interaction.spots.some((spot) => spot.reveal !== undefined)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'spots'], message: 'Check nodes must not carry reveal content' });

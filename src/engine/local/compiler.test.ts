@@ -47,4 +47,22 @@ describe('local scene compilation', () => {
       expect(NodeSchema.parse(JSON.parse(JSON.stringify(node)))).toEqual(node);
     }
   });
+
+  it('maps keyed practice outcomes to local IDs and rejects unknown or misclassified IDs', () => {
+    const choice = story.scenes.find((scene) => scene.id === 'who_said_it')!;
+    const withOutcomes = { ...choice, practice: { ...choice.practice!, outcomes: {
+      friend: { on_wrong: { text: 'Kai heard a video.' } },
+      video: { on_correct: { image: { src: '/truth.webp', alt: 'Kai points at the video' }, line: { text: 'A video made the claim.' } } },
+    } } };
+    const compiled = compileScene(withOutcomes, story, ['choices']);
+    expect(compiled.interaction).toMatchObject({ type: 'choices', local: { correctId: 'video', outcomes: {
+      friend: { onWrong: { text: 'Kai heard a video.' } },
+      video: { onCorrect: { image: { imageUrl: '/truth.webp', alt: 'Kai points at the video' }, line: { text: 'A video made the claim.' } } },
+    } } });
+    expect(JSON.stringify(compiled)).not.toContain('"answer"');
+    expect(() => compileScene({ ...withOutcomes, practice: { ...withOutcomes.practice, outcomes: { unknown: { on_wrong: { text: 'No.' } } } } }, story, ['choices'])).toThrow(/not a selectable answer/);
+    expect(() => compileScene({ ...withOutcomes, practice: { ...withOutcomes.practice, outcomes: { friend: { on_correct: { line: { text: 'Wrong.' } } } } } }, story, ['choices'])).toThrow(/invalid choice/);
+    const hotspot = story.scenes.find((scene) => scene.id === 'how_know_find')!;
+    expect(() => compileScene({ ...hotspot, practice: { ...hotspot.practice!, outcomes: { crow: { on_correct: { line: { text: 'Crow.' } } } } } }, story, ['hotspots'])).toThrow(/invalid choice/);
+  });
 });

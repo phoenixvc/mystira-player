@@ -6,36 +6,36 @@ Spec 2 follows the core contracts and continue-only renderer. Specs 3 and 4 depe
   - [x] 0.1 Freeze the answer-ID-keyed YAML shape, uniqueness/reference validation, and fallback precedence against the approved product behavior and existing Story YAML/Engine contracts.
   - [x] 0.2 Freeze the correct-selection image/line completion rule: authored alt text, accessible text, narration completion or explicit skip before Next, and immediate Next when narration is off or unavailable.
   - Requirements: CH1.6–CH1.8, CH2.7, CH5.6–CH5.9
-- [ ] 1. Complete choice/hotspot schemas and config gating.
-  - [ ] 1.1 Validate stable choice/object IDs, labels, positions and practice-local data.
-  - [ ] 1.2 Enforce check-only schema invariants and attempt/scoring consistency.
-  - [ ] 1.3 Validate optional answer-ID-keyed practice outcomes and reject unknown or duplicate IDs, duplicate YAML keys, missing image alt text, and any check-node outcome block; align optional hint in the runtime schema.
+- [x] 1. Complete choice/hotspot schemas and config gating.
+  - [x] 1.1 Validate stable choice/object IDs, labels, positions and practice-local data.
+  - [x] 1.2 Enforce check-only schema invariants and attempt/scoring consistency.
+  - [x] 1.3 Validate optional answer-ID-keyed practice outcomes and reject unknown or duplicate IDs, duplicate YAML keys, missing image alt text, and any check-node outcome block; align optional hint in the runtime schema.
   - Requirements: CH1–CH3
-- [ ] 2. Compile the assessment path.
-  - [ ] 2.1 Keep check answers Engine-private and compile first-attempt check nodes.
-  - [ ] 2.2 Compile research scenes and lesson results.
-  - [ ] 2.3 Enforce check back-navigation and unscored follow-up behavior.
-  - [ ] 2.4 Enable demo assessment and follow-up entry points once their nodes and interactions are supported.
+- [x] 2. Compile the assessment path.
+  - [x] 2.1 Keep check answers Engine-private and compile first-attempt check nodes.
+  - [x] 2.2 Compile research scenes and lesson results.
+  - [x] 2.3 Enforce check back-navigation and unscored follow-up behavior.
+  - [x] 2.4 Enable demo assessment and follow-up entry points once their nodes and interactions are supported.
   - Requirements: CH3
-- [ ] 3. Implement shared mode and practice behavior.
-  - [ ] 3.1 Add the total open/practice/check classifier with check precedence.
-  - [ ] 3.2 Build practice-local data without raw content answer fields.
-  - [ ] 3.3 Add choice/object-specific wrong feedback with per-try onWrong, hint and built-in fallbacks; retain gentle shake/low tone, revealAfter and final selection.
-  - [ ] 3.4 Present an optional changed scene image and explanatory line after a correct practice selection, then require explicit Next.
+- [x] 3. Implement shared mode and practice behavior.
+  - [x] 3.1 Add the total open/practice/check classifier with check precedence.
+  - [x] 3.2 Build practice-local data without raw content answer fields.
+  - [x] 3.3 Add choice/object-specific wrong feedback with per-try onWrong, hint and built-in fallbacks; retain gentle shake/low tone, revealAfter and final selection.
+  - [x] 3.4 Present an optional changed scene image and explanatory line after a correct practice selection, then require explicit Next.
   - Requirements: CH4–CH5
-- [ ] 4. Implement choice and hotspot interactions.
-  - [ ] 4.1 Render accessible choices and submit stable choice IDs.
-  - [ ] 4.2 Render accessible hotspot targets and submit stable object IDs.
-  - [ ] 4.3 Reuse practice behavior and suppress explicit wrong-location marks.
+- [x] 4. Implement choice and hotspot interactions.
+  - [x] 4.1 Render accessible choices and submit stable choice IDs.
+  - [x] 4.2 Render accessible hotspot targets and submit stable object IDs.
+  - [x] 4.3 Reuse practice behavior and suppress explicit wrong-location marks.
   - Requirements: CH1–CH2, CH4–CH5
-- [ ] 5. Implement check confirmation and score feedback.
-  - [ ] 5.1 Require selection and explicit confirmation.
-  - [ ] 5.2 Disable submission in flight and preserve request IDs across retries.
-  - [ ] 5.3 Explain first-attempt and unscored-follow-up behavior.
+- [x] 5. Implement check confirmation and score feedback.
+  - [x] 5.1 Require selection and explicit confirmation.
+  - [x] 5.2 Disable submission in flight and preserve request IDs across retries.
+  - [x] 5.3 Explain first-attempt and unscored-follow-up behavior.
   - Requirements: CH3, CH6
-- [ ] 6. Verify Spec 2 and publish the shared contract.
-  - [ ] 6.1 Add schema, compiler, component and mode property tests.
-  - [ ] 6.2 Verify answer privacy, scoring, navigation and config gating.
-  - [ ] 6.3 Document the mode/feedback API for Specs 3 and 4.
-  - [ ] 6.4 Cover keyed-feedback precedence, absent outcome fallback, changed-image/line ordering, narration-disabled/failed/stalled access, explicit skip, auto-advance suppression, retry idempotency and check-mode answer privacy.
+- [x] 6. Verify Spec 2 and publish the shared contract.
+  - [x] 6.1 Add schema, compiler, component and mode property tests.
+  - [x] 6.2 Verify answer privacy, scoring, navigation and config gating.
+  - [x] 6.3 Document the mode/feedback API for Specs 3 and 4.
+  - [x] 6.4 Cover keyed-feedback precedence, absent outcome fallback, changed-image/line ordering, narration-disabled/failed/stalled access, explicit skip, auto-advance suppression, retry idempotency and check-mode answer privacy.
   - Requirements: CH1–CH6

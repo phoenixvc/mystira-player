@@ -1,7 +1,7 @@
 {
   "mode": "local",
   "demo": true,
-  "interactions": { "enabled": [] },
+  "interactions": { "enabled": ["choices", "hotspots"] },
   "assetOrigins": [],
   "api": { "baseUrl": "" }
 }

@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
 const TextAsset = z.union([z.string(), z.null()]);
+const OutcomeNarrationYamlSchema = z.object({ text: z.string().trim().min(1), audio: TextAsset.optional() }).strict();
+const PracticeOutcomeYamlSchema = z.union([
+  z.object({ on_wrong: OutcomeNarrationYamlSchema }).strict(),
+  z.object({ on_correct: z.object({ image: z.object({ src: z.string().trim().min(1), alt: z.string().trim().min(1) }).strict().optional(), line: OutcomeNarrationYamlSchema }).strict() }).strict(),
+]);
 const RequiredOpaque = z.unknown().refine((value) => value !== undefined, 'Required legacy field is missing');
 const TimestampYamlSchema = z.object({
   word: z.string(), startMs: z.number().min(0), endMs: z.number().min(0),
@@ -61,7 +66,7 @@ export const SceneYamlSchema = z.object({
     scale: z.number().min(0.01).max(100).nullable().optional(), facing: TextAsset.optional(), rotation_y_deg: z.number().nullable().optional(),
     bounds: z.array(z.number()).nullable().optional(),
   }).strict().nullable().optional(), reveal: z.object({ text: z.string(), image: TextAsset.optional() }).strict().optional() }).strict()).optional(),
-  practice: z.object({ answer: z.object({ branch: z.string().optional(), object: z.string().optional(), order: z.array(z.string()).min(3).max(5).optional(), parts: z.array(z.string()).optional() }).strict(), hint: z.object({ text: z.string(), audio: TextAsset.optional() }).strict().optional(), on_wrong: z.array(z.object({ text: z.string(), audio: TextAsset.optional() }).strict()).optional(), reveal_after: z.number().int().min(1).max(5).optional() }).strict().optional(),
+  practice: z.object({ answer: z.object({ branch: z.string().optional(), object: z.string().optional(), order: z.array(z.string()).min(3).max(5).optional(), parts: z.array(z.string()).optional() }).strict(), hint: z.object({ text: z.string(), audio: TextAsset.optional() }).strict().optional(), on_wrong: z.array(z.object({ text: z.string(), audio: TextAsset.optional() }).strict()).optional(), reveal_after: z.number().int().min(1).max(5).optional(), outcomes: z.record(z.string(), PracticeOutcomeYamlSchema).refine((value) => Object.keys(value).length > 0, 'Outcomes must not be empty').optional() }).strict().optional(),
   interaction: InteractionYamlSchema.optional(),
   research: z.object({ step: z.enum(['where', 'find', 'verify', 'use']), source: z.object({ kind: z.enum(['character', 'picture', 'clip', 'chart', 'page']), label: z.string() }).strict().optional() }).strict().optional(),
   exit_allowed: z.boolean().optional(), host_slot: TextAsset.optional(), auto_advance: z.boolean().optional(),

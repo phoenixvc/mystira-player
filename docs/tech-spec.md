@@ -276,7 +276,7 @@ Every interaction runs in one of three modes, decided by the node, not by the ty
 
 Practice feedback ladder: wrong try *n* plays `onWrong[n-1]` if present, else `hint`, else the built-in "Not yet. Try again." It comes with a gentle shake and a low tone, never a red cross or a failure sound. After `revealAfter` wrong tries the correct target pulses, and the child still taps it.
 
-Spec 2 adds optional choice/hotspot practice outcomes keyed by the submitted stable ID. A matching wrong-ID `onWrong` takes precedence over the per-try ladder above; it still counts toward `revealAfter`. A correct choice may have `onCorrect` with an optional replacement image and required explanatory line. The player holds the correct answer, shows the image and line, waits for narration to finish or an explicit skip, then enables Next; Next submits once with `wrongTries`. This is the specific exception to the general rule that interactions remain usable during narration: the child can skip this line and proceed. With narration off, unavailable or failed, text is shown and Next becomes available immediately. This contract is frozen in the Spec 2 design; implementation remains in that spec's open tasks.
+Spec 2 adds optional choice/hotspot practice outcomes keyed by the submitted stable ID. A matching wrong-ID `onWrong` takes precedence over the per-try ladder above; it still counts toward `revealAfter`. A correct choice may have `onCorrect` with an optional replacement image and required explanatory line. The player holds the correct answer, shows the image and line, waits for narration to finish or an explicit skip, then enables Next; Next submits with `wrongTries` and reuses its request ID on retry. With narration off, unavailable or failed, text is shown and Next becomes available immediately. The shared runtime helpers are `src/player/interactionMode.ts` and `src/player/feedbackLadder.ts`; Engine check answers and scoring remain private to `LocalEngine`.
 
 ### Core interactions
 
@@ -414,7 +414,7 @@ Errors use `application/problem+json`. CORS allows only the player's deployed or
 - **Scene box.** Fixed 16:9 logical box, letterboxed to its container with container queries. All regions and anchors are relative to the box.
 - **Dialogue.** Lines play in order, each shown with its speaker's avatar, name and colour, and narrated in that speaker's voice. A replay control replays the current line; tapping a line replays it.
 - **Voice.** For each line: recorded `audioUrl` if present, else `speechSynthesis` with the speaker's `pitch` and `rate`. Speech is cancelled on node change and on unmount. If neither is available, text stays on screen and nothing blocks.
-- **Interactions never wait for audio.** They are usable while lines are still being spoken; a tap on an interaction stops the speech.
+- **Selections remain usable during scene narration.** A tap stops that speech. The authored correct-choice explanation uses the explicit completion or skip rule described above.
 - **Characters.** Three named slots. With `reactions`, a tap on the character plays one of them as a short CSS animation with a tone; it never advances the node or counts as an answer, and reduced motion swaps it for a small bounce.
 - **Media stage.** Image, or video with poster; `onEnd: advance` advances automatically; `skippable` shows a skip button; a video error shows a notice plus the interaction.
 - **Overlays.** Positioned at `anchor`, always on a backing plate (WCAG 2.2 AA), clamped to a safe area.
