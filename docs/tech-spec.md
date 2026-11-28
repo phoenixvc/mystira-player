@@ -2,9 +2,10 @@
 
 | | |
 |---|---|
-| Status | v1.5, final, issued to the team for build start |
-| Date | 24 November 2026 |
-| Companion docs | [PRD](./prd.md) v0.8, [Content format](./content-format.md) v1.1 |
+| Status | v1.6, current core and future seven-type scope reconciled |
+| Date | 28 November 2026 |
+| Companion docs | [PRD](./prd.md) v0.9, [Content format](./content-format.md) v1.1, [PRD 07](./prd-07-seven-interactions.md) |
+| Changes from v1.5 | Align auto-advance with the merged core schema and renderer; identify Spec 7 as the post-core gate, prioritize a gated keypad target with a core-interaction fallback, and align the fire-safety submission minimum with the Journey Phase A brief. |
 | Changes from v1.4 | Status only, plus the validated content artefacts: `content/manor/pumpkin-gate.story.yaml` (full example), `schema/story-schema-2.1.json` (player view) and `scripts/check-content.py`. Rechecked against Mystira `dev` at `1678d11` (24 Nov): no change to the story schema or parser. |
 | Changes from v1.3 | Content is now Mystira's own story YAML (schema version 2.1, backwards compatible) instead of a player-only format: tap targets are the existing scene objects plus branches, lessons are a `lesson` block in the same file, and demo-only selection moved to a `demo` block. The runtime node model (sections 5 and 6) is unchanged; section 7 now describes how `LocalEngine` compiles story YAML into nodes. v1.3 added the four-type interaction cap, the three modes and the check, research and validation rules. |
 
@@ -51,7 +52,7 @@ flowchart LR
 | Routing | Standalone: TanStack Router. Embedded: in-memory state only | An embedded player must never touch the host's URL or history. |
 | Data fetching | TanStack Query inside `RemoteEngine` only | The renderer stays engine-agnostic. |
 | Validation | Zod schemas for every node, interaction and the YAML format | Types inferred from schemas; invalid content fails loudly in tests and in a Kiro hook. |
-| Interaction scope | Four core types; three stretch types behind `interactions.enabled` | Each type is real work; the owner's cap is three or four. Story length and the number of demo children cost little by comparison. |
+| Interaction scope | Four core types for the current delivery gate; keypad is the first targeted Spec 7 addition, then pattern and count | Spec 7 enables a type only after all four core gates pass and that type has its own acceptance evidence. The Fire Door has an authored core fallback. |
 | Auth | Standalone: OIDC authorisation code + PKCE (`oidc-client-ts`) against Mystira Identity, as a public client restricted to adult accounts. Embedded: none | Nothing in the bundle or config is secret. Children never sign in. |
 | Narration | Recorded audio when provided; otherwise the Web Speech API (`speechSynthesis`) with per-speaker pitch and rate | The repo runs and speaks with no audio licensing. Recorded audio remains the production path. |
 | Sound | Web Audio API, generated tones for feedback only (and the pattern pads, if built) | No audio files needed for interaction sounds. |
@@ -106,7 +107,7 @@ mystira-player/
     player/           Player root, Hub, SceneView, MediaStage, Dialogue, Characters,
                       Overlay, NotesPanel, EndView, ErrorView
     interactions/     Choices, Hotspots, Sequence, Inspect, shared/ (modes, feedback ladder)
-    interactions/stretch/  Pattern, Keypad, Count (built only if time allows)
+    interactions/seven/    Keypad, Pattern, Count (Spec 7, after the core gate)
     voice/            NarrationPlayer (recorded), SpeechVoice (speechSynthesis), Tones (Web Audio)
     theme/            tokens, density, themes/manor, themes/mystira-{light,dark,bright}
   tests/e2e/          Playwright (standalone and element harness)
@@ -318,21 +319,21 @@ Rules:
 - **Inspect** content uses invented names, brands and domains only (`*.example`).
 - **Check nodes** never carry `local`, `task` or `reveal`; the schema rejects them.
 
-### Stretch interactions
+### Spec 7 interactions (post-core product target)
 
-Built only if time allows, in this order. `config.json` `interactions.enabled` lists the types the build supports; content using any other type raises `unsupported`, and the content hook warns rather than fails.
+Keypad, pattern and count are the post-core product target in [PRD 07](./prd-07-seven-interactions.md) and [Spec 7](../.kiro/specs/seven-interactions/requirements.md), in that priority order. Keypad is targeted for the Kiroween fire-safety lesson only after its acceptance gate; the lesson also needs an explicitly authored core-interaction path. The current 2.1 schema does not define these new interaction blocks. Spec 7 updates the JSON/Zod schemas and this contract before enabling each type. `config.json` `interactions.enabled` lists supported types; disabled types raise `unsupported` rather than falling back automatically.
 
 ```ts
   | { type: "pattern"; steps: { id: string; label: string; icon?: string; tone: number }[];  // 3 to 4 pads
-      demo: string[];                                   // 3 to 5 step ids; the demo is the answer
-      feedback?: Feedback }                             // practice only; never on check nodes
+      demo: string[];                                   // 3 to 5 visible stimulus steps
+      local?: { expected: string[]; feedback?: Feedback } } // practice only; absent on checks
   | { type: "keypad"; maxLength: number; reference?: string; showCall?: boolean;
       local?: { value: string; feedback?: Feedback } }  // digits only; "Call" is pretend, no tel: link; no reference on checks
-  | { type: "count"; targets: { id: string; region: Region; label: string }[];   // 2 to 8 spots on the scene
-      local?: { found: string[]; feedback?: Feedback } } // running tally; finds every one in the picture
+  | { type: "count"; spots: { id: string; region: Region; label: string }[]; // bounded candidates, not an answer list
+      local?: { found: string[]; feedback?: Feedback } } // practice only; absent on checks
 ```
 
-`pattern` works muted: every pad lights and is labelled, and the demo can always be replayed.
+`pattern` works muted: every pad lights and is labelled, and the demo can always be replayed. The demo is visible question stimulus, not a hidden check answer. Count candidates are neutral; correct IDs are Engine-owned on checks. The shapes above are future Spec 7 contracts, not support already present in the current build.
 
 ### Node types
 
@@ -361,7 +362,7 @@ Notes:
 
 Content is Mystira's own story YAML, schema version `2.1`. The format, with a worked example, is in [content-format.md](./content-format.md); this section covers only how an engine turns it into the nodes of section 6.
 
-**Schema.** The repository carries `schema/story-schema-2.1.json`: the player's view of Mystira's story schema. It accepts every field of the full schema, so any Mystira story validates, but describes in detail only the fields the player uses and the `2.1` additions. Engine-only fields are accepted as opaque objects.
+**Schema.** The repository carries `schema/story-schema-2.1.json`: the player's authoring view of Mystira's story schema. It accepts full-story fields for validation and describes in detail the fields the player uses and the `2.1` additions. Engine-only fields are opaque to this validator. Validation is not a safe Player projection: the private engine must remove child records, answer keys, Journey rationale and other private fields before returning a rendered `Step`.
 
 **Compilation** (done by `LocalEngine`; a remote engine does the same on the server):
 
@@ -381,7 +382,7 @@ Content is Mystira's own story YAML, schema version `2.1`. The format, with a wo
 | `music.profile` | `music.profile` hint |
 | `type: roll` or `special`, or `stage3d` only | `unsupported` (host handles it) |
 
-`LocalEngine` picks each piece's version and the piece order from the `demo` block, takes rationales from it, shuffles sequence items, strips every `answer` before building a node, and computes door state and pending checks from local progress.
+`LocalEngine` picks each piece's version from the `demo` block, takes rationales from it, shuffles sequence items, strips every `answer` before building a node, and computes door state and pending checks from local progress. The Kiroween fire-safety Phase A demo keeps one authored support, pace and piece order for both invented children; only reviewed teaching methods may vary. The general engine interface may support other ordering rules outside that lesson.
 
 **Validation** runs as a Kiro hook and in CI: schema, references, check-scene rules, box bounds and overlap, interaction limits, enabled interaction types (warning only) and demo profile fields, as listed in content-format.md section 10.
 
@@ -414,7 +415,8 @@ Errors use `application/problem+json`. CORS allows only the player's deployed or
 - **Scene box.** Fixed 16:9 logical box, letterboxed to its container with container queries. All regions and anchors are relative to the box.
 - **Dialogue.** Lines play in order, each shown with its speaker's avatar, name and colour, and narrated in that speaker's voice. A replay control replays the current line; tapping a line replays it.
 - **Voice.** For each line: recorded `audioUrl` if present, else `speechSynthesis` with the speaker's `pitch` and `rate`. Speech is cancelled on node change and on unmount. If neither is available, text stays on screen and nothing blocks.
-- **Selections remain usable during scene narration.** A tap stops that speech. The authored correct-choice explanation uses the explicit completion or skip rule described above.
+- **Continue auto-advance.** Authored `scenes[].auto_advance` is optional and defaults to false. On a continue scene only, the player may advance after playable dialogue audio completes; Next remains visible and usable. With no playable recorded or speech-synthesis audio, it waits without a timer for the child to press Next. Other interactions never advance from audio completion.
+- **Interactions never wait for scene narration.** Selections remain usable while lines are spoken, and a tap stops that speech. After a correct practice choice, the authored explanation follows the explicit completion or skip rule described above.
 - **Characters.** Three named slots. With `reactions`, a tap on the character plays one of them as a short CSS animation with a tone; it never advances the node or counts as an answer, and reduced motion swaps it for a small bounce.
 - **Media stage.** Image, or video with poster; `onEnd: advance` advances automatically; `skippable` shows a skip button; a video error shows a notice plus the interaction.
 - **Overlays.** Positioned at `anchor`, always on a backing plate (WCAG 2.2 AA), clamped to a safe area.
@@ -507,7 +509,7 @@ The current standalone element implementation and runnable plain HTML host examp
 | Kiro feature | Use |
 |---|---|
 | Steering | `product.md` (PRD), `tech.md` (section 2), `structure.md` (section 4), `content.md` (from content-format.md: Mystira story YAML 2.1, no real children's data, invented names and `*.example` domains only). |
-| Specs | Four Kiroween specs: core, choices/hotspots, sequence and inspect. Spec 5 covers legacy Blazor compatibility; Spec 6 covers portable third-party scenarios. A stretch type gets its own spec only if it is started. Implemented task by task. |
+| Specs | Four interaction specs: core (continue only), choices/hotspots with shared modes and assessment flow, sequence, inspect. Specs 5 and 6 cover compatibility and embedding. Spec 7 covers the post-core three-type expansion. Implemented task by task. |
 | Hooks | `src/schema/**` saved: check it still matches `schema/story-schema-2.1.json`, run schema tests. `content/**/*.yaml` saved: run content validation (section 7), and warn on any interaction type not in `interactions.enabled`. `src/theme/**` saved: contrast and density tests. `src/interactions/**` saved: that interaction's tests. |
 | Write-up | `docs/kiro-writeup.md`. |
 
@@ -519,7 +521,7 @@ The current standalone element implementation and runnable plain HTML host examp
 | Component | Vitest + Testing Library | Each core interaction in open, practice and check mode; the feedback ladder and reveal; "Nothing here" on a hotspot miss; "That's my answer"; Undo and Done; inspect with `minMarks: 0`; keyboard operation; dialogue with speech mocked and stopped by a tap; research flow; notes panel visibility rules; error screens. |
 | Contract | Vitest + MSW | `RemoteEngine` against recorded responses including 401, 409 and network failure. |
 | Element | Playwright, plain HTML harness page | Mount, unmount, remount; events and their `detail`; slot content; no style leakage; host-assigned engine used; no network requests from the element; speech cancelled on unmount. |
-| E2E | Playwright | Local demo: hub, Pumpkin Gate for both children (including the inspect piece), assessment with a deliberate wrong answer, research, unscored retry, result and key. Axe on each node and interaction type. |
+| E2E | Playwright | Submission gate: reviewed Fire Door fire-safety lesson for ages 6 to 9, common check for both invented children, a deliberate wrong answer, reviewed research, unscored follow-up, and result; fixed support, pace and piece order. Verify the key only if PR-08 remains in scope. Pumpkin Gate remains a second lesson fixture. Axe on each delivered node and interaction type. This gate is planned, not yet passed. |
 
 ## 16. CI/CD
 
@@ -540,7 +542,7 @@ GitHub Actions, one workflow, path-filtered, concurrency cancels superseded runs
 
 | Risk | Mitigation |
 |---|---|
-| Four interaction types are still too much for the time | Inspect is the first core type to cut (the "what do they want" piece falls back to choices); stretch types are not started unless the core is done. |
+| Four interaction types are still too much for the contest schedule | Inspect is the first core type to cut (the "what do they want" piece falls back to choices); Spec 7 remains a later product target. |
 | Speech voices differ by browser and some sound poor | Per-speaker pitch and rate; recorded audio for the main characters if time allows; text always on screen. |
 | Player API not ready | The demo runs on `LocalEngine` only; signed-in mode is cut first. |
 | Host CSS or scripts interfere with the element | Shadow DOM, element harness tests, documented token surface. |
