@@ -152,6 +152,30 @@ describe('LocalEngine', () => {
     expect(followUp.node).toMatchObject({ id: first.node.id, type: 'check', attempt: 2, scored: false });
   });
 
+  it('keeps every question unscored in a direct follow-up session', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const question = gate.lesson!.checks![0]!.questions[0]!;
+    const secondScene = { ...gate.scenes.find((scene) => scene.id === question.scene)!, id: 'q2_free_coins' };
+    const twoQuestions: StoryYaml = { ...gate, scenes: [...gate.scenes, secondScene], lesson: { ...gate.lesson!, checks: [{ ...gate.lesson!.checks![0]!, questions: [question, { ...question, id: 'q2', scene: secondScene.id, research: [] }] }] } };
+    const engine = new LocalEngine(twoQuestions, ['choices', 'hotspots']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: 'follow-up' });
+    expect(first.node).toMatchObject({ type: 'check', attempt: 2, scored: false });
+    const next = await engine.respond(first.sessionId, { answerRequestId: 'q1', version: first.version, nodeId: first.node.id, answer: { kind: 'choice', choiceId: 'who' } });
+    expect(next.node).toMatchObject({ id: 'q2_free_coins', type: 'check', attempt: 2, scored: false });
+    const result = await engine.respond(next.sessionId, { answerRequestId: 'q2', version: next.version, nodeId: next.node.id, answer: { kind: 'choice', choiceId: 'who' } });
+    expect(result.node).toMatchObject({ type: 'result', correctFirstTry: 0, total: 2 });
+  });
+
+  it('completes the fixed-profile choice and hotspot preview before an unsupported inspect scene', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots']);
+    const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: engine.demoPracticeEntry() });
+    const hotspot = await engine.respond(first.sessionId, { answerRequestId: 'choice', version: first.version, nodeId: first.node.id, answer: { kind: 'choice', choiceId: 'video' } });
+    expect(hotspot.node.id).toBe('how_know_find');
+    const end = await engine.respond(hotspot.sessionId, { answerRequestId: 'hotspot', version: hotspot.version, nodeId: hotspot.node.id, answer: { kind: 'hotspot', hotspotId: 'crow' } });
+    expect(end.node).toMatchObject({ id: 'story-end', type: 'result' });
+  });
+
   it('finishes a child-chosen piece when its authored next scene belongs to a different profile version', async () => {
     const gate = StoryYamlSchema.parse(parse(pumpkinGate));
     const engine = new LocalEngine(gate, ['choices', 'hotspots']);

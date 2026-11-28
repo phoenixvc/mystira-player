@@ -132,6 +132,40 @@ describe('Player', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false));
   });
 
+  it('starts speech fallback once when audio reports both error and a rejected play promise', async () => {
+    const speak = vi.fn();
+    vi.stubGlobal('speechSynthesis', { speak, cancel: vi.fn() });
+    vi.stubGlobal('SpeechSynthesisUtterance', class { onend?: () => void; onerror?: () => void; constructor(public text: string) {} });
+    let sound: { onerror?: () => void } | undefined;
+    vi.stubGlobal('Audio', class {
+      onended?: () => void;
+      onerror?: () => void;
+      constructor() { sound = this; }
+      play() { return Promise.reject(new Error('audio failed')); }
+      pause() { /* unavailable media */ }
+    });
+    const practice: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }], local: { correctId: 'yes', outcomes: { yes: { onCorrect: { line: { text: 'Read this explanation.', audioUrl: '/bad.mp3' } } } } } } } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    sound?.onerror?.();
+    await waitFor(() => expect(speak).toHaveBeenCalledTimes(1));
+  });
+
+  it('keeps scene-line navigation disabled while an explanation is held', async () => {
+    vi.stubGlobal('Audio', class {
+      play() { return new Promise<void>(() => { /* stalled media */ }); }
+      pause() { /* cancelled on skip */ }
+    });
+    const practice: Step = { ...first, node: { ...first.node, lines: [{ speakerId: 'narrator', text: 'First line.' }, { speakerId: 'narrator', text: 'Second line.' }], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }], local: { correctId: 'yes', outcomes: { yes: { onCorrect: { line: { text: 'Explanation.', audioUrl: '/why.mp3' } } } } } } } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
+    const nextLine = await screen.findByRole('button', { name: 'Show next line' });
+    expect(nextLine.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
+    expect(nextLine.hasAttribute('disabled')).toBe(true);
+  });
+
   it('advances immediately on a correct practice choice without an authored outcome', async () => {
     const practice: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }], local: { correctId: 'yes' } } } };
     const respond = vi.fn().mockResolvedValue(second);

@@ -20,6 +20,7 @@ type Session = {
   scoredChecks: Set<string>;
   correctFirstTry: number;
   researchAnswer?: string;
+  practicePreview?: boolean;
 };
 
 export class LocalEngine implements Engine {
@@ -80,7 +81,13 @@ export class LocalEngine implements Engine {
     const availableSceneIds = this.getSceneIds(profileId, assessmentEntry ? undefined : request.startNodeId);
     const assessmentIndex = availableSceneIds.indexOf(firstCheck ?? '');
     if (assessmentEntry && assessmentIndex < 0) throw new EngineError('notFound', 'The assessment start scene is unavailable.');
-    const sceneIds = assessmentEntry ? availableSceneIds.slice(assessmentIndex) : availableSceneIds;
+    const practicePreview = !assessmentEntry && profile?.order === 'fixed' && !!request.startNodeId && request.startNodeId === this.demoPracticeEntry();
+    const firstUnsupported = practicePreview ? availableSceneIds.findIndex((id) => {
+      const kind = this.story.scenes.find((scene) => scene.id === id)?.interaction?.kind;
+      return kind !== undefined && !this.enabled.includes(kind);
+    }) : -1;
+    const sceneIds = assessmentEntry ? availableSceneIds.slice(assessmentIndex) : practicePreview
+      ? availableSceneIds.slice(0, firstUnsupported < 0 ? availableSceneIds.length : firstUnsupported) : availableSceneIds;
     if (sceneIds.length === 0) {
       if (request.startNodeId) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
       throw new EngineError('unsupported', 'This story has no playable lesson scenes yet.');
@@ -89,12 +96,12 @@ export class LocalEngine implements Engine {
     if (startIndex < 0) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
     const players = request.players.length > 0 ? request.players : [{ type: 'Guest' as const, displayName: profile?.display_name ?? 'Guest' }];
     const session: Session = {
-      id: crypto.randomUUID(), sceneIds, index: startIndex, history: [], version: 1,
+      id: crypto.randomUUID(), sceneIds, index: startIndex, history: [], version: 1, practicePreview,
       profileId,
       ageGroupId: this.story.age_group,
       players: players.map((seat) => this.toSessionPlayer(seat)),
       responses: new Map(),
-      checkAttempts: new Map(firstCheck && request.startNodeId === 'follow-up' ? [[firstCheck, 2]] : []),
+      checkAttempts: new Map(request.startNodeId === 'follow-up' ? this.checkQuestions().map((question) => [question.scene, 2] as const) : []),
       scoredChecks: new Set(), correctFirstTry: 0,
     };
     const first = this.toStep(session);
@@ -239,6 +246,7 @@ export class LocalEngine implements Engine {
         if (profile?.order === 'child_chooses' && crossesPiece && mapped) {
           return session.sceneIds.length;
         }
+        if (session.practicePreview && crossesPiece) return session.sceneIds.length;
         throw new EngineError('unsupported', `Scene '${scene.id}' points to unavailable scene '${target}'.`);
       }
       return targetIndex;

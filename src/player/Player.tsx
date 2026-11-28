@@ -251,8 +251,10 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       if (!narrate) { setHeldReady(true); return; }
       const token = generation.current;
       const finish = () => { if (token === generation.current) setHeldReady(true); };
+      let fallbackStarted = false;
       const speak = () => {
-        if (token !== generation.current) return;
+        if (fallbackStarted || token !== generation.current) return;
+        fallbackStarted = true;
         if (typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') { finish(); return; }
         try {
           const utterance = new SpeechSynthesisUtterance(presentation.line.text);
@@ -331,7 +333,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     {held && !held.spot && <div className={styles.feedback} role="status"><p>{held.line.text}</p>{!heldReady && <button type="button" onClick={() => { stopMedia(); setHeldReady(true); }}>Continue without audio</button>}</div>}
     <div className={styles.dialogue} aria-live="polite">
       {currentLine && !(node.type === 'check' && currentLine.text === node.question.text) && <><div className={styles.speaker}>{speaker?.avatarUrl && <img src={speaker.avatarUrl} alt="" />}<strong style={{ color: speaker?.colour }}>{speaker?.name ?? 'Narrator'}</strong></div><p>{currentLine.text}</p></>}
-      {node.lines.length > 1 && <div className={styles.lineControls}><span>Line {lineIndex + 1} of {node.lines.length}</span><button type="button" disabled={lineIndex >= node.lines.length - 1} onClick={() => { stopMedia(); setLineIndex((index) => index + 1); }}>Show next line</button></div>}
+      {node.lines.length > 1 && <div className={styles.lineControls}><span>Line {lineIndex + 1} of {node.lines.length}</span><button type="button" disabled={!!held || lineIndex >= node.lines.length - 1} onClick={() => { stopMedia(); setLineIndex((index) => index + 1); }}>Show next line</button></div>}
     </div>
     {node.type === 'result' && <aside className={styles.feedback} aria-label="Lesson result">{node.total > 0 && <p>{node.correctFirstTry} of {node.total} correct on the first try</p>}{node.key && <div className={styles.resultKey}>{node.key.iconUrl && !keyImageFailed ? <img src={node.key.iconUrl} alt="" onError={() => setKeyImageFailed(true)} /> : <span aria-hidden="true">✦</span>}<strong>{node.key.label}</strong></div>}</aside>}
     <div className={styles.actions}>

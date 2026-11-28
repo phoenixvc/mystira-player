@@ -101,7 +101,7 @@ for sc in scenes.values():
         correct = sc["practice"]["answer"].get("branch") or sc["practice"]["answer"].get("object")
         is_hotspot = any(b.get("object_id") for b in sc.get("branches", []))
         ids = [b.get("object_id") if is_hotspot else b.get("id") for b in sc.get("branches", [])]
-        if outcomes and (not correct or not ids or any(not item for item in ids) or len(ids) != len(set(ids))):
+        if outcomes and (correct not in ids or not ids or any(not item for item in ids) or len(ids) != len(set(ids))):
             errors.append(f"{w}: practice outcomes require unique explicit choice or hotspot IDs")
         if outcomes and is_hotspot:
             bounded = {o["id"] for o in sc.get("objects", []) if len((o.get("geometry") or {}).get("bounds") or []) == 4}
