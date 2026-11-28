@@ -11,7 +11,7 @@ The sequence implementation is isolated in `feat/sequence-impl`, based on merged
 | 3. Place, Undo, Done | Component tests cover all six 3-item placement permutations, exact submitted IDs, Undo and no submission on final placement. Player tests cover Engine submission only after Done. |
 | 4. Shared modes | Player tests cover open, practice with feedback/reveal, and check with explicit confirmation. LocalEngine tests cover wrong practice retry and first-try-only check scoring. |
 | 5. Accessibility and presentation | Sequence buttons use the shared density target size and visible focus. A polite status region announces placement and Undo; component tests verify focus transfer. The shared reduced-motion rule removes reveal and wrong-answer animation. A local browser pass used Enter to place items and confirmed the remaining/placed lists, focus, Undo, feedback and completion. |
-| 6. Gate and standalone demo | Compiler test rejects sequence when disabled; local demo test checks enabled sequence entry and profile filtering. Browser pass selected `Sequence · Spec 3` and completed the authored piece. |
+| 6. Gate and standalone demo | Compiler test rejects sequence when disabled; local demo test checks sequence-only enablement, profile filtering and disabled Spec 2 entries. Browser pass selected `Sequence · Spec 3` and completed the authored piece. |
 
 ## Verification run
 

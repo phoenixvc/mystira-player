@@ -18,9 +18,12 @@ export async function loadLocalDemo(): Promise<{ engine: Engine; activityId: str
   const config = ConfigSchema.parse(await response.json());
   const story = StoryYamlSchema.parse(parse(corePreview));
   const engine = new LocalEngine(story, config.interactions.enabled);
-  const available = config.interactions.enabled.includes('choices') && config.interactions.enabled.includes('hotspots');
-  const assessment = available ? StoryYamlSchema.parse(parse(pumpkinGate)) : undefined;
+  const choicesAvailable = config.interactions.enabled.includes('choices') && config.interactions.enabled.includes('hotspots');
+  const sequenceAvailable = config.interactions.enabled.includes('sequence');
+  const assessment = choicesAvailable || sequenceAvailable ? StoryYamlSchema.parse(parse(pumpkinGate)) : undefined;
   const assessmentEngine = assessment ? new LocalEngine(assessment, config.interactions.enabled) : undefined;
+  const assessmentProfiles = assessmentEngine ? await assessmentEngine.listProfiles() : [];
+  const sequenceEntry = sequenceAvailable ? assessmentEngine?.demoSequenceEntry() : undefined;
   return { engine, activityId: story.title, isDemoMode: config.demo, sceneForProfile: (sceneId, profileId) => engine.demoSceneForProfile(sceneId, profileId), piecesForProfile: (profileId) => engine.demoPiecesForProfile(profileId),
-    ...(assessment && assessmentEngine ? { assessment: { engine: assessmentEngine, activityId: assessment.lesson?.id ?? assessment.title, profiles: await assessmentEngine.listProfiles(), sequenceProfiles: (await assessmentEngine.listProfiles()).filter((profile) => { const entry = assessmentEngine.demoSequenceEntry(); return !!entry && assessmentEngine.demoSceneForProfile(entry, profile.profileId) === entry; }), entries: { practice: assessmentEngine.demoPracticeEntry(), sequence: assessmentEngine.demoSequenceEntry(), ...assessmentEngine.demoAssessmentEntries() } } } : {}) };
+    ...(assessment && assessmentEngine ? { assessment: { engine: assessmentEngine, activityId: assessment.lesson?.id ?? assessment.title, profiles: assessmentProfiles, sequenceProfiles: assessmentProfiles.filter((profile) => !!sequenceEntry && assessmentEngine.demoSceneForProfile(sequenceEntry, profile.profileId) === sequenceEntry), entries: { ...(choicesAvailable ? { practice: assessmentEngine.demoPracticeEntry(), ...assessmentEngine.demoAssessmentEntries() } : {}), ...(sequenceEntry ? { sequence: sequenceEntry } : {}) } } } : {}) };
 }
