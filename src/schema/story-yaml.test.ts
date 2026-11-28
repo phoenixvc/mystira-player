@@ -33,6 +33,15 @@ describe('Story YAML foundation schema', () => {
     expect(story.scenes[0]?.media).toEqual(authored.scenes[0].media);
   });
 
+  it('requires nonblank outcome text and image alt text, and rejects duplicate YAML keys', () => {
+    const authored = parse(pumpkinGate);
+    authored.scenes[0].practice.outcomes = { friend: { on_wrong: { text: '   ' } } };
+    expect(StoryYamlSchema.safeParse(authored).success).toBe(false);
+    authored.scenes[0].practice.outcomes = { video: { on_correct: { image: { src: '/truth.webp', alt: ' ' }, line: { text: 'A video said it.' } } } };
+    expect(StoryYamlSchema.safeParse(authored).success).toBe(false);
+    expect(() => parse('outcomes:\n  friend: one\n  friend: two\n')).toThrow(/Map keys must be unique/);
+  });
+
   it('rejects a scene missing required legacy media fields', () => {
     const story = parse(corePreview);
     delete story.scenes[0].media.audio;

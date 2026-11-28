@@ -75,13 +75,15 @@ function buildInteraction(scene: SceneYaml) {
         if (x === undefined || y === undefined || w === undefined || h === undefined) throw new EngineError('server', `Scene '${scene.id}' has invalid bounds.`);
         return { id: branch.object_id, label: object.label ?? branch.choice, region: { shape: 'rect' as const, x, y, w, h }, ...(object.reveal ? { reveal: { text: object.reveal.text, ...(object.reveal.image ? { imageUrl: object.reveal.image } : {}) } } : {}) };
       });
-      const local = answer?.object ? { correctId: answer.object, ...(scene.practice?.hint ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+      const outcomes = outcomesFor(scene, spots.map((spot) => spot.id), answer?.object, true);
+      const local = answer?.object ? { correctId: answer.object, ...(feedbackFor(scene) ? { feedback: feedbackFor(scene) } : {}), ...(outcomes ? { outcomes } : {}) } : undefined;
       return { type: 'hotspots' as const, spots, ...(local ? { local } : {}) };
     }
     const options = branches.map((branch, index) => ({ id: branch.id ?? `choice-${index + 1}`, label: branch.choice }));
     const correctId = answer?.branch ? options.find((option) => option.id === answer.branch)?.id : undefined;
     if (answer?.branch && !correctId) throw new EngineError('server', `Scene '${scene.id}' practice answer refers to missing branch '${answer.branch}'.`);
-    const local = correctId ? { correctId, ...(scene.practice?.hint ? { feedback: feedbackFor(scene) } : {}) } : undefined;
+    const outcomes = outcomesFor(scene, options.map((option) => option.id), correctId, false);
+    const local = correctId ? { correctId, ...(feedbackFor(scene) ? { feedback: feedbackFor(scene) } : {}), ...(outcomes ? { outcomes } : {}) } : undefined;
     return { type: 'choices' as const, options, ...(local ? { local } : {}) };
   }
   return { type: 'continue' as const };
@@ -89,10 +91,30 @@ function buildInteraction(scene: SceneYaml) {
 
 function feedbackFor(scene: SceneYaml) {
   const practice = scene.practice;
-  if (!practice?.hint) return undefined;
+  if (!practice || (!practice.hint && !practice.on_wrong && practice.reveal_after === undefined)) return undefined;
   return {
-    hint: { text: practice.hint.text, ...(practice.hint.audio ? { audioUrl: practice.hint.audio } : {}) },
+    ...(practice.hint ? { hint: { text: practice.hint.text, ...(practice.hint.audio ? { audioUrl: practice.hint.audio } : {}) } } : {}),
     ...(practice.on_wrong ? { onWrong: practice.on_wrong.map((item) => ({ text: item.text, ...(item.audio ? { audioUrl: item.audio } : {}) })) } : {}),
     ...(practice.reveal_after === undefined ? {} : { revealAfter: practice.reveal_after }),
   };
+}
+
+function outcomesFor(scene: SceneYaml, ids: string[], correctId: string | undefined, hotspot: boolean) {
+  const authored = scene.practice?.outcomes;
+  if (!authored) return undefined;
+  if (!correctId || new Set(ids).size !== ids.length || scene.branches.some((branch) => !branch.id && !hotspot)) {
+    throw new EngineError('server', `Scene '${scene.id}' practice outcomes require stable, unique answer IDs.`);
+  }
+  const outcomes: Record<string, { onWrong: { text: string; audioUrl?: string } } | { onCorrect: { image?: { imageUrl: string; alt: string }; line: { text: string; audioUrl?: string } } }> = {};
+  for (const [id, outcome] of Object.entries(authored)) {
+    if (!ids.includes(id)) throw new EngineError('server', `Scene '${scene.id}' outcome '${id}' is not a selectable answer.`);
+    if ('on_wrong' in outcome) {
+      if (id === correctId) throw new EngineError('server', `Scene '${scene.id}' gives wrong feedback for its correct answer.`);
+      outcomes[id] = { onWrong: { text: outcome.on_wrong.text, ...(outcome.on_wrong.audio ? { audioUrl: outcome.on_wrong.audio } : {}) } };
+    } else {
+      if (hotspot || id !== correctId) throw new EngineError('server', `Scene '${scene.id}' gives a correct presentation for an invalid choice.`);
+      outcomes[id] = { onCorrect: { ...(outcome.on_correct.image ? { image: { imageUrl: outcome.on_correct.image.src, alt: outcome.on_correct.image.alt } } : {}), line: { text: outcome.on_correct.line.text, ...(outcome.on_correct.line.audio ? { audioUrl: outcome.on_correct.line.audio } : {}) } } };
+    }
+  }
+  return outcomes;
 }

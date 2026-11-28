@@ -123,7 +123,7 @@ characters:
     host_slot: null                       # NEW: a slot the host may fill on this scene
 ```
 
-Spec 2 freezes an optional practice-outcome extension for choice and hotspot scenes. It is a planned content contract until Spec 2 schema and renderer tasks implement it; current validators still reject `practice.outcomes`. The map keys are the stable submitted branch IDs or hotspot `object_id` values. When outcomes are used, choice branches require explicit unique IDs. Wrong IDs can carry `on_wrong`; only the correct choice ID can carry `on_correct`:
+Spec 2 supports optional practice outcomes for choice and hotspot scenes. The map keys are the stable submitted branch IDs or hotspot `object_id` values. When outcomes are used, choice branches require explicit unique IDs. Wrong IDs can carry `on_wrong`; only the correct choice ID can carry `on_correct`:
 
 ```yaml
 practice:
@@ -311,7 +311,7 @@ A Kiro hook and a CI step run `scripts/check-content.py schema/story-schema-2.1.
 
 - the file is valid Mystira story content (required story fields present);
 - every `lesson`, `practice`, `answer`, `object_id` and `cast` reference resolves;
-- once Spec 2 implementation lands, outcome keys resolve to unique explicit choice IDs or unique hotspot object IDs, and duplicate YAML map keys are rejected;
+- outcome keys resolve to unique explicit choice IDs or unique hotspot object IDs, and duplicate YAML map keys are rejected;
 - no check scene has `practice`, `task` or `reveal`;
 - object and door boxes lie inside the picture and do not overlap;
 - interactions are within their limits (choices 2 to 4, targets 2 to 6, sequence 3 to 5, inspect parts 3 to 8);

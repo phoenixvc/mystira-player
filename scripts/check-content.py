@@ -5,8 +5,29 @@ import sys
 import yaml
 from jsonschema import Draft7Validator
 
+class UniqueKeyLoader(yaml.SafeLoader):
+    pass
+
+
+def unique_mapping(loader, node):
+    mapping = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node)
+        if key in mapping:
+            raise yaml.constructor.ConstructorError(None, None, f"duplicate YAML key '{key}'", key_node.start_mark)
+        mapping[key] = loader.construct_object(value_node)
+    return mapping
+
+
+UniqueKeyLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
+
 schema_path, content_path = sys.argv[1], sys.argv[2]
-doc = yaml.safe_load(open(content_path))
+try:
+    with open(content_path, encoding="utf-8") as content_file:
+        doc = yaml.load(content_file, Loader=UniqueKeyLoader)
+except yaml.YAMLError as cause:
+    print(f"{content_path}: 1 problem(s)\n  - yaml: {cause}")
+    sys.exit(1)
 errors: list[str] = []
 
 for e in sorted(Draft7Validator(json.load(open(schema_path))).iter_errors(doc), key=str):
@@ -74,6 +95,26 @@ for sc in scenes.values():
             errors.append(f"{w}: cast member '{c['character_id']}' is not a character")
     if sc.get("practice"):
         answer_resolves(sc, sc["practice"]["answer"], f"{w} practice")
+        outcomes = sc["practice"].get("outcomes") or {}
+        if outcomes and sc.get("interaction"):
+            errors.append(f"{w}: practice outcomes are only supported for choices and hotspots")
+        correct = sc["practice"]["answer"].get("branch") or sc["practice"]["answer"].get("object")
+        is_hotspot = any(b.get("object_id") for b in sc.get("branches", []))
+        ids = [b.get("object_id") if is_hotspot else b.get("id") for b in sc.get("branches", [])]
+        if outcomes and (correct not in ids or not ids or any(not item for item in ids) or len(ids) != len(set(ids))):
+            errors.append(f"{w}: practice outcomes require unique explicit choice or hotspot IDs")
+        if outcomes and is_hotspot:
+            bounded = {o["id"] for o in sc.get("objects", []) if len((o.get("geometry") or {}).get("bounds") or []) == 4}
+            for item in ids:
+                if item not in bounded:
+                    errors.append(f"{w}: outcome hotspot '{item}' needs an object with rectangular bounds")
+        for outcome_id, outcome in outcomes.items():
+            if outcome_id not in ids:
+                errors.append(f"{w}: outcome ID '{outcome_id}' does not match a selectable answer")
+            if "on_correct" in outcome and (is_hotspot or outcome_id != correct):
+                errors.append(f"{w}: on_correct is only allowed for the correct choice ID")
+            if "on_wrong" in outcome and outcome_id == correct:
+                errors.append(f"{w}: the correct answer cannot have on_wrong feedback")
     plain_choices = [b for b in sc.get("branches", []) if not b.get("object_id")]
     if sc.get("type") == "choice" and plain_choices and not 2 <= len(plain_choices) <= 4:
         errors.append(f"{w}: choices must number 2 to 4")

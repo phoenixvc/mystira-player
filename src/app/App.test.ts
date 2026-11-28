@@ -9,7 +9,7 @@ vi.mock('./localDemo', () => ({ loadLocalDemo: vi.fn() }));
 afterEach(() => cleanup());
 
 describe('core preview', () => {
-  it('does not offer Next for a scene whose interaction is not rendered yet', async () => {
+  it('renders a choice scene with stable answer submission', async () => {
     const step: Step = {
       sessionId: 'session', version: '1', ageGroupId: '6-9', players: [],
       node: {
@@ -30,9 +30,10 @@ describe('core preview', () => {
     const startButton = screen.getByRole('button', { name: 'Start preview' });
     await waitFor(() => expect(startButton.hasAttribute('disabled')).toBe(false));
     fireEvent.click(startButton);
-    await waitFor(() => expect(screen.getByText('This interaction is not available in the core preview yet.')).toBeTruthy());
+    await screen.findByRole('button', { name: 'A' });
     expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
-    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'A' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('session', expect.objectContaining({ answer: { kind: 'choice', choiceId: 'a' } }), expect.anything()));
   });
 
   it('switches demo profiles at the corresponding scene supplied by the engine', async () => {
@@ -90,6 +91,23 @@ describe('core preview', () => {
     expect(screen.queryByText('A note for grown-ups.')).toBeNull();
     fireEvent.click(screen.getByLabelText('Grown-up notes'));
     expect(screen.getByText('A note for grown-ups.')).toBeTruthy();
+  });
+
+  it('starts the Engine-provided assessment and follow-up entries', async () => {
+    const check: Step = { sessionId: 'check', version: '1', ageGroupId: '6-9', players: [], node: { type: 'check', id: 'question', title: 'Question', media: {}, characters: [], speakers: [], lines: [], overlays: [], question: { text: 'Who said it?' }, attempt: 1, scored: true, interaction: { type: 'choices', options: [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }] } } };
+    const assessmentStart = vi.fn().mockResolvedValue(check);
+    const assessmentEngine: Engine = { startSession: assessmentStart, resumeSession: vi.fn(), respond: vi.fn() };
+    const engine: Engine = { startSession: vi.fn(), resumeSession: vi.fn(), respond: vi.fn() };
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'preview', isDemoMode: true, sceneForProfile: (id) => id, piecesForProfile: () => [], assessment: { engine: assessmentEngine, activityId: 'lesson', profiles: [{ profileId: 'child', displayName: 'Child' }], entries: { assessment: 'assessment', followUp: 'follow-up' } } });
+    render(React.createElement(App));
+    await waitFor(() => expect(screen.getByRole('option', { name: 'Assessment · Spec 2' }).hasAttribute('disabled')).toBe(false));
+    fireEvent.change(screen.getByLabelText('Entry point'), { target: { value: 'assessment' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start preview' }));
+    await screen.findByRole('heading', { name: 'Question' });
+    expect(assessmentStart).toHaveBeenCalledWith(expect.objectContaining({ activityId: 'lesson', players: [{ type: 'Profile', profileId: 'child' }], startNodeId: 'assessment' }), expect.anything());
+    fireEvent.change(screen.getByLabelText('Entry point'), { target: { value: 'follow-up' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start preview' }));
+    await waitFor(() => expect(assessmentStart).toHaveBeenLastCalledWith(expect.objectContaining({ startNodeId: 'follow-up' }), expect.anything()));
   });
 
   it('hides demo controls when the host is not in demo mode', async () => {
