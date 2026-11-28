@@ -39,6 +39,14 @@ function addNodeInvariants(node: Node, ctx: z.RefinementCtx): void {
       if (spot.region.shape === 'circle' && (spot.region.x - spot.region.r < 0 || spot.region.y - spot.region.r < 0 || spot.region.x + spot.region.r > 1 || spot.region.y + spot.region.r > 1 || spot.region.r <= 0)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'spots'], message: 'Hotspot circle must be inside the image' });
     }
   }
+  if (node.interaction.type === 'sequence') {
+    const ids = node.interaction.items.map((item) => item.id);
+    if (new Set(ids).size !== ids.length) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'items'], message: 'Sequence item IDs must be unique' });
+    const order = node.interaction.local?.order;
+    if (order && (order.length !== ids.length || new Set(order).size !== ids.length || order.some((id) => !ids.includes(id)))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local', 'order'], message: 'Practice order must contain every sequence item exactly once' });
+    }
+  }
   if (node.type !== 'check') return;
   if ('local' in node.interaction && node.interaction.local !== undefined) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'local'], message: 'Check nodes must not carry a local answer block' });
   if (node.interaction.type === 'hotspots' && node.interaction.spots.some((spot) => spot.reveal !== undefined)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'spots'], message: 'Check nodes must not carry reveal content' });

@@ -27,6 +27,15 @@
 .actions .next { background:#e8954a; color:#21112f; border-color:#e8954a; }
 .notes h2 { margin-top:0; } .notes p { margin:.4rem 0; }
 .choices { display:flex; flex-wrap:wrap; gap:.75rem; max-width:960px; }
+.sequence { max-width:960px; display:grid; gap:.75rem; background:var(--mp-surface); padding:1rem; border-radius:1rem; }
+.sequenceColumns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.sequence h2 { margin:.2rem 0; font-size:1.1em; }
+.sequence ol,.sequence ul { margin:.5rem 0; padding-left:1.5rem; }
+.sequence li { margin:.5rem 0; min-height:var(--mp-min-target,48px); }
+.sequence li button { text-align:left; width:100%; display:flex; align-items:center; gap:.5rem; }
+.sequence li img { width:2.75rem; height:2.75rem; object-fit:contain; }
+.sequenceStatus { margin:0; color:var(--mp-muted); }
+@media (max-width:540px) { .sequenceColumns { grid-template-columns:1fr; } }
 .hotspot { position:absolute; z-index:2; display:grid; place-items:center; overflow:hidden; border-color:transparent!important; background:transparent!important; color:transparent!important; padding:.2rem!important; font-size:clamp(.7rem,1.5vw,1rem)!important; }
 .hotspot span { position:absolute; clip:rect(0 0 0 0); clip-path:inset(50%); width:1px; height:1px; overflow:hidden; white-space:nowrap; }
 .hotspot:hover,.hotspot:focus-visible,.hotspot.revealed { border-color:var(--mp-accent)!important; background:color-mix(in srgb,var(--mp-surface) 75%,transparent)!important; color:var(--mp-text)!important; }

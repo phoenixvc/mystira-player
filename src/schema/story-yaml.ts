@@ -18,7 +18,7 @@ const MusicPaletteYamlSchema = z.object({
 const InteractionYamlSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('sequence'),
-    items: z.array(z.object({ id: z.string(), label: z.string(), image: TextAsset.optional() }).strict()).min(3).max(5),
+    items: z.array(z.object({ id: z.string().trim().min(1), label: z.string().trim().min(1), image: TextAsset.optional(), alt: z.string().trim().min(1).optional() }).strict().refine((item) => !item.image || !!item.alt, 'Sequence images need alt text')).min(3).max(5).refine((items) => new Set(items.map((item) => item.id)).size === items.length, 'Sequence item IDs must be unique'),
   }).strict(),
   z.object({
     kind: z.literal('inspect'), min_marks: z.number().int().min(0).optional(),

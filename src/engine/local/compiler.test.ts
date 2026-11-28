@@ -65,4 +65,13 @@ describe('local scene compilation', () => {
     const hotspot = story.scenes.find((scene) => scene.id === 'how_know_find')!;
     expect(() => compileScene({ ...hotspot, practice: { ...hotspot.practice!, outcomes: { crow: { on_correct: { line: { text: 'Crow.' } } } } } }, story, ['hotspots'])).toThrow(/invalid choice/);
   });
+
+  it('preserves Engine-supplied sequence order and transforms practice answer without raw fields', () => {
+    const scene = story.scenes.find((candidate) => candidate.id === 'how_know_teach')!;
+    expect(() => compileScene(scene, story, ['choices', 'hotspots'])).toThrow(/Unsupported interaction: sequence/);
+    const node = compileScene(scene, story, ['sequence'], 'demo_daan', ['ear', 'eye', 'book']);
+    expect(node.interaction).toMatchObject({ type: 'sequence', items: [{ id: 'ear' }, { id: 'eye' }, { id: 'book' }], local: { order: ['eye', 'book', 'ear'] } });
+    expect(JSON.stringify(node)).not.toContain('"answer"');
+    expect(() => compileScene(scene, story, ['sequence'], 'demo_daan', ['ear', 'eye', 'eye'])).toThrow(/invalid Engine-supplied sequence order/);
+  });
 });

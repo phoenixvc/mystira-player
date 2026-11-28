@@ -23,4 +23,13 @@ describe('local demo bootstrap', () => {
     const followUp = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: demo.assessment!.profiles[0]!.profileId }], startNodeId: demo.assessment!.entries.followUp });
     expect(followUp.node).toMatchObject({ type: 'check', attempt: 2, scored: false });
   });
+
+  it('exposes the sequence entry only when sequence is enabled and filters to its authored profile', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence'] } }) }));
+    const demo = await loadLocalDemo();
+    expect(demo.assessment?.entries.sequence).toBeTruthy();
+    expect(demo.assessment?.sequenceProfiles.map((profile) => profile.profileId)).toEqual(['demo_daan']);
+    const step = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: demo.assessment!.entries.sequence });
+    expect(step.node.interaction.type).toBe('sequence');
+  });
 });

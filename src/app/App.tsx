@@ -5,7 +5,7 @@ import { loadLocalDemo } from './localDemo';
 import styles from './App.module.css';
 
 export function App() {
-  const [demo, setDemo] = useState<{ engine: Engine; activityId: string; isDemoMode?: boolean; sceneForProfile?: (sceneId: string, profileId: string) => string | undefined; piecesForProfile?: (profileId: string) => { id: string; title: string; startSceneId: string }[]; assessment?: { engine: Engine; activityId: string; profiles: Profile[]; entries: { practice?: string; assessment?: string; followUp?: string } } }>();
+  const [demo, setDemo] = useState<{ engine: Engine; activityId: string; isDemoMode?: boolean; sceneForProfile?: (sceneId: string, profileId: string) => string | undefined; piecesForProfile?: (profileId: string) => { id: string; title: string; startSceneId: string }[]; assessment?: { engine: Engine; activityId: string; profiles: Profile[]; sequenceProfiles: Profile[]; entries: { practice?: string; assessment?: string; followUp?: string; sequence?: string } } }>();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [profileId, setProfileId] = useState<string>();
   const [entryPoint, setEntryPoint] = useState('lesson');
@@ -30,11 +30,11 @@ export function App() {
 
   const assessmentMode = entryPoint !== 'lesson' && demo?.assessment;
   const activeEngine = assessmentMode ? demo.assessment!.engine : demo?.engine;
-  const visibleProfiles = assessmentMode ? demo.assessment!.profiles : profiles;
+  const visibleProfiles = assessmentMode ? entryPoint === 'sequence' ? demo.assessment!.sequenceProfiles : demo.assessment!.profiles : profiles;
   const startRequest: StartSessionRequest | undefined = useMemo(() => demo ? {
     activityId: assessmentMode ? demo.assessment!.activityId : demo.activityId,
     players: profileId ? [{ type: 'Profile', profileId }] : [],
-    ...(assessmentMode ? { startNodeId: entryPoint === 'practice' ? demo.assessment!.entries.practice : entryPoint === 'assessment' ? demo.assessment!.entries.assessment : demo.assessment!.entries.followUp }
+    ...(assessmentMode ? { startNodeId: entryPoint === 'practice' ? demo.assessment!.entries.practice : entryPoint === 'sequence' ? demo.assessment!.entries.sequence : entryPoint === 'assessment' ? demo.assessment!.entries.assessment : demo.assessment!.entries.followUp }
       : startNodeId ? { startNodeId } : {}),
   } : undefined, [demo, profileId, entryPoint, startNodeId, assessmentMode]);
   const pieceChoices = entryPoint === 'lesson' && profileId ? demo?.piecesForProfile?.(profileId) ?? [] : [];
@@ -42,7 +42,7 @@ export function App() {
   return <main className={styles.shell}>
     {demo?.isDemoMode && <aside className={styles.controls} aria-label="Demo controls">
       <label>Child <select value={profileId ?? ''} onChange={(event) => { const target = event.target.value; const sceneId = currentStep && currentStep.node.type !== 'result' ? currentStep.node.id : startNodeId; const mapped = !assessmentMode && sceneId ? demo.sceneForProfile?.(sceneId, target) : undefined; setStartNodeId(mapped); setProfileId(target); setCurrentStep(undefined); if (!assessmentMode && !mapped && demo.piecesForProfile?.(target)?.length) setStarted(false); setSessionKey((key) => key + 1); }}>{visibleProfiles.map((profile) => <option key={profile.profileId} value={profile.profileId}>{profile.displayName}</option>)}</select></label>
-      <label>Entry point <select value={entryPoint} onChange={(event) => { const next = event.target.value; const available = next === 'lesson' ? profiles : demo.assessment?.profiles ?? []; setStartNodeId(undefined); setEntryPoint(next); setProfileId(available.some((profile) => profile.profileId === profileId) ? profileId : available[0]?.profileId); setCurrentStep(undefined); setStarted(false); setSessionKey((key) => key + 1); }}><option value="lesson">Lesson</option><option value="practice" disabled={!demo.assessment?.entries.practice}>Choice practice · Spec 2</option><option value="assessment" disabled={!demo.assessment?.entries.assessment}>Assessment · Spec 2</option><option value="follow-up" disabled={!demo.assessment?.entries.followUp}>Follow-up assessment · Spec 2</option></select></label>
+      <label>Entry point <select value={entryPoint} onChange={(event) => { const next = event.target.value; const available = next === 'lesson' ? profiles : next === 'sequence' ? demo.assessment?.sequenceProfiles ?? [] : demo.assessment?.profiles ?? []; setStartNodeId(undefined); setEntryPoint(next); setProfileId(available.some((profile) => profile.profileId === profileId) ? profileId : available[0]?.profileId); setCurrentStep(undefined); setStarted(false); setSessionKey((key) => key + 1); }}><option value="lesson">Lesson</option><option value="practice" disabled={!demo.assessment?.entries.practice}>Choice practice · Spec 2</option><option value="sequence" disabled={!demo.assessment?.entries.sequence}>Sequence · Spec 3</option><option value="assessment" disabled={!demo.assessment?.entries.assessment}>Assessment · Spec 2</option><option value="follow-up" disabled={!demo.assessment?.entries.followUp}>Follow-up assessment · Spec 2</option></select></label>
       <label><input type="checkbox" checked={notesEnabled} onChange={(event) => setNotesEnabled(event.target.checked)} /> Grown-up notes</label>
       {pieceChoices.length > 0 && <fieldset><legend>Choose a lesson piece</legend>{pieceChoices.map((piece) => <button key={piece.id} type="button" aria-pressed={startNodeId === piece.startSceneId} onClick={() => { setStartNodeId(piece.startSceneId); setCurrentStep(undefined); setStarted(true); setSessionKey((key) => key + 1); }}>{piece.title}</button>)}</fieldset>}
     </aside>}

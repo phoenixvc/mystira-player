@@ -981,6 +981,11 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "alt": {
+                          "type": "string",
+                          "minLength": 1,
+                          "pattern": "\\S"
                         }
                       }
                     }

@@ -98,7 +98,7 @@ describe('core preview', () => {
     const assessmentStart = vi.fn().mockResolvedValue(check);
     const assessmentEngine: Engine = { startSession: assessmentStart, resumeSession: vi.fn(), respond: vi.fn() };
     const engine: Engine = { startSession: vi.fn(), resumeSession: vi.fn(), respond: vi.fn() };
-    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'preview', isDemoMode: true, sceneForProfile: (id) => id, piecesForProfile: () => [], assessment: { engine: assessmentEngine, activityId: 'lesson', profiles: [{ profileId: 'child', displayName: 'Child' }], entries: { assessment: 'assessment', followUp: 'follow-up' } } });
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'preview', isDemoMode: true, sceneForProfile: (id) => id, piecesForProfile: () => [], assessment: { engine: assessmentEngine, activityId: 'lesson', profiles: [{ profileId: 'child', displayName: 'Child' }], sequenceProfiles: [], entries: { assessment: 'assessment', followUp: 'follow-up' } } });
     render(React.createElement(App));
     await waitFor(() => expect(screen.getByRole('option', { name: 'Assessment · Spec 2' }).hasAttribute('disabled')).toBe(false));
     fireEvent.change(screen.getByLabelText('Entry point'), { target: { value: 'assessment' } });

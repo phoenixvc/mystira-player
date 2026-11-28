@@ -5,6 +5,7 @@ import { manorTheme, themeStyle, type PlayerTheme } from '../theme/tokens';
 import { interactionMode } from './interactionMode';
 import { practiceFeedback } from './feedbackLadder';
 import type { Region } from '../schema/node';
+import { SequenceView } from './SequenceView';
 
 type Props = {
   engine: Engine;
@@ -33,6 +34,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
   const [wrongTries, setWrongTries] = useState(0);
   const [feedback, setFeedback] = useState<string>();
   const [reveal, setReveal] = useState(false);
+  const [sequenceRevealId, setSequenceRevealId] = useState<string>();
   const [wrongMotion, setWrongMotion] = useState(false);
   const [held, setHeld] = useState<{ answer: Answer; image?: { imageUrl: string; alt: string }; line: { text: string; audioUrl?: string }; spot?: { region: Region; text: string; imageUrl?: string; alt?: string } }>();
   const [heldReady, setHeldReady] = useState(false);
@@ -114,6 +116,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     setWrongTries(0);
     setFeedback(undefined);
     setReveal(false);
+    setSequenceRevealId(undefined);
     setWrongMotion(false);
     setHeld(undefined);
     setHeldReady(false);
@@ -275,6 +278,29 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     void answer(value, wrongTries);
   }, [step, held, answer, wrongTries, narration, stopMedia, playReaction]);
 
+  const submitSequence = useCallback((itemIds: string[]) => {
+    if (!step || step.node.interaction.type !== 'sequence' || busyRef.current) return;
+    stopMedia();
+    const value: Answer = { kind: 'sequence', itemIds };
+    const mode = interactionMode(step.node);
+    if (mode === 'check') { setSelected(value); setFeedback('Order selected. Confirm when ready.'); return; }
+    const local = step.node.interaction.local;
+    if (mode === 'practice' && local && itemIds.some((id, index) => id !== local.order[index])) {
+      const count = wrongTries + 1;
+      const result = practiceFeedback(local, '', count);
+      setWrongTries(count);
+      setFeedback(result.message.text);
+      setReveal(result.revealTarget);
+      setSequenceRevealId(result.revealTarget ? local.order.find((id, index) => itemIds[index] !== id) : undefined);
+      setWrongMotion(true);
+      playReaction(220);
+      window.setTimeout(() => setWrongMotion(false), 350);
+      return;
+    }
+    setFeedback(undefined);
+    void answer(value, wrongTries);
+  }, [step, answer, wrongTries, stopMedia, playReaction]);
+
   useEffect(() => {
     if (!step) return;
     const defaultOn = step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9';
@@ -329,6 +355,8 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     {node.type === 'research' && node.yourAnswer && <p className={styles.banner}>You chose: {node.yourAnswer}</p>}
     {node.task && <p className={styles.task}>{node.task.text}</p>}
     {node.interaction.type === 'choices' && !held && <div className={`${styles.choices} ${wrongMotion ? styles.wrongMotion : ''}`} role="group" aria-label="Choices">{node.interaction.options.map((option) => <button key={option.id} type="button" className={reveal && node.interaction.type === 'choices' && node.interaction.local?.correctId === option.id ? styles.revealed : ''} aria-pressed={selected?.kind === 'choice' && selected.choiceId === option.id} disabled={busy} onClick={() => choose({ kind: 'choice', choiceId: option.id })}>{option.label}</button>)}</div>}
+    {node.interaction.type === 'sequence' && <div className={wrongMotion ? styles.wrongMotion : undefined}><SequenceView key={`${step.sessionId}:${node.id}:${step.version}`} items={node.interaction.items} disabled={busy} revealId={sequenceRevealId} onEdit={() => { stopMedia(); setSelected(undefined); setFeedback(undefined); setSequenceRevealId(undefined); }} onDone={submitSequence} /></div>}
+    {sequenceRevealId && node.interaction.type === 'sequence' && <p role="status" className={styles.feedback}>Look at {node.interaction.items.find((item) => item.id === sequenceRevealId)?.label} and try that position again.</p>}
     {feedback && <p role="status" className={styles.feedback}>{feedback}</p>}
     {held && !held.spot && <div className={styles.feedback} role="status"><p>{held.line.text}</p>{!heldReady && <button type="button" onClick={() => { stopMedia(); setHeldReady(true); }}>Continue without audio</button>}</div>}
     <div className={styles.dialogue} aria-live="polite">
@@ -344,7 +372,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
         : held ? <button className={styles.next} type="button" disabled={busy || !heldReady} onClick={() => void answer(held.answer, wrongTries)}>Next</button>
         : node.type === 'check' ? <button className={styles.next} type="button" disabled={busy || !selected} onClick={() => { if (selected) void answer(selected); }}>That's my answer</button>
           : node.interaction.type === 'continue' ? <button className={styles.next} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Next</button>
-            : node.interaction.type !== 'choices' && node.interaction.type !== 'hotspots' ? <p role="status">This interaction is not available in the core preview yet.</p> : null}
+            : node.interaction.type !== 'choices' && node.interaction.type !== 'hotspots' && node.interaction.type !== 'sequence' ? <p role="status">This interaction is not available in the core preview yet.</p> : null}
     </div>
     {notesEnabled && (isDemoMode || grownUpAuthorized) && node.rationale && <aside className={styles.notes}><h2>Grown-up note</h2><p>{node.title}</p><p>{node.rationale.differs ? 'Different for each child' : 'Same for every child'}</p><p>{node.rationale.text}</p></aside>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
