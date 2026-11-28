@@ -66,6 +66,33 @@ describe('Player', () => {
     await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'hotspot', hotspotId: 'crow' }, wrongTries: 1 }), expect.anything()));
   });
 
+  it('shows an authored hotspot reveal in place before submitting the correct answer', async () => {
+    const hotspot: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'hotspots', spots: [
+      { id: 'crow', label: 'The crow', region: { shape: 'rect', x: .7, y: .1, w: .15, h: .2 }, reveal: { text: 'The crow was right there!' } },
+      { id: 'dog', label: 'The dog', region: { shape: 'rect', x: .1, y: .6, w: .2, h: .25 } },
+    ], local: { correctId: 'crow' } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(hotspot), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'The crow' }));
+    expect(screen.getByRole('status').textContent).toContain('The crow was right there!');
+    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ answer: { kind: 'hotspot', hotspotId: 'crow' }, wrongTries: 0 }), expect.anything()));
+  });
+
+  it('renders the authored result scene, first-try score, and key before replay', async () => {
+    const result: Step = { ...first, progress: { done: 2, total: 2 }, node: { ...first.node, type: 'result', id: 'gate_opens', title: 'The gate opens', lines: [{ speakerId: 'narrator', text: 'The truthful pumpkin opens the gate.' }], correctFirstTry: 1, total: 1, key: { label: 'The pumpkin key', iconUrl: '/key.webp' } } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(result), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('heading', { name: 'The gate opens' });
+    expect(screen.getByText('The truthful pumpkin opens the gate.')).toBeTruthy();
+    expect(screen.getByText('1 of 1 correct on the first try')).toBeTruthy();
+    expect(screen.getByText('The pumpkin key')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Play again' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
+  });
+
   it('offers an explicit audio skip for a stalled correct-choice explanation', async () => {
     vi.stubGlobal('Audio', class {
       onended?: () => void;
