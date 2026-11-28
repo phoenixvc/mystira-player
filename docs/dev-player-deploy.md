@@ -6,4 +6,6 @@ The standalone demo builds from this repository and deploys to the existing Azur
 
 The GitHub Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV_PLAYER` must hold the deployment token for **this exact** Static Web App. Restrict write access to the repo and rotate the token if it is exposed. Never put the token in a file, commit, build variable or browser bundle. `public/staticwebapp.config.json` is copied into `dist` for SPA route fallback.
 
+The dev build sets `VITE_DEFAULT_STORY=mummys-party`, so the root URL opens The Mummy's Party. An explicit `?story=pumpkin-gate` still opens the earlier demo; local `pnpm dev` keeps its own default unless the variable is set there too. This build variable selects public demo content and contains no credential.
+
 The deployed `public/config.json` currently selects `mode: local` and `demo: true`, so this is a public demo deploy. API-backed authentication and signed-in Story playback have separate acceptance gates. After the first `dev` run, verify the named deploy job, inspect the live URL and exercise both child paths before reporting runtime acceptance.
