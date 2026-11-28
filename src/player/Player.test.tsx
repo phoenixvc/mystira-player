@@ -20,6 +20,7 @@ describe('Player', () => {
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(ready), resumeSession: vi.fn(), respond };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
     const roll = await screen.findByRole('button', { name: 'Roll' });
+    expect(screen.getByRole('region', { name: 'Roll challenge' }).getAttribute('tabindex')).toBe('0');
     fireEvent.click(roll);
     fireEvent.click(roll);
     await waitFor(() => expect(respond).toHaveBeenCalledTimes(1));
