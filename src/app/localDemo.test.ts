@@ -17,7 +17,7 @@ describe('local demo bootstrap', () => {
   it('exposes assessment and follow-up only when both Spec 2 interactions are enabled', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots'] } }) }));
     const demo = await loadLocalDemo();
-    expect(demo.assessment?.entries).toEqual({ practice: 'who_said_it', assessment: 'assessment', followUp: 'follow-up' });
+    expect(demo.assessment?.entries).toEqual({ practice: 'demo:practice', assessment: 'assessment', followUp: 'follow-up' });
     const first = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: demo.assessment!.profiles[0]!.profileId }], startNodeId: demo.assessment!.entries.assessment });
     expect(first.node).toMatchObject({ type: 'check', attempt: 1 });
     const followUp = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: demo.assessment!.profiles[0]!.profileId }], startNodeId: demo.assessment!.entries.followUp });
@@ -39,7 +39,8 @@ describe('local demo bootstrap', () => {
   it('exposes the fictional inspect piece with inspect enabled alone', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['inspect'] } }) }));
     const demo = await loadLocalDemo();
-    expect(demo.assessment?.entries).toEqual({ inspect: 'what_do_they_want' });
+    expect(demo.assessment?.entries).toEqual({ inspect: 'demo:inspect' });
+    expect(demo.assessment?.inspectProfiles.map((profile) => profile.profileId)).toEqual(['demo_lerato', 'demo_daan']);
     const first = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: demo.assessment!.entries.inspect });
     expect(first.node.interaction.type).toBe('inspect');
     if (first.node.interaction.type !== 'inspect') throw new Error('Expected inspect');
@@ -52,5 +53,37 @@ describe('local demo bootstrap', () => {
     const fixed = await demo.assessment!.engine.startSession({ activityId: demo.assessment!.activityId, players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: demo.assessment!.entries.inspect });
     const completed = await demo.assessment!.engine.respond(fixed.sessionId, { answerRequestId: 'inspect-only', version: fixed.version, nodeId: fixed.node.id, answer: { kind: 'inspect', partIds: ['link', 'price'] } });
     expect(completed.node).toMatchObject({ type: 'result', title: 'Piece complete' });
+  });
+
+  it('opens the full Pumpkin Gate lesson when every core interaction is enabled', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence', 'inspect'] } }) }));
+    const demo = await loadLocalDemo();
+    expect(demo.fullLesson).toBe(true);
+    expect(demo.activityId).toBe('pumpkin_gate');
+    expect(demo.assessment?.engine).toBe(demo.engine);
+    expect(demo.piecesForProfile('demo_lerato')).toEqual([]);
+    expect(demo.piecesForProfile('demo_daan')).toHaveLength(5);
+    const lerato = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_lerato' }] });
+    expect(lerato.node).toMatchObject({ id: 'who_said_it', interaction: { type: 'choices' } });
+    const daanPiece = demo.piecesForProfile('demo_daan')[1]!;
+    const daan = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: daanPiece.startSceneId });
+    expect(daan.node).toMatchObject({ id: 'how_know_teach', interaction: { type: 'sequence' } });
+  });
+
+  it('offers the Mummy’s Party inspect entry only to Max, whose path contains it', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence', 'inspect'] } }) }));
+    const demo = await loadLocalDemo('mummys-party');
+    expect(demo.assessment?.entries.inspect).toBe('demo:inspect');
+    expect(demo.assessment?.inspectProfiles.map((profile) => profile.profileId)).toEqual(['demo_max']);
+    const step = await demo.assessment!.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_max' }], startNodeId: demo.assessment!.entries.inspect });
+    expect(step.node.interaction.type).toBe('inspect');
+  });
+
+  it('keeps Mummy’s Party assessment entries on the same story with partial capabilities', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots'] } }) }));
+    const demo = await loadLocalDemo('mummys-party');
+    expect(demo.assessment?.engine).toBe(demo.engine);
+    const step = await demo.assessment!.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_zoe' }], startNodeId: demo.assessment!.entries.assessment });
+    expect(step.node.id).toBe('assessment_intro');
   });
 });

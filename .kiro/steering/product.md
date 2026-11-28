@@ -16,20 +16,20 @@ It ships as a standalone SPA and as an embeddable `<mystira-player>` custom elem
 
 "The Manor of Major Headaches": a friendly-spooky front hall with five doors. Each door is a lesson; solving it earns a key.
 
-- **The Pumpkin Gate** (built in full): "How do you know something is true?" Five pieces: who said it, how do they know, what do they want, who else says it, ask a grown-up. The lesson concludes with an assessment; a wrong first answer leads into research before an unscored retry.
-- **The Fire Door**: stretch, only if the Pumpkin Gate is complete.
+- **The Fire Door** is the minimum submission lesson: fire safety for ages 6 to 9. A mummy hosts a party, a witch visits from her potion house, a ghost is present, and the child helps make the party safe. The full plot, teaching pieces, common check and media placement await content approval. Media production is underway; production does not imply approval.
+- **The Pumpkin Gate** is the second lesson target: "How do you know something is true?" Its validated content skeleton is available, but it does not replace the fire-safety minimum.
 - The other doors stay locked with "coming soon".
 - Audience: ages 6 to 9, written for nine-year-olds.
-- Two invented children, **Lerato** and **Daan**, see the same pieces taught differently. The notes panel explains why.
+- The two demo children are invented. Reviewed method variants may differ, while the fire-safety facts, support, pace, piece order and common check remain the same. The notes panel explains the selected method.
 
 ## Scope rule
 
 Each interaction type is real work; story length and the number of children cost little.
 
 - **Core four:** choices, hotspots (tap the picture), sequence (put in order), inspect (mark parts of a message).
-- **Stretch:** pattern, keypad, count. Never start one before the core four pass their tests.
-- **Cut order** when time is short: Fire Door and stretch types first; then preloading, extra themes, density; then key ring and progress; then inspect (its piece falls back to choices); then signed-in mode.
-- **Never cut:** the Pumpkin Gate for both children, the check with research, the notes panel, the Manor theme.
+- **Post-core product target:** keypad, pattern and count complete the seven-type player under [PRD 07](../../docs/prd-07-seven-interactions.md) and Spec 7. Keypad is targeted for Kiroween after the core gates pass, with an authored core-interaction fallback; it does not block submission.
+- **Contest cut order** when time is short: Pumpkin Gate second lesson and unfinished Spec 7 interactions first. The Fire Door retains its authored core-interaction path. Then preloading, extra themes, density; key ring and progress; inspect if an approved lesson can use a core fallback; signed-in mode.
+- **Never cut:** the reviewed Fire Door fire-safety lesson, its common check with research, the notes panel, or the Manor theme. Unapproved content must not be presented as ready.
 
 ## Design principles
 

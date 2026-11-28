@@ -5,7 +5,7 @@
 | Status | v1.1, final, issued to the team |
 | Date | 24 November 2026 |
 | Format | Mystira story YAML, schema version `2.1` |
-| Companion docs | [PRD](./prd.md) v0.8, [Technical Specification](./tech-spec.md) v1.5 |
+| Companion docs | [PRD](./prd.md) v0.9, [Technical Specification](./tech-spec.md) v1.6, [PRD 07](./prd-07-seven-interactions.md) |
 | Full example | [`content/manor/pumpkin-gate.story.yaml`](../content/manor/pumpkin-gate.story.yaml), validated against the schema and every rule in section 10 |
 
 > Public document. It describes how a story or lesson is written for the player. It does not describe how Mystira chooses what a child gets.
@@ -20,7 +20,7 @@ Version `2.1` adds lessons, dialogue, 2D staging and two new interactions to the
 - a `2.1` file that uses none of the additions is a plain story;
 - nothing that exists today is renamed, removed or given a new meaning.
 
-Mystira stories also carry engine fields (developmental and progression data on branches and scenes). The player accepts them and ignores them. They are not described here, and demo content leaves them out.
+Mystira stories also carry engine fields (developmental and progression data on branches and scenes). The authoring validator accepts them as opaque fields, and public demo content leaves them out. Acceptance by this schema is not permission to send private fields to the player: a private engine must project only the fields needed for the rendered Step before delivery.
 
 **Required fields stay required.** The additions are optional, but every field the `2.0` format requires is still required in a `2.1` file (section 3). The snippets in sections 4 to 7 are excerpts that show only the new fields; copy the full example file, not a snippet, when starting a new lesson.
 
@@ -31,8 +31,8 @@ Names are `snake_case`, as in the existing format. Media fields hold a Mystira m
 ```
 content/manor/
   hub.yaml                    the Manor front hall (player-only; not a story)
-  pumpkin-gate.story.yaml     one lesson = one story file
-  fire-door.story.yaml        stretch
+  fire-door.story.yaml        minimum submission lesson once reviewed
+  pumpkin-gate.story.yaml     second lesson target and validated example
   assets/                     images and audio, referenced by relative path
 ```
 
@@ -304,6 +304,8 @@ doors:
   - { story: pumpkin-gate.story.yaml, label: The Pumpkin Gate, bounds: [0.05, 0.20, 0.16, 0.60], state: open }
   - { story: fire-door.story.yaml,    label: The Fire Door,    bounds: [0.25, 0.20, 0.16, 0.60], state: locked }
 ```
+
+This snippet reflects the existing Pumpkin Gate fixture. The Kiroween submission hub must open the Fire Door only after its reviewed fire-safety content is present; its current locked state is not the approved submission priority.
 
 ## 10. Validation
 

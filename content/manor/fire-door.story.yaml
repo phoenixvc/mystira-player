@@ -1,0 +1,3316 @@
+# The Mummy’s Party: a Halloween fire safety lesson for nine-year-olds.
+# Mystira story YAML 2.1, made from the agreed demo page. Updated 28 November 2026 to the made pictures and videos.
+# Pictures are layers: media.image is the background, cast gives each character and pose, and the pieces for each screen are listed in metadata.creative_instruction. See fire-door-notes.md.
+# Stretch screens (count, keypad, pattern) are written in their fallback form; see fire-door-notes.md.
+schema_version: '2.1'
+title: The Mummy’s Party
+description: 'A Halloween fire safety lesson for ages 8 to 10: spot fire hazards, make a plan, get out and stay out.'
+image: assets/backgrounds/party-room-full.jpg
+tags:
+- halloween
+- fire-safety
+- lesson
+difficulty: Easy
+session_length: Short
+age_group: 6-9
+minimum_age: 8
+core_axes: []
+archetypes:
+- the_helper
+characters:
+- id: ghost
+  name: The little ghost
+  image: assets/characters/ghost.png
+  audio: null
+  voice:
+    pitch: 1.5
+    rate: 0.95
+  colour: '#E9E4F5'
+  metadata:
+    role:
+    - guide
+    archetype:
+    - the_helper
+    species: ghost
+    age: 9
+    traits:
+    - friendly
+    backstory: A small friendly ghost who helps the child.
+- id: mummy
+  name: Mummy
+  image: assets/characters/mummy.png
+  audio: null
+  voice:
+    pitch: 0.9
+    rate: 0.95
+  colour: '#E8D9B5'
+  metadata:
+    role:
+    - character
+    archetype:
+    - the_helper
+    species: monster
+    age: 40
+    traits:
+    - friendly
+    backstory: Throws the Halloween party. Means well, spots nothing.
+- id: vampire
+  name: Vampire
+  image: assets/characters/vampire.png
+  audio: null
+  voice:
+    pitch: 1.0
+    rate: 0.95
+  colour: '#B23A48'
+  metadata:
+    role:
+    - character
+    archetype:
+    - the_helper
+    species: monster
+    age: 9
+    traits:
+    - friendly
+    backstory: A party guest with a dramatic cape.
+- id: skeleton
+  name: Skeleton
+  image: assets/characters/skeleton.png
+  audio: null
+  voice:
+    pitch: 1.2
+    rate: 0.95
+  colour: '#F2F2F2'
+  metadata:
+    role:
+    - character
+    archetype:
+    - the_helper
+    species: monster
+    age: 9
+    traits:
+    - friendly
+    backstory: A party guest who loves his hat.
+- id: bat
+  name: The bat
+  image: assets/characters/bat.png
+  audio: null
+  voice:
+    pitch: 1.7
+    rate: 0.95
+  colour: '#5B4B8A'
+  metadata:
+    role:
+    - character
+    archetype:
+    - the_helper
+    species: monster
+    age: 9
+    traits:
+    - friendly
+    backstory: A small party guest.
+- id: fire
+  name: Firefighter
+  image: assets/characters/firefighter.png
+  audio: null
+  voice:
+    pitch: 1.0
+    rate: 0.95
+  colour: '#D7263D'
+  metadata:
+    role:
+    - character
+    archetype:
+    - the_helper
+    species: monster
+    age: 40
+    traits:
+    - friendly
+    backstory: Comes with the fire engine.
+- id: witch
+  name: The potion witch
+  image: assets/characters/witch.png
+  audio: null
+  voice:
+    pitch: 1.1
+    rate: 0.95
+  colour: '#6C9A8B'
+  metadata:
+    role:
+    - character
+    archetype:
+    - the_helper
+    species: monster
+    age: 40
+    traits:
+    - friendly
+    backstory: Runs the shop Witch’s Poo-tions.
+- id: cat
+  name: The shop cat
+  image: assets/characters/shop-cat.png
+  audio: null
+  voice:
+    pitch: 1.4
+    rate: 0.95
+  colour: '#2E2E3A'
+  metadata:
+    role:
+    - character
+    archetype:
+    - the_helper
+    species: monster
+    age: 40
+    traits:
+    - friendly
+    backstory: The cat at Witch’s Poo-tions.
+- id: operator
+  name: The fire service
+  image: null
+  audio: null
+  voice:
+    pitch: 1.0
+    rate: 0.95
+  colour: '#C0392B'
+  metadata:
+    role:
+    - character
+    archetype:
+    - the_helper
+    species: monster
+    age: 40
+    traits:
+    - friendly
+    backstory: The voice that answers 112 in this European setting.
+scenes:
+- id: opening_video
+  title: The opening video
+  type: narrative
+  description: The mummy pushes the sofa against the back door, and the little ghost sees trouble.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Oh no. Oh no, no, no. This party is a fire hazard. Can you make it safe?
+  next_scene: null
+  difficulty: null
+  media:
+    image: assets/backgrounds/party-room-full.jpg
+    audio: null
+    video: assets/opening_video.mp4
+  branches: []
+  metadata:
+    creative_instruction: 'Video, about 13 seconds, made in Flow from two clips joined in DaVinci. Clip 1, 7 seconds: the mummy pushes the sofa against the back door, cut where it passes the armchair. The room is already decorated: the paper bats on the lamp, the candle in the pumpkin and the full socket. Clip 2, 6 seconds: the little ghost says her line. File: opening_video.mp4.'
+- id: spot_table
+  title: The party table
+  type: choice
+  description: The party table
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: A fire hazard can start a fire, or trap us inside.
+  task:
+    text: Find the hazard on the table. Tap it.
+  objects:
+  - id: sweets
+    label: The bowl of sweets
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: Just yummy sweets.
+  - id: cookies
+    label: The spider cookies
+    geometry:
+      bounds:
+      - 0.285
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: Just spooky cookies.
+  - id: punch
+    label: The punch
+    geometry:
+      bounds:
+      - 0.51
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: Punch. It is wet.
+  - id: lantern
+    label: The pumpkin lantern
+    geometry:
+      bounds:
+      - 0.35
+      - 0.55
+      - 0.07
+      - 0.3
+    reveal:
+      text: A real candle! One bump and it tips.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: tap_sweets
+    object_id: sweets
+    verb: tap
+    choice: The bowl of sweets
+    next_scene: spot_table_after
+  - id: tap_cookies
+    object_id: cookies
+    verb: tap
+    choice: The spider cookies
+    next_scene: spot_table_after
+  - id: tap_punch
+    object_id: punch
+    verb: tap
+    choice: The punch
+    next_scene: spot_table_after
+  - id: tap_lantern
+    object_id: lantern
+    verb: tap
+    choice: The pumpkin lantern
+    next_scene: spot_table_after
+  practice:
+    answer:
+      object: lantern
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with its real candle; paper-bats on the lamp; sofa against the back door; plugs-six in the socket by the hall door.'
+- id: spot_table_after
+  title: What changes
+  type: narrative
+  description: The ghost swaps the candle for a battery one.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Battery candles are safer than real candles. Same glow, no flame.
+  next_scene: spot_corner
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The ghost swaps the candle for a battery one. Pieces: candle-battery now in the pumpkin-lantern in place of the real candle; paper-bats still on the lamp; sofa still against the back door; plugs-six still in the socket.'
+- id: spot_corner
+  title: The corner with the lamp
+  type: choice
+  description: The corner with the lamp
+  active_character: ghost
+  task:
+    text: Find the hazard in this corner. Tap it.
+  objects:
+  - id: chair
+    label: The armchair
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Just a comfy chair.
+  - id: balloons
+    label: The balloons
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Just balloons that can pop.
+  - id: lamp
+    label: The lamp with the paper bats
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Paper bats on a hot lamp!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: tap_chair
+    object_id: chair
+    verb: tap
+    choice: The armchair
+    next_scene: spot_corner_after
+  - id: tap_balloons
+    object_id: balloons
+    verb: tap
+    choice: The balloons
+    next_scene: spot_corner_after
+  - id: tap_lamp
+    object_id: lamp
+    verb: tap
+    choice: The lamp with the paper bats
+    next_scene: spot_corner_after
+  practice:
+    answer:
+      object: lamp
+  metadata:
+    creative_instruction: 'Pieces: candle-battery in the pumpkin-lantern; paper-bats on the lamp; sofa against the back door; plugs-six in the socket.'
+- id: spot_corner_after
+  title: What changes
+  type: narrative
+  description: The ghost moves the bats to the wall.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Paper burns fast. Keep it far away from hot lamps.
+  next_scene: spot_backdoor
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The ghost moves the bats to the wall. Pieces: candle-battery in the pumpkin-lantern; paper-bats moved from the lamp to the wall; sofa against the back door; plugs-six in the socket.'
+- id: spot_backdoor
+  title: The back door
+  type: choice
+  description: The back door
+  active_character: ghost
+  task:
+    text: Find the hazard by the back door. Tap it.
+  objects:
+  - id: coats
+    label: The coats on the hooks
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Just creepy coats.
+  - id: brolly
+    label: The umbrella stand
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Just umbrellas for rainy days.
+  - id: sofa
+    label: The sofa
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: The sofa is blocking the door!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: tap_coats
+    object_id: coats
+    verb: tap
+    choice: The coats on the hooks
+    next_scene: spot_backdoor_after
+  - id: tap_brolly
+    object_id: brolly
+    verb: tap
+    choice: The umbrella stand
+    next_scene: spot_backdoor_after
+  - id: tap_sofa
+    object_id: sofa
+    verb: tap
+    choice: The sofa
+    next_scene: spot_backdoor_after
+  practice:
+    answer:
+      object: sofa
+  metadata:
+    creative_instruction: 'Pieces: candle-battery in the pumpkin-lantern; paper-bats on the wall; sofa against the back door; plugs-six in the socket.'
+- id: spot_backdoor_after
+  title: What changes
+  type: narrative
+  description: The mummy comes in and pushes the sofa back.
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: Fine. Smaller dance floor.
+  - speaker: ghost
+    text: A blocked door traps us inside. Doors must stay clear.
+  next_scene: spot_lights
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  - character_id: mummy
+    slot: right
+    pose: pushing
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy comes in and pushes the sofa back. Pieces: candle-battery in the pumpkin-lantern; paper-bats on the wall; sofa pushed away from the back door; plugs-six in the socket.'
+- id: spot_lights
+  title: The wall with the party lights
+  type: choice
+  description: The wall with the party lights
+  active_character: ghost
+  task:
+    text: Find the hazard by the lights. Tap it.
+  objects:
+  - id: rug
+    label: The rug
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Just a fluffy rug.
+  - id: broom
+    label: The broom
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Just a witchy broom.
+  - id: socket
+    label: The socket
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Six plugs in one socket!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: tap_rug
+    object_id: rug
+    verb: tap
+    choice: The rug
+    next_scene: spot_lights_after
+  - id: tap_broom
+    object_id: broom
+    verb: tap
+    choice: The broom
+    next_scene: spot_lights_after
+  - id: tap_socket
+    object_id: socket
+    verb: tap
+    choice: The socket
+    next_scene: spot_lights_after
+  practice:
+    answer:
+      object: socket
+  metadata:
+    creative_instruction: 'Pieces: candle-battery in the pumpkin-lantern; paper-bats on the wall; sofa clear of the back door; plugs-six in the socket.'
+- id: spot_lights_after
+  title: What changes
+  type: narrative
+  description: The ghost pulls plugs out until two are left.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Too many plugs make a socket hot. Fewer plugs are safer.
+  next_scene: zoe_s1_02
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The ghost pulls plugs out until two are left. Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket.'
+- id: zoe_s1_02
+  title: The room, made safe
+  type: narrative
+  description: The room, made safe
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: 'Four hazards, all fixed. That is the first step: looking for fire hazards.'
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: center
+    pose: pleased
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket.'
+- id: zoe_s2_03
+  title: The party room, with both doors
+  type: choice
+  description: The party room, with both doors
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Now we need a plan. How do we get out in case there is a fire?
+  - speaker: ghost
+    text: Our party room has two ways out. The hall door is one.
+  task:
+    text: Find the other way out. Tap it.
+  objects:
+  - id: cupboard
+    label: The cupboard
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: Just a cupboard. Never hide in a fire.
+  - id: wall
+    label: The wall
+    geometry:
+      bounds:
+      - 0.285
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: I can go through walls, but my friends cannot.
+  - id: backdoor
+    label: The back door
+    geometry:
+      bounds:
+      - 0.51
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: The back door!
+  - id: fireplace
+    label: The fireplace
+    geometry:
+      bounds:
+      - 0.735
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: Just a chimney. Only smoke goes up there.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: tap_cupboard
+    object_id: cupboard
+    verb: tap
+    choice: The cupboard
+    next_scene: zoe_s2_03_after
+  - id: tap_wall
+    object_id: wall
+    verb: tap
+    choice: The wall
+    next_scene: zoe_s2_03_after
+  - id: tap_backdoor
+    object_id: backdoor
+    verb: tap
+    choice: The back door
+    next_scene: zoe_s2_03_after
+  - id: tap_fireplace
+    object_id: fireplace
+    verb: tap
+    choice: The fireplace
+    next_scene: zoe_s2_03_after
+  practice:
+    answer:
+      object: backdoor
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket.'
+- id: zoe_s2_03_after
+  title: What changes
+  type: narrative
+  description: Two green arrows appear on the floor, one to each door.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Two ways out are safer than one. If one is blocked, we use the other.
+  next_scene: zoe_s2_04
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: Two green arrows appear on the floor, one to each door. Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; arrow-left on the floor towards the hall door, arrow-right on the floor towards the back door.'
+- id: zoe_s2_04
+  title: 'Outside: the front garden and the gate'
+  type: choice
+  description: 'Outside: the front garden and the gate'
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: And when we are out, where do we all meet?
+  task:
+    text: Pick the meeting place. Tap it.
+  objects:
+  - id: step
+    label: The front step
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: The front step! That is too close.
+  - id: bush
+    label: The thorn bush
+    geometry:
+      bounds:
+      - 0.285
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: This bush is far enough, but nobody wants the thorns.
+  - id: lamppost
+    label: The lamp post by the front gate
+    geometry:
+      bounds:
+      - 0.51
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: The lamp post by the gate!
+  - id: hall
+    label: The hall, through the open door
+    geometry:
+      bounds:
+      - 0.735
+      - 0.55
+      - 0.205
+      - 0.3
+    reveal:
+      text: Back inside? Never!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: tap_step
+    object_id: step
+    verb: tap
+    choice: The front step
+    next_scene: zoe_s2_04_after
+  - id: tap_bush
+    object_id: bush
+    verb: tap
+    choice: The thorn bush
+    next_scene: zoe_s2_04_after
+  - id: tap_lamppost
+    object_id: lamppost
+    verb: tap
+    choice: The lamp post by the front gate
+    next_scene: zoe_s2_04_after
+  - id: tap_hall
+    object_id: hall
+    verb: tap
+    choice: The hall, through the open door
+    next_scene: zoe_s2_04_after
+  practice:
+    answer:
+      object: lamppost
+  metadata:
+    creative_instruction: null
+- id: zoe_s2_04_after
+  title: What changes
+  type: narrative
+  description: 'A sign appears on the lamp post: “MEET HERE”.'
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: At a meeting place we can see that everybody got out.
+  next_scene: zoe_s2_05
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: A sign appears on the lamp post: “MEET HERE”. Pieces: meet-here-sign on the lamp post.'
+- id: zoe_s2_05
+  title: The lamp post. The ghost holds up a phone with three names on it
+  type: choice
+  description: The lamp post. The ghost holds up a phone with three names on it
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Last part of the plan. Who do we call if there is a fire?
+  task:
+    text: Tap who to call.
+  objects:
+  - id: spiderc
+    label: The Weather Witch
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: The Weather Witch? Her next rain dance is only next Tuesday.
+  - id: pootions
+    label: The pizza shop
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Pizza? Yum. But they cannot put out a fire.
+  - id: fireservice
+    label: The fire service
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: The fire service!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: center
+    pose: phone
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: tap_spiderc
+    object_id: spiderc
+    verb: tap
+    choice: The Weather Witch
+    next_scene: zoe_s2_05_after
+  - id: tap_pootions
+    object_id: pootions
+    verb: tap
+    choice: The pizza shop
+    next_scene: zoe_s2_05_after
+  - id: tap_fireservice
+    object_id: fireservice
+    verb: tap
+    choice: The fire service
+    next_scene: zoe_s2_05_after
+  practice:
+    answer:
+      object: fireservice
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post; the three names are shown on the phone screen in the ghost-phone pose.'
+- id: zoe_s2_05_after
+  title: What changes
+  type: narrative
+  description: 'The phone screen fills up with big numbers: EMERGENCY 112 (EU).'
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Here in Europe, 112 calls the emergency services, including the fire service. Remember it!
+  - speaker: ghost
+    text: From outside, we call 112 here in Europe and say where the fire is. Elsewhere, use your local emergency number.
+  next_scene: zoe_s2_06
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: center
+    pose: phone
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The phone screen fills up with big numbers: EMERGENCY 112 (EU). Pieces: meet-here-sign on the lamp post; EMERGENCY 112 (EU) on the phone screen in the ghost-phone pose.'
+- id: zoe_s2_06
+  title: The lamp post
+  type: narrative
+  description: The lamp post
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: 'Two ways out, a meeting place, and the emergency number for where you live. Here in Europe, that number is 112. That is the second step: making a plan before anything goes wrong.'
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: zoe_s3_07
+  title: The party
+  type: choice
+  description: The party
+  active_character: ghost
+  lines:
+  - speaker: narrator
+    text: BEEP! BEEP! BEEP!
+  - speaker: ghost
+    text: The smoke alarm! Smoke is coming from the kitchen!
+  task:
+    text: What do you do first?
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: worried
+  - character_id: mummy
+    slot: center
+    pose: shocked
+  - character_id: skeleton
+    slot: right
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: zoe_s3_07_b
+    choice: Go and find the fire
+    next_scene: zoe_s3_07_after
+  - id: zoe_s3_07_a
+    choice: Get out now
+    next_scene: zoe_s3_07_after
+  - id: zoe_s3_07_c
+    choice: Finish my toffee apple
+    next_scene: zoe_s3_07_after
+  practice:
+    answer:
+      branch: zoe_s3_07_a
+    on_wrong:
+    - text: Not that! The alarm is beeping.
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-alarm on the ceiling.'
+- id: zoe_s3_07_after
+  title: What changes
+  type: narrative
+  description: All the guests turn towards the doors.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: The alarm means get out. No looking and no waiting.
+  next_scene: zoe_s3_08
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  - character_id: mummy
+    slot: center
+    pose: shocked
+  - character_id: vampire
+    slot: right
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: All the guests turn towards the doors. Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-alarm on the ceiling.'
+- id: zoe_s3_08
+  title: Smoke under the ceiling
+  type: choice
+  description: Smoke under the ceiling
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Look up! Smoke is filling the top of the room.
+  task:
+    text: How do you move?
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: worried
+  - character_id: mummy
+    slot: center
+    pose: shocked
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: zoe_s3_08_a
+    choice: Crawl low
+    next_scene: zoe_s3_08_after
+  - id: zoe_s3_08_b
+    choice: Run, head up
+    next_scene: zoe_s3_08_after
+  - id: zoe_s3_08_c
+    choice: Hold my breath
+    next_scene: zoe_s3_08_after
+  practice:
+    answer:
+      branch: zoe_s3_08_a
+    on_wrong:
+    - text: Not like that. Smoke floats up.
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-alarm on the ceiling; smoke-ceiling across the top of the room.'
+- id: zoe_s3_08_after
+  title: What changes
+  type: narrative
+  description: The guests crawl across the floor in a line.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Smoke rises. Stay low and keep moving to the exit. The air near the floor can still be dangerous.
+  next_scene: zoe_s3_09
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: left
+    pose: crawling
+  - character_id: vampire
+    slot: center
+    pose: crawling
+  - character_id: skeleton
+    slot: right
+    pose: crawling
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The guests crawl across the floor in a line. Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-ceiling across the top of the room.'
+- id: zoe_s3_09
+  title: Smoke pours in through the hall door
+  type: choice
+  description: Smoke pours in through the hall door
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Oh no! The hall is full of smoke!
+  task:
+    text: Which way out?
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: center
+    pose: worried
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: zoe_s3_09_b
+    choice: Through the hall
+    next_scene: zoe_s3_09_after
+  - id: zoe_s3_09_c
+    choice: Hide in the cupboard
+    next_scene: zoe_s3_09_after
+  - id: zoe_s3_09_a
+    choice: The back door
+    next_scene: zoe_s3_09_after
+  practice:
+    answer:
+      branch: zoe_s3_09_a
+    on_wrong:
+    - text: Not that way! Remember our second way out.
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-ceiling across the top of the room; smoke-door at the hall door.'
+- id: zoe_s3_09_after
+  title: What changes
+  type: narrative
+  description: Everybody crawls out of the back door and round to the gate.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: The first way was blocked, so we used the second.
+  next_scene: zoe_s3_10
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: left
+    pose: crawling
+  - character_id: vampire
+    slot: center
+    pose: crawling
+  - character_id: skeleton
+    slot: right
+    pose: crawling
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: Everybody crawls out of the back door and round to the gate. Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-ceiling; smoke-door at the hall door; arrow-right on the floor towards the back door.'
+- id: zoe_s3_10
+  title: The lamp post. Everybody is out
+  type: choice
+  description: The lamp post. Everybody is out
+  active_character: ghost
+  lines:
+  - speaker: skeleton
+    text: My hat is inside! I will be quick!
+  task:
+    text: What do you tell him?
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: worried
+  - character_id: skeleton
+    slot: center
+    pose: no-hat
+  - character_id: bat
+    slot: right
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: zoe_s3_10_b
+    choice: Be quick then
+    next_scene: zoe_s3_10_after
+  - id: zoe_s3_10_a
+    choice: No. Stay out
+    next_scene: zoe_s3_10_after
+  - id: zoe_s3_10_c
+    choice: Send the bat
+    next_scene: zoe_s3_10_after
+  practice:
+    answer:
+      branch: zoe_s3_10_a
+    on_wrong:
+    - text: Nobody goes back in. Not for anything.
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: zoe_s3_10_after
+  title: What changes
+  type: narrative
+  description: The skeleton stays by the lamp post, hatless.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Once you are out, you stay out. Hats can be replaced.
+  next_scene: zoe_s3_11
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  - character_id: skeleton
+    slot: center
+    pose: no-hat
+  - character_id: bat
+    slot: right
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The skeleton stays by the lamp post, hatless. Pieces: meet-here-sign on the lamp post.'
+- id: zoe_s3_11
+  title: The lamp post. The mummy hands you his phone
+  type: choice
+  description: The lamp post. The mummy hands you his phone
+  active_character: ghost
+  lines:
+  - speaker: mummy
+    text: Everybody is here! Quick, call the fire service!
+  task:
+    text: Here in Europe, which emergency number? Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: phone-give
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: zoe_s3_11_b
+    choice: '121'
+    next_scene: zoe_s3_11_after
+  - id: zoe_s3_11_a
+    choice: '112'
+    next_scene: zoe_s3_11_after
+  - id: zoe_s3_11_c
+    choice: '211'
+    next_scene: zoe_s3_11_after
+  practice:
+    answer:
+      branch: zoe_s3_11_a
+    on_wrong:
+    - text: 'Wrong number! Answering machine: “Hello, this is Spider. I cannot come to the phone, I am on the web.”'
+    - text: 'Wrong again! Answering machine: “Witch’s Poo-tions. Yes, that is how we spell it. Yes, that is how it smells.”'
+    - text: It is 1, 1, 2.
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: zoe_s3_11_after
+  title: What changes
+  type: narrative
+  description: The phone rings once and somebody answers.
+  active_character: null
+  next_scene: zoe_s3_12
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: phone-give
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The phone rings once and somebody answers. Pieces: meet-here-sign on the lamp post.'
+- id: zoe_s3_12
+  title: On the phone
+  type: choice
+  description: On the phone
+  active_character: ghost
+  lines:
+  - speaker: operator
+    text: Fire service. What is wrong, and where?
+  task:
+    text: What do you tell them?
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: zoe_s3_12_b
+    choice: Hello, how are you?
+    next_scene: zoe_s3_12_after
+  - id: zoe_s3_12_c
+    choice: Guess where we are
+    next_scene: zoe_s3_12_after
+  - id: zoe_s3_12_a
+    choice: Fire! Mummy’s house, Hallow Lane
+    next_scene: zoe_s3_12_after
+  practice:
+    answer:
+      branch: zoe_s3_12_a
+    on_wrong:
+    - text: 'They need two things: what is wrong, and where.'
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: zoe_s3_12_after
+  title: What changes
+  type: narrative
+  description: 'The fire service answers: “On our way!”'
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Say what is wrong and where you are.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  - character_id: mummy
+    slot: center
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The fire service answers: “On our way!” Pieces: meet-here-sign on the lamp post.'
+- id: max_s1_01
+  title: The mummy holds up the pumpkin lantern
+  type: choice
+  description: The mummy holds up the pumpkin lantern
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: The mummy cannot see the fire hazards. Tell him what to do.
+  - speaker: mummy
+    text: Look at my lantern. A real candle!
+  task:
+    text: What should he do? Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: lantern
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s1_01_b
+    choice: Add more candles
+    next_scene: max_s1_01_after
+  - id: max_s1_01_a
+    choice: Use a battery candle
+    next_scene: max_s1_01_after
+  - id: max_s1_01_c
+    choice: Use a smaller candle
+    next_scene: max_s1_01_after
+  practice:
+    answer:
+      branch: max_s1_01_a
+    on_wrong:
+    - text: Hmm. That still has a flame.
+  metadata:
+    creative_instruction: 'Pieces: the pumpkin-lantern with its real candle held in the mummy''s hands; paper-bats on the lamp; sofa against the back door; plugs-six in the socket.'
+- id: max_s1_01_after
+  title: What changes
+  type: narrative
+  description: The mummy swaps the candle for a battery one.
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: Same glow and no flame. Much safer!
+  next_scene: max_s1_02
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: proud
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy swaps the candle for a battery one. Pieces: pumpkin-lantern on the table with candle-battery in it; paper-bats on the lamp; sofa against the back door; plugs-six in the socket.'
+- id: max_s1_02
+  title: The mummy points at the lamp
+  type: choice
+  description: The mummy points at the lamp
+  active_character: ghost
+  lines:
+  - speaker: mummy
+    text: My paper bats are on the lamp. So cosy!
+  task:
+    text: What should he do? Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: pointing
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s1_02_a
+    choice: Move them to the wall
+    next_scene: max_s1_02_after
+  - id: max_s1_02_b
+    choice: Add more bats
+    next_scene: max_s1_02_after
+  - id: max_s1_02_c
+    choice: Use a red bulb
+    next_scene: max_s1_02_after
+  practice:
+    answer:
+      branch: max_s1_02_a
+    on_wrong:
+    - text: Hmm. The bats are still on the hot lamp.
+  metadata:
+    creative_instruction: 'Pieces: candle-battery in the pumpkin-lantern; paper-bats on the lamp; sofa against the back door; plugs-six in the socket.'
+- id: max_s1_02_after
+  title: What changes
+  type: narrative
+  description: The mummy sticks the bats on the wall.
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: On the wall! Paper burns fast near hot lamps.
+  next_scene: max_s1_03
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: proud
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy sticks the bats on the wall. Pieces: candle-battery in the pumpkin-lantern; paper-bats moved to the wall; sofa against the back door; plugs-six in the socket.'
+- id: max_s1_03
+  title: The mummy leans on the sofa
+  type: choice
+  description: The mummy leans on the sofa
+  active_character: ghost
+  lines:
+  - speaker: mummy
+    text: The sofa is against the back door. More dance floor!
+  task:
+    text: What should he do? Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: right
+    pose: leaning-sofa
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s1_03_b
+    choice: Add a chair too
+    next_scene: max_s1_03_after
+  - id: max_s1_03_c
+    choice: Add some cushions
+    next_scene: max_s1_03_after
+  - id: max_s1_03_a
+    choice: Move the sofa back
+    next_scene: max_s1_03_after
+  practice:
+    answer:
+      branch: max_s1_03_a
+    on_wrong:
+    - text: Hmm. The door is still blocked.
+  metadata:
+    creative_instruction: 'Pieces: candle-battery in the pumpkin-lantern; paper-bats on the wall; plugs-six in the socket. No separate sofa piece: the mummy-leaning-sofa pose has the sofa in it, placed against the back door.'
+- id: max_s1_03_after
+  title: What changes
+  type: narrative
+  description: The mummy pushes the sofa back.
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: Fine. Smaller dance floor, but a clear door.
+  next_scene: max_s1_04
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: right
+    pose: pushing
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy pushes the sofa back. Pieces: candle-battery in the pumpkin-lantern; paper-bats on the wall; sofa pushed away from the back door; plugs-six in the socket.'
+- id: max_s1_04
+  title: The mummy shows off the party lights
+  type: choice
+  description: The mummy shows off the party lights
+  active_character: ghost
+  lines:
+  - speaker: mummy
+    text: Six plugs in one socket. So many lights!
+  task:
+    text: What should he do? Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: proud
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s1_04_b
+    choice: Add one more
+    next_scene: max_s1_04_after
+  - id: max_s1_04_a
+    choice: Unplug some lights
+    next_scene: max_s1_04_after
+  - id: max_s1_04_c
+    choice: Hide it with a rug
+    next_scene: max_s1_04_after
+  practice:
+    answer:
+      branch: max_s1_04_a
+    on_wrong:
+    - text: Hmm. The socket is still too full.
+  metadata:
+    creative_instruction: 'Pieces: candle-battery in the pumpkin-lantern; paper-bats on the wall; sofa clear of the back door; plugs-six in the socket.'
+- id: max_s1_04_after
+  title: What changes
+  type: narrative
+  description: The mummy pulls plugs out until two are left.
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: Fewer plugs, cooler socket. Much safer.
+  next_scene: max_s1_05
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: proud
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy pulls plugs out until two are left. Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket.'
+- id: max_s1_05
+  title: The room, made safe
+  type: narrative
+  description: The room, made safe
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: 'Four hazards, and you fixed every one. That is the first step: looking for fire hazards.'
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  - character_id: mummy
+    slot: center
+    pose: proud
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket.'
+- id: max_s2_06
+  title: The mummy’s sign
+  type: narrative
+  description: The mummy’s sign
+  active_character: mummy
+  lines:
+  - speaker: mummy
+    text: I wrote a fire plan. It is perfect.
+  task:
+    text: Three lines are wrong. Find all three. Tap them. Then tap “Done”.
+  interaction:
+    kind: inspect
+    document:
+      kind: sign
+      title: MY FIRE PLAN
+      parts:
+      - id: f1
+        role: text
+        text: 1. Go out the hall door.
+      - id: f2
+        role: text
+        text: 2. Door blocked? Hide in the cupboard.
+      - id: f3
+        role: text
+        text: 3. Meet by the snack table.
+      - id: f4
+        role: text
+        text: 4. Call the Weather Witch to make it rain.
+      - id: f5
+        role: text
+        text: 5. Stay out until it is safe.
+    min_marks: 1
+  next_scene: max_s2_06_after
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: right
+    pose: proud
+  media:
+    image: assets/backgrounds/hall-wall.jpg
+    audio: null
+    video: null
+  branches: []
+  practice:
+    answer:
+      parts:
+      - f2
+      - f3
+      - f4
+    hint:
+      text: Which lines keep us inside, or bring no help?
+  metadata:
+    creative_instruction: 'Pieces: the mummy''s fire plan is the inspect document, shown on the blank poster on the wall.'
+- id: max_s2_06_after
+  title: What changes
+  type: narrative
+  description: The mummy crosses out the three wrong lines.
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: Her next rain dance is only next Tuesday? Fair enough.
+  next_scene: max_s2_07
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: right
+    pose: asking
+  media:
+    image: assets/backgrounds/hall-wall.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy crosses out the three wrong lines. Pieces: the poster with the three wrong lines crossed out.'
+- id: max_s2_07
+  title: The party room, with both doors
+  type: choice
+  description: The party room, with both doors
+  active_character: ghost
+  lines:
+  - speaker: mummy
+    text: No hiding? Then where, if the hall door is blocked?
+  task:
+    text: Tell him. Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: center
+    pose: asking
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s2_07_b
+    choice: Up the chimney
+    next_scene: max_s2_07_after
+  - id: max_s2_07_a
+    choice: The back door
+    next_scene: max_s2_07_after
+  - id: max_s2_07_c
+    choice: Through the cat flap
+    next_scene: max_s2_07_after
+  practice:
+    answer:
+      branch: max_s2_07_a
+    on_wrong:
+    - text: Hmm. That is not a way out for everybody.
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket.'
+- id: max_s2_07_after
+  title: What changes
+  type: narrative
+  description: 'The mummy writes: “Blocked? Use the back door.”'
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: Two ways out are safer than one.
+  next_scene: max_s2_08
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: right
+    pose: pointing
+  media:
+    image: assets/backgrounds/hall-wall.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy writes: “Blocked? Use the back door.” Pieces: the poster with the new line written on it.'
+- id: max_s2_08
+  title: The front garden
+  type: choice
+  description: The front garden
+  active_character: ghost
+  lines:
+  - speaker: mummy
+    text: Not the snack table? Then where do we all meet?
+  task:
+    text: Tell him. Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: center
+    pose: asking
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s2_08_b
+    choice: The front step
+    next_scene: max_s2_08_after
+  - id: max_s2_08_c
+    choice: The thorn bush
+    next_scene: max_s2_08_after
+  - id: max_s2_08_a
+    choice: The lamp post
+    next_scene: max_s2_08_after
+  practice:
+    answer:
+      branch: max_s2_08_a
+    on_wrong:
+    - text: Hmm. Somewhere outside, and away from the house.
+  metadata:
+    creative_instruction: null
+- id: max_s2_08_after
+  title: What changes
+  type: narrative
+  description: 'The mummy writes: “Meet at the lamp post.”'
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: Then we can see that everybody got out.
+  next_scene: max_s2_09
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: right
+    pose: pointing
+  media:
+    image: assets/backgrounds/hall-wall.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy writes: “Meet at the lamp post.” Pieces: the poster with the new line written on it.'
+- id: max_s2_09
+  title: The mummy with his phone
+  type: choice
+  description: The mummy with his phone
+  active_character: ghost
+  lines:
+  - speaker: mummy
+    text: Then who do we call?
+  task:
+    text: Tell him. Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: right
+    pose: phone-give
+  media:
+    image: assets/backgrounds/hall-wall.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s2_09_b
+    choice: The pizza shop
+    next_scene: max_s2_09_after
+  - id: max_s2_09_a
+    choice: The fire service
+    next_scene: max_s2_09_after
+  practice:
+    answer:
+      branch: max_s2_09_a
+    on_wrong:
+    - text: The pizza shop? They bring pizza, not fire engines.
+  metadata:
+    creative_instruction: null
+- id: max_s2_09_after
+  title: What changes
+  type: narrative
+  description: 'The mummy writes in big numbers: “In Europe, call 112 from outside.”'
+  active_character: null
+  lines:
+  - speaker: mummy
+    text: Here in Europe, 112 reaches emergency services, including the fire service. Elsewhere, use your local emergency number.
+  next_scene: max_s2_10
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: right
+    pose: pointing
+  media:
+    image: assets/backgrounds/hall-wall.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The mummy writes in big numbers: “In Europe, call 112 from outside.” Pieces: the poster with the new line written on it in big numbers.'
+- id: max_s2_10
+  title: The finished sign
+  type: narrative
+  description: The finished sign
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: 'Two ways out, a meeting place and who to call. That is the second step: making a plan before anything goes wrong.'
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  - character_id: mummy
+    slot: right
+    pose: proud
+  media:
+    image: assets/backgrounds/hall-wall.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'Pieces: the finished fire plan on the poster.'
+- id: max_s3_11
+  title: The party
+  type: narrative
+  description: The party
+  active_character: ghost
+  lines:
+  - speaker: narrator
+    text: BEEP! BEEP! BEEP!
+  - speaker: ghost
+    text: Smoke rises. Stay low and keep moving to the exit. The air near the floor can still be dangerous.
+  - speaker: ghost
+    text: They are all looking at you. Give them the order.
+  task:
+    text: Put the steps in order. Then tap “Done”.
+  interaction:
+    kind: sequence
+    items:
+    - id: s4
+      label: Meet at the lamp post
+    - id: s1
+      label: Get low
+    - id: s5
+      label: Call the fire service
+    - id: s3
+      label: Go out
+    - id: s2
+      label: Find the clear door
+  next_scene: max_s3_11_after
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: worried
+  - character_id: mummy
+    slot: center
+    pose: shocked
+  - character_id: vampire
+    slot: right
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  practice:
+    answer:
+      order:
+      - s1
+      - s2
+      - s3
+      - s4
+      - s5
+    hint:
+      text: Get safe first. Call for help last.
+    on_wrong:
+    - text: Not yet. Get safe first, and call for help last.
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-alarm on the ceiling; smoke-ceiling across the top of the room.'
+- id: max_s3_11_after
+  title: What changes
+  type: narrative
+  description: The guests drop down and crawl in a line.
+  active_character: null
+  next_scene: max_s3_12
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: left
+    pose: crawling
+  - character_id: vampire
+    slot: center
+    pose: crawling
+  - character_id: skeleton
+    slot: right
+    pose: crawling
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The guests drop down and crawl in a line. Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-ceiling across the top of the room.'
+- id: max_s3_12
+  title: Smoke comes through the hall door
+  type: choice
+  description: Smoke comes through the hall door
+  active_character: ghost
+  lines:
+  - speaker: vampire
+    text: This door is closer! Follow me!
+  - speaker: ghost
+    text: Stop! Smoke is coming through that door. Show them the way to the back door.
+  task:
+    text: Which way out? Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: worried
+  - character_id: vampire
+    slot: center
+  - character_id: skeleton
+    slot: right
+    pose: crawling
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s3_12_b
+    choice: Through the hall door
+    next_scene: max_s3_12_after
+  - id: max_s3_12_a
+    choice: Along the wall to the back door
+    next_scene: max_s3_12_after
+  - id: max_s3_12_c
+    choice: Hide in the cupboard
+    next_scene: max_s3_12_after
+  practice:
+    answer:
+      branch: max_s3_12_a
+    on_wrong:
+    - text: Not that way. Show them the clear way out.
+  metadata:
+    creative_instruction: 'Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-ceiling; smoke-door at the hall door.'
+- id: max_s3_12_after
+  title: What changes
+  type: narrative
+  description: Everybody crawls out of the back door and round to the gate.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: The first way was blocked, so you led them the second.
+  next_scene: max_s3_13
+  difficulty: null
+  cast:
+  - character_id: mummy
+    slot: left
+    pose: crawling
+  - character_id: vampire
+    slot: center
+    pose: crawling
+  - character_id: skeleton
+    slot: right
+    pose: crawling
+  media:
+    image: assets/backgrounds/party-room.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: Everybody crawls out of the back door and round to the gate. Pieces: pumpkin-lantern on the table with candle-battery in place of the real candle; paper-bats on the wall; sofa clear of the back door; plugs-two in the socket; smoke-ceiling; smoke-door at the hall door; arrow-right on the floor towards the back door.'
+- id: max_s3_13
+  title: The lamp post. Everybody is out
+  type: choice
+  description: The lamp post. Everybody is out
+  active_character: ghost
+  lines:
+  - speaker: vampire
+    text: My bag of sweets is inside! I will be quick!
+  task:
+    text: What do you tell him?
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: worried
+  - character_id: vampire
+    slot: center
+    pose: pleading
+  - character_id: bat
+    slot: right
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s3_13_a
+    choice: No. Stay out
+    next_scene: max_s3_13_after
+  - id: max_s3_13_b
+    choice: Be quick then
+    next_scene: max_s3_13_after
+  - id: max_s3_13_c
+    choice: Send the bat
+    next_scene: max_s3_13_after
+  practice:
+    answer:
+      branch: max_s3_13_a
+    on_wrong:
+    - text: Nobody goes back in. Not for anything.
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: max_s3_13_after
+  title: What changes
+  type: narrative
+  description: The vampire stays by the lamp post.
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Once you are out, you stay out. Sweets can be replaced.
+  next_scene: max_s3_14
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  - character_id: vampire
+    slot: center
+  - character_id: bat
+    slot: right
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The vampire stays by the lamp post. Pieces: meet-here-sign on the lamp post.'
+- id: max_s3_14
+  title: The lamp post. The mummy holds his phone
+  type: choice
+  description: The lamp post. The mummy holds his phone
+  active_character: ghost
+  lines:
+  - speaker: mummy
+    text: Quick! What is the number? I cannot remember!
+  task:
+    text: Here in Europe, which emergency number? Tap one.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: phone-give
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s3_14_b
+    choice: '121'
+    next_scene: max_s3_14_after
+  - id: max_s3_14_a
+    choice: '112'
+    next_scene: max_s3_14_after
+  - id: max_s3_14_c
+    choice: '211'
+    next_scene: max_s3_14_after
+  practice:
+    answer:
+      branch: max_s3_14_a
+    on_wrong:
+    - text: 'Wrong number! Answering machine: “Hello, this is Spider. I cannot come to the phone, I am on the web.”'
+    - text: 'Wrong again! Answering machine: “Witch’s Poo-tions. Yes, that is how we spell it. Yes, that is how it smells.”'
+    - text: It is 1, 1, 2.
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: max_s3_14_after
+  title: What changes
+  type: narrative
+  description: The phone rings once and somebody answers.
+  active_character: null
+  next_scene: max_s3_15
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: mummy
+    slot: center
+    pose: phone-panic
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The phone rings once and somebody answers. Pieces: meet-here-sign on the lamp post.'
+- id: max_s3_15
+  title: The mummy is on the phone. He panics
+  type: choice
+  description: The mummy is on the phone. He panics
+  active_character: ghost
+  lines:
+  - speaker: operator
+    text: Fire service. What is wrong, and where?
+  - speaker: mummy
+    text: Help! Um. What do I say?
+  task:
+    text: Tell the mummy what to say.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: worried
+  - character_id: mummy
+    slot: center
+    pose: phone-panic
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches:
+  - id: max_s3_15_b
+    choice: Our sweets are inside
+    next_scene: max_s3_15_after
+  - id: max_s3_15_c
+    choice: Guess where I am
+    next_scene: max_s3_15_after
+  - id: max_s3_15_a
+    choice: Fire! My house, Hallow Lane
+    next_scene: max_s3_15_after
+  practice:
+    answer:
+      branch: max_s3_15_a
+    on_wrong:
+    - text: 'They need two things: what is wrong, and where.'
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: max_s3_15_after
+  title: What changes
+  type: narrative
+  description: 'The fire service answers: “On our way!”'
+  active_character: null
+  lines:
+  - speaker: ghost
+    text: Say what is wrong and where you are.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  - character_id: mummy
+    slot: center
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'We see: The fire service answers: “On our way!” Pieces: meet-here-sign on the lamp post.'
+- id: closing_video
+  title: The closing video
+  type: narrative
+  description: The fire engine comes. The firefighter puts out the fire.
+  active_character: fire
+  lines:
+  - speaker: fire
+    text: A pan was left on the stove. The fire is out.
+  - speaker: mummy
+    text: My toffee apples! I forgot them on the stove.
+  - speaker: fire
+    text: You all got out and stayed out. That was exactly right.
+  next_scene: null
+  difficulty: null
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: assets/end_video.mp4
+  branches: []
+  metadata:
+    creative_instruction: 'Video, about 16 seconds, made in Flow from two clips joined in DaVinci. Clip 1, 4 seconds: the fire engine at the gate as the smoke fades. Clip 2, 12 seconds: the firefighter comes out with the burnt pan; the mummy only, no other guests. File: end_video.mp4.'
+- id: zoe_end
+  title: The three steps
+  type: narrative
+  description: The three steps, said together.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: You spotted the hazards, made the plan and got everybody out.
+  - speaker: ghost
+    text: 'That is the third step: getting out and staying out.'
+  overlays:
+  - id: steps
+    text: 1. Spot it. 2. Plan it. 3. Get out.
+    x: 0.5
+    y: 0.8
+    align: center
+    style: callout
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: waving
+  - character_id: mummy
+    slot: right
+    pose: proud
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: max_end
+  title: The three steps
+  type: narrative
+  description: The three steps, said together.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: You fixed the hazards, fixed the plan and gave everybody the order.
+  - speaker: ghost
+    text: 'That is the third step: getting out and staying out.'
+  overlays:
+  - id: steps
+    text: 1. Spot it. 2. Plan it. 3. Get out.
+    x: 0.5
+    y: 0.8
+    align: center
+    style: callout
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: waving
+  - character_id: mummy
+    slot: right
+    pose: proud
+  media:
+    image: assets/backgrounds/front-garden.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: 'Pieces: meet-here-sign on the lamp post.'
+- id: assessment_intro
+  title: Witch’s Poo-tions
+  type: narrative
+  description: The next day, inside Witch’s Poo-tions.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: The witch at Witch’s Poo-tions cooks potions on real fire all day.
+  - speaker: ghost
+    text: Is her shop safe? This time you check it without me.
+  overlays:
+  - id: rules
+    text: Three questions. Only your first try counts. Take your time.
+    x: 0.5
+    y: 0.8
+    align: center
+    style: callout
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: center
+  media:
+    image: assets/backgrounds/pootions-outside.jpg
+    audio: null
+    video: null
+  branches: []
+  metadata:
+    creative_instruction: null
+- id: q1
+  title: Question 1
+  type: choice
+  description: looking for fire hazards
+  active_character: witch
+  lines:
+  - speaker: witch
+    text: This is where I brew. Everything I need is close by!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: witch
+    slot: right
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q1_b
+    choice: A jar of frog eyes
+    next_scene: null
+  - id: q1_a
+    choice: Recipe papers by the burner
+    next_scene: null
+  - id: q1_c
+    choice: A bucket of cold slime
+    next_scene: null
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall.'
+- id: q1_where
+  title: Where to look
+  type: choice
+  description: The shop.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Not quite. Let’s find out. Who knows about fire?
+  task:
+    text: Tap where to look.
+  objects:
+  - id: cat
+    label: The shop cat
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Meow. I only check if my food bowl is full.
+  - id: witch
+    label: The potion witch
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: My table looks fine to me. But I never checked.
+  - id: poster
+    label: The fire safety poster on the wall
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: The fire service made this poster. They know!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  - character_id: cat
+    slot: center
+  - character_id: witch
+    slot: right
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q1_where_cat
+    object_id: cat
+    verb: tap
+    choice: The shop cat
+    next_scene: q1_find
+  - id: q1_where_witch
+    object_id: witch
+    verb: tap
+    choice: The potion witch
+    next_scene: q1_find
+  - id: q1_where_poster
+    object_id: poster
+    verb: tap
+    choice: The fire safety poster on the wall
+    next_scene: q1_find
+  practice:
+    answer:
+      object: poster
+  research:
+    step: where
+    source:
+      kind: page
+      label: The fire safety poster
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall. When the witch is tapped she shows the witch-shrugging pose.'
+- id: q1_find
+  title: Find it
+  type: choice
+  description: The poster, close up.
+  active_character: ghost
+  task:
+    text: Which rule fits the witch’s table? Tap it.
+  objects:
+  - id: rdoors
+    label: “Keep doors clear.”
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: That rule is about doors.
+  - id: rpaper
+    label: “Keep paper away from heat.”
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Keep paper away from heat. That is the one.
+  - id: rplugs
+    label: “Use fewer plugs.”
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: That rule is about plugs.
+  next_scene: null
+  difficulty: null
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q1_find_rdoors
+    object_id: rdoors
+    verb: tap
+    choice: “Keep doors clear.”
+    next_scene: q1_verify
+  - id: q1_find_rpaper
+    object_id: rpaper
+    verb: tap
+    choice: “Keep paper away from heat.”
+    next_scene: q1_verify
+  - id: q1_find_rplugs
+    object_id: rplugs
+    verb: tap
+    choice: “Use fewer plugs.”
+    next_scene: q1_verify
+  practice:
+    answer:
+      object: rpaper
+  research:
+    step: find
+    source:
+      kind: page
+      label: The fire safety poster
+  metadata:
+    creative_instruction: 'Pieces: fire-poster shown large, close up; the three rules are written on it.'
+- id: q1_verify
+  title: Check it
+  type: choice
+  description: The witch’s potion table again.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Now look at her table. Is any paper near heat?
+  task:
+    text: Tap it.
+  objects:
+  - id: frog
+    label: The jar of frog eyes
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Just goggly frog eyes.
+  - id: slime
+    label: The bucket of slime
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Just cold, wet slime.
+  - id: papers
+    label: The recipe papers
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Paper, right by the burner!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q1_verify_frog
+    object_id: frog
+    verb: tap
+    choice: The jar of frog eyes
+    next_scene: q1_use
+  - id: q1_verify_slime
+    object_id: slime
+    verb: tap
+    choice: The bucket of slime
+    next_scene: q1_use
+  - id: q1_verify_papers
+    object_id: papers
+    verb: tap
+    choice: The recipe papers
+    next_scene: q1_use
+  practice:
+    answer:
+      object: papers
+  research:
+    step: verify
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall.'
+- id: q1_use
+  title: Use it
+  type: narrative
+  description: Answer the question again.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: You found that out yourself. Now answer again.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches: []
+  research:
+    step: use
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall.'
+- id: q2
+  title: Question 2
+  type: choice
+  description: making a plan
+  active_character: witch
+  lines:
+  - speaker: witch
+    text: If there is a fire, where do we all meet?
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: witch
+    slot: right
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q2_b
+    choice: By the till
+    next_scene: null
+  - id: q2_c
+    choice: In the storeroom
+    next_scene: null
+  - id: q2_a
+    choice: The well by the gate
+    next_scene: null
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall.'
+- id: q2_where
+  title: Where to look
+  type: choice
+  description: The shop, with the street outside the window.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Not quite. Let’s find out. Who knows about staying safe in a fire?
+  task:
+    text: Tap who to ask.
+  objects:
+  - id: cat
+    label: The shop cat
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Meow. Everybody meets at my food bowl.
+  - id: witch
+    label: The potion witch
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Where to meet? I never thought about that.
+  - id: ff
+    label: The firefighter outside
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: The firefighter! Fire is her job. She knows.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: cat
+    slot: left
+  - character_id: witch
+    slot: center
+  - character_id: fire
+    slot: right
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q2_where_cat
+    object_id: cat
+    verb: tap
+    choice: The shop cat
+    next_scene: q2_find
+  - id: q2_where_witch
+    object_id: witch
+    verb: tap
+    choice: The potion witch
+    next_scene: q2_find
+  - id: q2_where_ff
+    object_id: ff
+    verb: tap
+    choice: The firefighter outside
+    next_scene: q2_find
+  practice:
+    answer:
+      object: ff
+  research:
+    step: where
+    source:
+      kind: character
+      label: The firefighter
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall; the firefighter stands outside the window. When the witch is tapped she shows the witch-shrugging pose.'
+- id: q2_find
+  title: Find it
+  type: choice
+  description: The firefighter at the shop door.
+  active_character: fire
+  task:
+    text: What do you ask her?
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+  - character_id: fire
+    slot: right
+  media:
+    image: assets/backgrounds/pootions-outside.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q2_find_b
+    choice: What is your name?
+    next_scene: q2_verify
+  - id: q2_find_a
+    choice: Where should we meet?
+    next_scene: q2_verify
+  - id: q2_find_c
+    choice: Do you like potions?
+    next_scene: q2_verify
+  practice:
+    answer:
+      branch: q2_find_a
+    on_wrong:
+    - text: Nice, but that is not what we need to know.
+  research:
+    step: find
+    source:
+      kind: character
+      label: The firefighter
+  metadata:
+    creative_instruction: null
+- id: q2_verify
+  title: Check it
+  type: choice
+  description: The shop from above.
+  active_character: ghost
+  lines:
+  - speaker: fire
+    text: Meet outside, away from the building.
+  - speaker: ghost
+    text: Outside, and away from the building. Now check the three places.
+  task:
+    text: Tap the one that fits.
+  objects:
+  - id: till
+    label: The till
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Inside. Right in the shop.
+  - id: store
+    label: The storeroom
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Inside, and full of boxes.
+  - id: well
+    label: The well by the gate
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Outside, by the gate!
+  next_scene: null
+  difficulty: null
+  media:
+    image: assets/backgrounds/pootions-from-above.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q2_verify_till
+    object_id: till
+    verb: tap
+    choice: The till
+    next_scene: q2_use
+  - id: q2_verify_store
+    object_id: store
+    verb: tap
+    choice: The storeroom
+    next_scene: q2_use
+  - id: q2_verify_well
+    object_id: well
+    verb: tap
+    choice: The well by the gate
+    next_scene: q2_use
+  practice:
+    answer:
+      object: well
+  research:
+    step: verify
+  metadata:
+    creative_instruction: null
+- id: q2_use
+  title: Use it
+  type: narrative
+  description: Answer the question again.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: You found that out yourself. Now answer again.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches: []
+  research:
+    step: use
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall.'
+- id: q3
+  title: Question 3
+  type: choice
+  description: getting out
+  active_character: witch
+  lines:
+  - speaker: narrator
+    text: BEEP! BEEP! BEEP!
+  - speaker: witch
+    text: Smoke! It is up by the ceiling!
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: witch
+    slot: right
+    pose: alarmed
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q3_b
+    choice: Stand up and find the fire
+    next_scene: null
+  - id: q3_a
+    choice: Crawl low to the door
+    next_scene: null
+  - id: q3_c
+    choice: Hide under the counter
+    next_scene: null
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall; smoke-alarm on the ceiling; smoke-ceiling across the top of the room.'
+- id: q3_where
+  title: Where to look
+  type: choice
+  description: The smoky shop.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Not quite. Let’s find out. Where can we look?
+  task:
+    text: Tap where to look.
+  objects:
+  - id: cat
+    label: The shop cat
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Meow. I always hide under the counter.
+  - id: witch
+    label: The potion witch
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Find the fire, I think? I have never had a fire.
+  - id: room
+    label: The smoky room
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Look at the room! Your own eyes can tell you.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: worried
+  - character_id: cat
+    slot: center
+  - character_id: witch
+    slot: right
+    pose: alarmed
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q3_where_cat
+    object_id: cat
+    verb: tap
+    choice: The shop cat
+    next_scene: q3_find
+  - id: q3_where_witch
+    object_id: witch
+    verb: tap
+    choice: The potion witch
+    next_scene: q3_find
+  - id: q3_where_room
+    object_id: room
+    verb: tap
+    choice: The smoky room
+    next_scene: q3_find
+  practice:
+    answer:
+      object: room
+  research:
+    step: where
+    source:
+      kind: picture
+      label: The smoky room
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame; smoke-ceiling across the top of the room. When the witch is tapped she shows the witch-shrugging pose.'
+- id: q3_find
+  title: Find it
+  type: choice
+  description: The room, with grey smoke across the top.
+  active_character: ghost
+  task:
+    text: If you must escape through smoke, where should you stay low? Tap it.
+  objects:
+  - id: ceiling
+    label: Up by the ceiling
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.43
+      - 0.3
+    reveal:
+      text: Full of smoke up here.
+  - id: floor
+    label: Down by the floor
+    geometry:
+      bounds:
+      - 0.51
+      - 0.55
+      - 0.43
+      - 0.3
+    reveal:
+      text: Stay low and move to the exit. Air near the floor can still be dangerous.
+  next_scene: null
+  difficulty: null
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q3_find_ceiling
+    object_id: ceiling
+    verb: tap
+    choice: Up by the ceiling
+    next_scene: q3_verify
+  - id: q3_find_floor
+    object_id: floor
+    verb: tap
+    choice: Down by the floor
+    next_scene: q3_verify
+  practice:
+    answer:
+      object: floor
+  research:
+    step: find
+    source:
+      kind: picture
+      label: The smoky room
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame; smoke-ceiling across the top of the room.'
+- id: q3_verify
+  title: Check it
+  type: choice
+  description: The fire safety poster on the wall.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: Now check it with the poster. Were your eyes right?
+  task:
+    text: Tap the rule about smoke.
+  objects:
+  - id: ralarm
+    label: “Alarm? Get out.”
+    geometry:
+      bounds:
+      - 0.06
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: That rule is about the alarm.
+  - id: rsmoke
+    label: “Smoke? Get low.”
+    geometry:
+      bounds:
+      - 0.36
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: Smoke? Stay low and move to the exit. Air near the floor can still be dangerous.
+  - id: rhide
+    label: “Never hide.”
+    geometry:
+      bounds:
+      - 0.66
+      - 0.55
+      - 0.28
+      - 0.3
+    reveal:
+      text: That rule is about hiding.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pointing
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches:
+  - id: q3_verify_ralarm
+    object_id: ralarm
+    verb: tap
+    choice: “Alarm? Get out.”
+    next_scene: q3_use
+  - id: q3_verify_rsmoke
+    object_id: rsmoke
+    verb: tap
+    choice: “Smoke? Get low.”
+    next_scene: q3_use
+  - id: q3_verify_rhide
+    object_id: rhide
+    verb: tap
+    choice: “Never hide.”
+    next_scene: q3_use
+  practice:
+    answer:
+      object: rsmoke
+  research:
+    step: verify
+  metadata:
+    creative_instruction: 'Pieces: fire-poster shown large, close up; the three rules are written on it.'
+- id: q3_use
+  title: Use it
+  type: narrative
+  description: Answer the question again.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: You found that out yourself. Now answer again.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: pleased
+  media:
+    image: assets/backgrounds/pootions-shop.jpg
+    audio: null
+    video: null
+  branches: []
+  research:
+    step: use
+  metadata:
+    creative_instruction: 'Pieces: fire-poster in the blank frame on the wall.'
+- id: result
+  title: Everybody is safe
+  type: narrative
+  description: The assessment is over.
+  active_character: ghost
+  lines:
+  - speaker: ghost
+    text: You are safe, and the firefighters put out the fire at the witch’s shop.
+  next_scene: null
+  difficulty: null
+  cast:
+  - character_id: ghost
+    slot: left
+    pose: waving
+  - character_id: witch
+    slot: center
+  - character_id: fire
+    slot: right
+  media:
+    image: assets/backgrounds/pootions-outside.jpg
+    audio: null
+    video: null
+  branches: []
+  exit_allowed: true
+  host_slot: end-cta
+  metadata:
+    creative_instruction: 'Pieces: fire-engine in the street outside the shop.'
+lesson:
+  id: fire_door
+  title: How do you keep a party safe from fire?
+  pieces:
+  - id: opening
+    title: The party
+    scenes:
+    - opening_video
+  - id: spot_it
+    title: Spot it
+    versions:
+    - id: hunt_alone
+      scenes:
+      - spot_table
+      - spot_table_after
+      - spot_corner
+      - spot_corner_after
+      - spot_backdoor
+      - spot_backdoor_after
+      - spot_lights
+      - spot_lights_after
+      - zoe_s1_02
+      method: 'tap the picture (stretch: count)'
+    - id: help_the_mummy
+      scenes:
+      - max_s1_01
+      - max_s1_01_after
+      - max_s1_02
+      - max_s1_02_after
+      - max_s1_03
+      - max_s1_03_after
+      - max_s1_04
+      - max_s1_04_after
+      - max_s1_05
+      method: choices
+  - id: plan_it
+    title: Plan it
+    versions:
+    - id: find_it_yourself
+      scenes:
+      - zoe_s2_03
+      - zoe_s2_03_after
+      - zoe_s2_04
+      - zoe_s2_04_after
+      - zoe_s2_05
+      - zoe_s2_05_after
+      - zoe_s2_06
+      method: tap the picture
+    - id: fix_the_sign
+      scenes:
+      - max_s2_06
+      - max_s2_06_after
+      - max_s2_07
+      - max_s2_07_after
+      - max_s2_08
+      - max_s2_08_after
+      - max_s2_09
+      - max_s2_09_after
+      - max_s2_10
+      method: inspect, then choices
+  - id: get_out
+    title: Get out
+    versions:
+    - id: decide_each_move
+      scenes:
+      - zoe_s3_07
+      - zoe_s3_07_after
+      - zoe_s3_08
+      - zoe_s3_08_after
+      - zoe_s3_09
+      - zoe_s3_09_after
+      - zoe_s3_10
+      - zoe_s3_10_after
+      - zoe_s3_11
+      - zoe_s3_11_after
+      - zoe_s3_12
+      - zoe_s3_12_after
+      method: 'choices (stretch: keypad)'
+    - id: give_the_order
+      scenes:
+      - max_s3_11
+      - max_s3_11_after
+      - max_s3_12
+      - max_s3_12_after
+      - max_s3_13
+      - max_s3_13_after
+      - max_s3_14
+      - max_s3_14_after
+      - max_s3_15
+      - max_s3_15_after
+      method: 'put in order (stretch: pattern, keypad)'
+  - id: fire_engine
+    title: The fire engine
+    versions:
+    - id: end_zoe
+      scenes:
+      - closing_video
+      - zoe_end
+    - id: end_max
+      scenes:
+      - closing_video
+      - max_end
+  checks:
+  - id: pootions
+    title: Witch’s Poo-tions
+    questions:
+    - id: q1
+      scene: q1
+      answer:
+        branch: q1_a
+      research:
+      - q1_where
+      - q1_find
+      - q1_verify
+      - q1_use
+    - id: q2
+      scene: q2
+      answer:
+        branch: q2_a
+      research:
+      - q2_where
+      - q2_find
+      - q2_verify
+      - q2_use
+    - id: q3
+      scene: q3
+      answer:
+        branch: q3_a
+      research:
+      - q3_where
+      - q3_find
+      - q3_verify
+      - q3_use
+  result:
+    scene: result
+demo:
+  profiles:
+  - id: demo_zoe
+    display_name: Zoe
+    strengths:
+    - Finding things out
+    - Noticing details
+    - Working things out alone
+    versions:
+      spot_it: hunt_alone
+      plan_it: find_it_yourself
+      get_out: decide_each_move
+      fire_engine: end_zoe
+    order: fixed
+    rationale:
+      spot_it: Zoe notices details, so she hunts through the room and finds each hazard herself.
+      plan_it: Zoe works things out alone, so she finds the second way out, the meeting place and who to call herself.
+      get_out: Zoe works things out alone, so she makes each decision herself when the alarm goes.
+  - id: demo_max
+    display_name: Max
+    strengths:
+    - Helping others
+    - Explaining to others
+    - Putting things in order
+    versions:
+      spot_it: help_the_mummy
+      plan_it: fix_the_sign
+      get_out: give_the_order
+      fire_engine: end_max
+    order: fixed
+    rationale:
+      spot_it: Max likes helping others, so the mummy shows him each thing and Max tells him what to do.
+      plan_it: Max likes explaining to others, so he fixes the mummy’s written plan.
+      get_out: Max puts things in order, so he gives the guests the steps and leads them out.

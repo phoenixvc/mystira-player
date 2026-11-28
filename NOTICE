@@ -8,6 +8,8 @@ Content and assets
 The story text, pictures and audio under content/ are Copyright 2026 Mystira (Pty) Ltd, all rights reserved.
 They are included so the player can be run and judged. They are not licensed under the Apache License,
 and may not be reused outside this repository without written permission.
+The Mummy's Party preview media under public/mummys-party/ is likewise provided for preview only;
+it is not licensed under the Apache License, and this repository grants no right to reuse it.
 
 Logo
 The Mystira logo (public/favicon.ico and public/icons/) is Copyright 2026 Mystira (Pty) Ltd, all rights reserved,

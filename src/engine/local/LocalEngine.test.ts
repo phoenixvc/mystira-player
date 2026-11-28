@@ -193,7 +193,7 @@ describe('LocalEngine', () => {
     expect(done.node).toMatchObject({ type: 'result', title: 'Piece complete' });
   });
 
-  it('plays the full fixed-profile lesson through Inspect, check, and result when all core interactions are enabled', async () => {
+  it('plays all five fixed-profile pieces and stops before the separate assessment', async () => {
     const gate = StoryYamlSchema.parse(parse(pumpkinGate));
     const engine = new LocalEngine(gate, ['choices', 'hotspots', 'sequence', 'inspect']);
     let step = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }] });
@@ -213,9 +213,45 @@ describe('LocalEngine', () => {
       step = await engine.respond(step.sessionId, { answerRequestId: `full-${index}`, version: step.version, nodeId: step.node.id, answer });
     }
     expect(visited).toContain('what_do_they_want');
-    expect(visited).toContain('q1_free_coins');
-    expect(visited).toContain('gate_opens');
+    expect(visited).toContain('ask_a_grown_up');
+    expect(visited).not.toContain('q1_free_coins');
     expect(step.node.id).toBe('story-end');
+    expect(step.node.title).toBe('The End');
+    const assessment = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_lerato' }], startNodeId: 'assessment' });
+    expect(assessment.node).toMatchObject({ id: 'q1_free_coins', type: 'check' });
+  });
+
+  it('continues a fixed-profile lesson from authored practice and inspect scene IDs', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots', 'sequence', 'inspect']);
+    const players = [{ type: 'Profile' as const, profileId: 'demo_lerato' }];
+    const practice = await engine.startSession({ activityId: 'pumpkin_gate', players, startNodeId: 'who_said_it' });
+    const hotspot = await engine.respond(practice.sessionId, { answerRequestId: 'lesson-choice', version: practice.version, nodeId: practice.node.id, answer: { kind: 'choice', choiceId: 'video' } });
+    expect(hotspot.node.id).toBe('how_know_find');
+
+    const inspect = await engine.startSession({ activityId: 'pumpkin_gate', players, startNodeId: 'what_do_they_want' });
+    const next = await engine.respond(inspect.sessionId, { answerRequestId: 'lesson-inspect', version: inspect.version, nodeId: inspect.node.id, answer: { kind: 'inspect', partIds: ['link', 'price'] } });
+    expect(next.node.id).toBe('who_else_says_it');
+  });
+
+  it('lets the child-chosen profile complete all five lesson pieces in any order', async () => {
+    const gate = StoryYamlSchema.parse(parse(pumpkinGate));
+    const engine = new LocalEngine(gate, ['choices', 'hotspots', 'sequence', 'inspect']);
+    const pieces = engine.demoPiecesForProfile('demo_daan');
+    expect(pieces).toHaveLength(5);
+    for (const [index, piece] of [...pieces].reverse().entries()) {
+      const first = await engine.startSession({ activityId: 'pumpkin_gate', players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: piece.startSceneId });
+      const interaction = first.node.interaction;
+      let answer: Answer;
+      switch (interaction.type) {
+        case 'choices': answer = { kind: 'choice', choiceId: interaction.local?.correctId ?? interaction.options[0]!.id }; break;
+        case 'sequence': answer = { kind: 'sequence', itemIds: interaction.local?.order ?? interaction.items.map((item) => item.id) }; break;
+        case 'inspect': answer = { kind: 'inspect', partIds: interaction.local?.flagged ?? [] }; break;
+        default: throw new Error(`Unexpected lesson interaction ${interaction.type}`);
+      }
+      const end = await engine.respond(first.sessionId, { answerRequestId: `piece-${index}`, version: first.version, nodeId: first.node.id, answer });
+      expect(end.node).toMatchObject({ id: 'story-end', title: 'Piece complete' });
+    }
   });
 
   it('validates inspect answers, keeps incorrect practice local, and completes the chosen piece', async () => {

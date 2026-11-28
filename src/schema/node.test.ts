@@ -11,6 +11,21 @@ const base = {
 };
 
 describe('node validation', () => {
+  it('accepts a generic terminal scene without enabling an answer capability', () => {
+    const terminal = { ...base, type: 'terminal', interaction: { type: 'terminal' }, title: 'The End' };
+    expect(createNodeValidator([]).safeParse(terminal).success).toBe(true);
+    expect(NodeSchema.safeParse({ ...terminal, interaction: { type: 'terminal', answer: 'hidden' } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...terminal, interaction: { type: 'continue' } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...terminal, type: 'scene' }).success).toBe(false);
+  });
+  it('gates legacy rolls and requires a host result only in the resolved state', () => {
+    const scene = { ...base, type: 'scene', interaction: { type: 'roll', state: 'ready', target: 3 } };
+    expect(createNodeValidator([]).safeParse(scene).success).toBe(false);
+    expect(createNodeValidator(['roll']).safeParse(scene).success).toBe(true);
+    expect(NodeSchema.safeParse({ ...scene, interaction: { type: 'roll', state: 'resolved', target: 3 } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...scene, interaction: { type: 'roll', state: 'ready', target: 3, result: { value: 4, success: true, message: 'Great!' } } }).success).toBe(false);
+    expect(NodeSchema.safeParse({ ...scene, interaction: { type: 'roll', state: 'resolved', target: 3, result: { value: 2, success: false, message: 'Try the other path.' } } }).success).toBe(true);
+  });
   it('rejects check nodes with local answers, reveal content, or scoring on attempt two', () => {
     expect(NodeSchema.safeParse({ ...base, interaction: { ...base.interaction, local: { correctId: 'a' } } }).success).toBe(false);
     expect(validateNode.safeParse({ ...base, interaction: { ...base.interaction, local: { correctId: 'a' } } }).success).toBe(false);

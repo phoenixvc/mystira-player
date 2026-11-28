@@ -36,4 +36,37 @@ describe('child-chosen lesson order', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: 'first-scene' })).toBeTruthy());
     expect(startSession).toHaveBeenLastCalledWith(expect.objectContaining({ startNodeId: 'first-scene' }), expect.any(Object));
   });
+
+  it('records completed pieces for the current child without changing the piece buttons', async () => {
+    const step = (id: string): Step => ({
+      sessionId: id, version: '1', ageGroupId: '6-9', players: [],
+      node: { type: 'scene', id, title: id, media: {}, characters: [], speakers: [], lines: [], overlays: [], interaction: { type: 'continue' } },
+    });
+    const engine: Engine = {
+      listProfiles: vi.fn().mockResolvedValue([{ profileId: 'chooser', displayName: 'Chooser' }]),
+      startSession: vi.fn().mockImplementation(async (request: { startNodeId?: string }) => step(request.startNodeId ?? 'unexpected')),
+      resumeSession: vi.fn(),
+      respond: vi.fn().mockImplementation(async (sessionId: string) => ({
+        ...step(sessionId), version: '2',
+        node: { ...step(sessionId).node, id: 'story-end', title: 'Piece complete', type: 'result', correctFirstTry: 0, total: 0 },
+      })),
+    };
+    vi.mocked(loadLocalDemo).mockResolvedValue({
+      engine, activityId: 'lesson', isDemoMode: true, fullLesson: true,
+      sceneForProfile: (id) => id,
+      piecesForProfile: () => [
+        { id: 'first', title: 'First piece', startSceneId: 'first-scene' },
+        { id: 'second', title: 'Second piece', startSceneId: 'second-scene' },
+      ],
+    });
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'First piece' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
+    await screen.findByText('Complete');
+    expect(screen.getByRole('button', { name: 'First piece' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Second piece' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
+    await screen.findByRole('status', { name: '' });
+    expect(screen.getByText('Lesson complete')).toBeTruthy();
+  });
 });

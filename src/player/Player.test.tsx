@@ -13,6 +13,35 @@ const first: Step = {
 const second: Step = { ...first, version: '2', canGoBack: true, progress: { done: 1, total: 2 }, node: { ...first.node, id: 'hall', title: 'In the hall' } };
 
 describe('Player', () => {
+  it('shows a generic story ending without a score or submission control', async () => {
+    const terminal: Step = { ...first, node: { ...first.node, type: 'terminal', title: 'The story ends', interaction: { type: 'terminal' }, lines: [{ speakerId: 'narrator', text: 'Everyone is safe.' }] } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(terminal), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} muted />);
+    expect(await screen.findByRole('heading', { name: 'The story ends' })).toBeTruthy();
+    expect(screen.getByText('Everyone is safe.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
+    expect(screen.queryByText(/correct on the first try/i)).toBeNull();
+    expect(engine.respond).not.toHaveBeenCalled();
+  });
+  it('asks the host to roll once, displays its resolved outcome, then continues without deciding success', async () => {
+    const ready: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'roll', state: 'ready', target: 3 } } };
+    const resolved: Step = { ...ready, version: '2', node: { ...ready.node, interaction: { type: 'roll', state: 'resolved', target: 3, result: { value: 2, success: false, message: 'A gentle miss.' } } } };
+    const respond = vi.fn().mockResolvedValueOnce(resolved).mockResolvedValueOnce(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(ready), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    const roll = await screen.findByRole('button', { name: 'Roll' });
+    expect(screen.getByRole('region', { name: 'Roll challenge' }).getAttribute('tabindex')).toBe('0');
+    fireEvent.click(roll);
+    fireEvent.click(roll);
+    await waitFor(() => expect(respond).toHaveBeenCalledTimes(1));
+    expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ nodeId: 'gate', version: '1', answer: { kind: 'roll' }, answerRequestId: expect.any(String) }), expect.anything());
+    const next = await screen.findByRole('button', { name: 'Continue adventure' });
+    expect(screen.getByText('A gentle miss.')).toBeTruthy();
+    expect(document.activeElement).toBe(next);
+    fireEvent.click(next);
+    await waitFor(() => expect(respond).toHaveBeenCalledTimes(2));
+    expect(respond).toHaveBeenLastCalledWith('s1', expect.objectContaining({ nodeId: 'gate', version: '2', answer: { kind: 'continue' } }), expect.anything());
+  });
   const inspectParts = [
     { id: 'sender', role: 'sender' as const, text: 'coinz4u.example' },
     { id: 'link', role: 'link' as const, text: 'Enter a password' },
@@ -166,7 +195,7 @@ describe('Player', () => {
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(hotspot), resumeSession: vi.fn(), respond };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
     fireEvent.click(await screen.findByRole('button', { name: 'The dog' }));
-    expect(screen.getByText('Not yet. Try again.')).toBeTruthy();
+    expect(await screen.findByText('Not yet. Try again.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'The crow' }).getAttribute('class')).toContain('revealed');
     expect(screen.getByRole('button', { name: 'The dog' }).getAttribute('class')).not.toContain('revealed');
     expect(respond).not.toHaveBeenCalled();
@@ -222,6 +251,24 @@ describe('Player', () => {
     await waitFor(() => expect(respond).toHaveBeenCalledTimes(1));
   });
 
+  it('keeps a correct-choice explanation silent and ready when the host mutes playback', async () => {
+    const audio = vi.fn();
+    const speak = vi.fn();
+    vi.stubGlobal('Audio', audio);
+    vi.stubGlobal('speechSynthesis', { speak, cancel: vi.fn() });
+    const practice: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }], local: { correctId: 'yes', outcomes: { yes: { onCorrect: { line: { text: 'Here is why.', audioUrl: '/why.mp3' } } } } } } } };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture muted />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    expect(await screen.findByText('Here is why.')).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false));
+    expect(audio).not.toHaveBeenCalled();
+    expect(speak).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledTimes(1));
+  });
+
   it('allows Next when explanation audio fails and speech is unavailable', async () => {
     vi.stubGlobal('speechSynthesis', undefined);
     vi.stubGlobal('SpeechSynthesisUtterance', undefined);
@@ -236,7 +283,7 @@ describe('Player', () => {
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
     fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
-    expect(screen.getByText('Read this explanation.')).toBeTruthy();
+    expect(await screen.findByText('Read this explanation.')).toBeTruthy();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false));
   });
 
@@ -378,7 +425,7 @@ describe('Player', () => {
     act(() => played[0]!.onended?.());
     expect(screen.getByText('Second.')).toBeTruthy();
     expect(played).toHaveLength(2);
-    fireEvent.pointerDown(window);
+    fireEvent.pointerDown(screen.getByRole('region', { name: 'Story player' }));
     expect(played).toHaveLength(2);
     expect(screen.getByText('Second.')).toBeTruthy();
   });
@@ -395,9 +442,9 @@ describe('Player', () => {
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
     await screen.findByRole('heading', { name: 'At the gate' });
     expect(played).toHaveLength(0);
-    fireEvent.pointerDown(window);
+    fireEvent.pointerDown(screen.getByRole('region', { name: 'Story player' }));
     await waitFor(() => expect(played).toEqual(['/welcome.mp3']));
-    fireEvent.keyDown(window);
+    fireEvent.keyDown(screen.getByRole('region', { name: 'Story player' }));
     expect(played).toHaveLength(1);
   });
 

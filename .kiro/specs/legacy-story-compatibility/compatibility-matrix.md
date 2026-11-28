@@ -1,8 +1,8 @@
 # Spec 5 legacy playback compatibility matrix
 
-Snapshot: Mystira `origin/dev` `7ae1335e103fff11e75a0b4845245457005213b1`; Player `origin/dev` `05101ca87ca221ef61c488497eb01f901381cead` on 2026-11-28. See [source-audit.md](source-audit.md) for source paths. This matrix describes **current end-to-end compatibility**, not isolated React features. A source test confirms old behavior; it does not establish new host parity.
+Snapshot: Mystira `origin/dev` `7ae1335e103fff11e75a0b4845245457005213b1`; Player `origin/dev` `05101ca87ca221ef61c488497eb01f901381cead` on 2026-11-28. See [source-audit.md](source-audit.md) for source paths. This matrix describes **end-to-end compatibility at that snapshot**, not isolated React features. A source test confirms old behavior; it does not establish new host parity. Since the snapshot, the custom element and player-side Blazor interop seam landed. The host wrapper, actual DTO mapping and signed-in playback proof remain open, so the end-to-end dispositions below have not changed.
 
-Statuses: **supported** = currently playable through the same embedded Player and authorized host; **host-rendered** = intentionally retained in a connected host with a verified boundary; **unsupported** = required adapter, element, host or parity evidence is missing; **not applicable** = no equivalent working behavior to migrate. On this snapshot, no case can honestly be marked supported or host-rendered because the custom element and Blazor adapter are not implemented.
+Statuses: **supported** = playable through the same embedded Player and authorized host; **host-rendered** = intentionally retained in a connected host with a verified boundary; **unsupported** = required adapter, element, host or parity evidence is missing; **not applicable** = no equivalent working behavior to migrate. At the audited snapshot, no case could be marked supported or host-rendered because the custom element and Blazor adapter were not implemented. The newer player-side seams alone do not establish that parity.
 
 | Case and fixture | Blazor result to preserve | Current disposition and owner | Evidence / next proof |
 |---|---|---|---|
