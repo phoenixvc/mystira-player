@@ -6,6 +6,7 @@ import { LocalEngine } from '../engine/local/LocalEngine';
 import type { Engine } from '../engine/types';
 import { StoryYamlSchema } from '../schema/story-yaml';
 import { stageMummysParty } from './mummysPartyStaging';
+import { attachMummysPartyVoices } from './mummysPartyVoices';
 
 const ConfigSchema = z.object({
   mode: z.literal('local'),
@@ -30,7 +31,7 @@ export async function loadLocalDemo(kind: 'pumpkin-gate' | 'mummys-party' = 'pum
   const required = ['choices', 'hotspots', 'sequence', 'inspect'] as const;
   const fullLesson = required.every((kind) => config.interactions.enabled.includes(kind));
   const story = kind === 'mummys-party'
-    ? StoryYamlSchema.parse(resolveMummyMedia(parse((await import('../../content/manor/fire-door.story.yaml?raw')).default)))
+    ? StoryYamlSchema.parse(resolveMummyMedia(attachMummysPartyVoices(parse((await import('../../content/manor/fire-door.story.yaml?raw')).default))))
     : StoryYamlSchema.parse(parse(fullLesson ? pumpkinGate : corePreview));
   const engine = new LocalEngine(story, config.interactions.enabled, kind === 'mummys-party' ? stageMummysParty : undefined);
   const choicesAvailable = config.interactions.enabled.includes('choices') && config.interactions.enabled.includes('hotspots');

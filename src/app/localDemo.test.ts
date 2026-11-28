@@ -79,6 +79,18 @@ describe('local demo bootstrap', () => {
     expect(step.node.interaction.type).toBe('inspect');
   });
 
+  it('serves generated Ghost audio on the first non-video Mummy’s Party scene', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence', 'inspect'] } }) }));
+    const demo = await loadLocalDemo('mummys-party');
+    const opening = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_zoe' }] });
+    expect(opening.node.id).toBe('opening_video');
+    expect(opening.node.media.video?.url).toContain('/mummys-party/videos/opening_video.mp4');
+    expect(opening.node.lines[0]?.audioUrl).toBeUndefined();
+    const table = await demo.engine.respond(opening.sessionId, { answerRequestId: 'voice-opening', version: opening.version, nodeId: opening.node.id, answer: { kind: 'continue' } });
+    expect(table.node.id).toBe('spot_table');
+    expect(table.node.lines[0]?.audioUrl).toMatch(/\/mummys-party\/audio\/en\/ghost-[a-f0-9]+\.mp3$/);
+  });
+
   it('keeps Mummy’s Party assessment entries on the same story with partial capabilities', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots'] } }) }));
     const demo = await loadLocalDemo('mummys-party');

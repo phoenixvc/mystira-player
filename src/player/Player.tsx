@@ -54,6 +54,11 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
   const [keyImageFailed, setKeyImageFailed] = useState(false);
   const audio = useRef<HTMLAudioElement | undefined>(undefined);
   const video = useRef<HTMLVideoElement>(null);
+  const lastVideo = useRef<HTMLVideoElement>(null);
+  const attachVideo = useCallback((element: HTMLVideoElement | null) => {
+    video.current = element;
+    if (element) lastVideo.current = element;
+  }, []);
   const request = useRef<{ key: string; id: string; answer: Answer } | undefined>(undefined);
   const generation = useRef(0);
   const requestGeneration = useRef(0);
@@ -64,11 +69,11 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
   const reactionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rollContinue = useRef<HTMLButtonElement>(null);
 
-  const stopMedia = useCallback(() => {
+  const stopMedia = useCallback((pauseVideo = true) => {
     generation.current += 1;
     audio.current?.pause();
     audio.current = undefined;
-    video.current?.pause();
+    if (pauseVideo) (video.current ?? lastVideo.current)?.pause();
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
     if (reactionTimer.current) clearTimeout(reactionTimer.current);
   }, []);
@@ -121,7 +126,8 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
   }, [engine, startRequest, resumeSessionId, stopMedia, beginRequest]);
 
   useEffect(() => {
-    stopMedia();
+    // The keyed stage has already mounted the incoming video; scene reset must not pause it.
+    stopMedia(false);
     setLineIndex(0);
     setReaction(undefined);
     setSelected(undefined);
@@ -194,7 +200,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
   }, [engine, startRequest, stopMedia, beginRequest]);
 
   const playLines = useCallback((from: number) => {
-    if (!step || muted) return;
+    if (!step || muted || step.node.media.video) return;
     narrationStartedFor.current = `${step.sessionId}:${step.node.id}:${step.version}`;
     stopMedia();
     const token = generation.current;
@@ -347,7 +353,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
     const defaultOn = step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9';
     if (narration === undefined) setNarration(defaultOn);
     const key = `${step.sessionId}:${step.node.id}:${step.version}`;
-    if (!muted && (narration ?? defaultOn) && step.node.lines.length && (!['1-2', '3-5'].includes(step.ageGroupId) || hasGesture) && narrationStartedFor.current !== key) playLines(0);
+    if (!muted && !step.node.media.video && (narration ?? defaultOn) && step.node.lines.length && (!['1-2', '3-5'].includes(step.ageGroupId) || hasGesture) && narrationStartedFor.current !== key) playLines(0);
   // Only start narration when a new step arrives; replay and toggle use explicit handlers.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step?.node.id, step?.version, hasGesture]);
@@ -383,7 +389,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
       {step.progress && <p className={styles.progress}>{node.type === 'result' ? 'Result' : `Scene ${step.progress.done + 1} of ${step.progress.total}`}</p>}
     </header>
     <div className={`${styles.stage} ${slotGuide ? styles.slotGuide : ''}`} key={`${node.id}:${step.version}`} onClick={(event) => { if (node.interaction.type === 'hotspots' && !held && !(event.target as HTMLElement).closest('button')) setFeedback('Nothing here'); }}>
-      {node.media.video && !held?.image ? <video ref={video} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline muted={muted} onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
+      {node.media.video && !held?.image ? <video ref={attachVideo} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline muted={muted} onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
         : (held?.image?.imageUrl ?? node.media.imageUrl) && !imageFailed ? <img className={styles.media} src={held?.image?.imageUrl ?? node.media.imageUrl} alt={held?.image?.alt ?? node.media.alt ?? ''} onError={() => setImageFailed(true)} />
           : <div className={styles.mediaFallback} role="img" aria-label={imageFailed ? held?.image?.alt ?? node.media.alt ?? 'Scene image unavailable' : 'Scene artwork'}>✦</div>}
       {!node.media.video && !held?.image && node.media.layers?.map((layer) => <img key={layer.id} className={`${styles.stageLayer} ${layer.overlay ? styles.stageOverlay : ''}`} src={layer.imageUrl} alt={layer.alt} style={{ left: `${layer.left}%`, bottom: `${layer.bottom}%`, width: `${layer.width}%`, height: layer.height ? `${layer.height}%` : undefined }} />)}
@@ -410,13 +416,13 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
     {held && !held.spot && <div className={styles.feedback} role="status"><p>{held.line.text}</p>{!heldReady && <button type="button" onClick={() => { stopMedia(); setHeldReady(true); }}>Continue without audio</button>}</div>}
     <div className={styles.dialogue} aria-live="polite">
       {currentLine && !(node.type === 'check' && currentLine.text === node.question.text) && <><div className={styles.speaker}>{speaker?.avatarUrl && <img src={speaker.avatarUrl} alt="" />}<strong style={{ color: speaker?.colour }}>{speaker?.name ?? 'Narrator'}</strong></div><p>{currentLine.text}</p></>}
-      {node.lines.length > 1 && <div className={styles.lineControls}><span>Line {lineIndex + 1} of {node.lines.length}</span><button type="button" disabled={!!held || lineIndex >= node.lines.length - 1} onClick={() => { stopMedia(); setLineIndex((index) => index + 1); }}>Show next line</button></div>}
+      {node.lines.length > 1 && <div className={styles.lineControls}><span>Line {lineIndex + 1} of {node.lines.length}</span><button type="button" disabled={!!held || lineIndex >= node.lines.length - 1} onClick={() => { if (!node.media.video) stopMedia(); setLineIndex((index) => index + 1); }}>Show next line</button></div>}
     </div>
     {node.type === 'result' && <aside className={styles.feedback} aria-label="Lesson result">{node.total > 0 && <p>{node.correctFirstTry} of {node.total} correct on the first try</p>}{node.key && <div className={styles.resultKey}>{node.key.iconUrl && !keyImageFailed ? <img src={node.key.iconUrl} alt="" onError={() => setKeyImageFailed(true)} /> : <span aria-hidden="true">✦</span>}<strong>{node.key.label}</strong></div>}</aside>}
     {node.type !== 'terminal' && <div className={styles.actions}>
       <button type="button" disabled={busy || !step.canGoBack} hidden={!step.canGoBack} onClick={() => void answer({ kind: 'back' })}>Back</button>
-      <button type="button" aria-pressed={narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')} onClick={() => { const next = !(narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')); setNarration(next); stopMedia(); if (!next && held) setHeldReady(true); if (next && !held) playLines(lineIndex); }}>{narration ? 'Narration on' : 'Narration off'}</button>
-      <button type="button" disabled={!!held} onClick={() => playLines(lineIndex)}>Replay line</button>
+      {!node.media.video && <button type="button" aria-pressed={narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')} onClick={() => { const next = !(narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')); setNarration(next); stopMedia(); if (!next && held) setHeldReady(true); if (next && !held) playLines(lineIndex); }}>{narration ? 'Narration on' : 'Narration off'}</button>}
+      {!node.media.video && <button type="button" disabled={!!held} onClick={() => playLines(lineIndex)}>Replay line</button>}
       {node.type === 'result' ? startRequest && <button className={styles.next} type="button" disabled={busy} onClick={() => void playAgain()}>Play again</button>
         : held ? <button className={styles.next} type="button" disabled={busy || !heldReady} onClick={() => void answer(held.answer, wrongTries)}>Next</button>
         : node.type === 'check' ? <button className={styles.next} type="button" disabled={busy || !selected} onClick={() => { if (selected) void answer(selected); }}>That's my answer</button>

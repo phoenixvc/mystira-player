@@ -1,0 +1,27 @@
+{
+  "locale": "en",
+  "model": "eleven_multilingual_v2",
+  "lines": [
+    {
+      "sceneId": "spot_table",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "A fire hazard can start a fire, or trap us inside.",
+      "file": "ghost-26df728149aeefe0c617.mp3"
+    },
+    {
+      "sceneId": "spot_table_after",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Battery candles are safer than real candles. Same glow, no flame.",
+      "file": "ghost-5fc025d58db05551977a.mp3"
+    },
+    {
+      "sceneId": "spot_corner_after",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Paper burns fast. Keep it far away from hot lamps.",
+      "file": "ghost-02ee237743e9daa411d8.mp3"
+    }
+  ]
+}
