@@ -62,7 +62,9 @@ That second review found a callout clipping issue near the stage edges. The rend
 
 The next exact-head review caught that a height-constrained callout could not be scrolled because its inset region ignored pointer events and it had no keyboard focus. The callout now accepts pointer events, is keyboard focusable, and uses its available width before wrapping. A 280 px browser check confirmed a tall right-edge callout stayed within the stage, received focus, and scrolled to its remaining text.
 
-Marking PR #14 ready triggered a CodeRabbit review. It found that an unstable host `onStep` callback could restart a session, a rapid second profile change could lose the pending lesson piece, and malformed non-object `interaction` values could pass Story YAML validation. The player now reads the latest callback through a ref, the shell maps from a pending scene ID while a new Step loads, and the Story YAML schema validates both declared interaction variants. Focused regressions brought the suite to 77 tests; typecheck and build passed. CodeRabbit's exact-head follow-up remains the review gate after these changes are pushed.
+Marking PR #14 ready triggered a CodeRabbit review. It found that an unstable host `onStep` callback could restart a session, a rapid second profile change could lose the pending lesson piece, and malformed non-object `interaction` values could pass Story YAML validation. The player now reads the latest callback through a ref, the shell maps from a pending scene ID while a new Step loads, and the Story YAML schema validates both declared interaction variants. Focused regressions brought the suite to 77 tests; typecheck and build passed. The automatic CodeRabbit follow-up on that head was rate limited and skipped analysis.
+
+Codex then reviewed that head and found that the first user gesture could restart 6–9 narration already playing. The player now tracks narration started for each Step, so only a young-child Step waiting for its first gesture starts on that event. Regression tests cover both age paths. The suite reached 79 tests, with typecheck and build passing.
 
 ## MCP
 

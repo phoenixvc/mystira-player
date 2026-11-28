@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Player } from './Player';
 import type { Engine, Step } from '../engine/types';
 
@@ -87,6 +87,49 @@ describe('Player', () => {
     finishResponse(second);
     await screen.findByRole('heading', { name: 'In the hall' });
     expect(screen.getByRole('button', { name: 'Next' }).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('does not restart ongoing narration when the first gesture arrives', async () => {
+    const played: Array<{ onended?: () => void }> = [];
+    vi.stubGlobal('Audio', class {
+      onended?: () => void;
+      onerror?: () => void;
+      constructor(_url: string) { played.push(this); }
+      play() { return Promise.resolve(); }
+      pause() { /* stopped between lines */ }
+    });
+    const narrated: Step = { ...first, node: { ...first.node, lines: [
+      { speakerId: 'narrator', text: 'First.', audioUrl: '/first.mp3' },
+      { speakerId: 'narrator', text: 'Second.', audioUrl: '/second.mp3' },
+    ] } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(narrated), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    await waitFor(() => expect(played).toHaveLength(1));
+    act(() => played[0]!.onended?.());
+    expect(screen.getByText('Second.')).toBeTruthy();
+    expect(played).toHaveLength(2);
+    fireEvent.pointerDown(window);
+    expect(played).toHaveLength(2);
+    expect(screen.getByText('Second.')).toBeTruthy();
+  });
+
+  it('starts young-child narration once after the first gesture', async () => {
+    const played: string[] = [];
+    vi.stubGlobal('Audio', class {
+      constructor(url: string) { played.push(url); }
+      play() { return Promise.resolve(); }
+      pause() { /* stopped on cleanup */ }
+    });
+    const young: Step = { ...first, ageGroupId: '3-5', node: { ...first.node, lines: [{ speakerId: 'narrator', text: 'Welcome.', audioUrl: '/welcome.mp3' }] } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(young), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    expect(played).toHaveLength(0);
+    fireEvent.pointerDown(window);
+    await waitFor(() => expect(played).toEqual(['/welcome.mp3']));
+    fireEvent.keyDown(window);
+    expect(played).toHaveLength(1);
   });
 
   it('does not speak a cancelled audio fallback after unmount', async () => {

@@ -34,6 +34,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
   const inFlight = useRef<AbortController | undefined>(undefined);
   const busyRef = useRef(false);
   const autoAdvanced = useRef<string | undefined>(undefined);
+  const narrationStartedFor = useRef<string | undefined>(undefined);
   const reactionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const stopMedia = useCallback(() => {
@@ -151,6 +152,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
 
   const playLines = useCallback((from: number) => {
     if (!step) return;
+    narrationStartedFor.current = `${step.sessionId}:${step.node.id}:${step.version}`;
     stopMedia();
     const token = generation.current;
     const lines = step.node.lines;
@@ -193,7 +195,8 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     if (!step) return;
     const defaultOn = step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9';
     if (narration === undefined) setNarration(defaultOn);
-    if ((narration ?? defaultOn) && step.node.lines.length && (!['1-2', '3-5'].includes(step.ageGroupId) || hasGesture)) playLines(0);
+    const key = `${step.sessionId}:${step.node.id}:${step.version}`;
+    if ((narration ?? defaultOn) && step.node.lines.length && (!['1-2', '3-5'].includes(step.ageGroupId) || hasGesture) && narrationStartedFor.current !== key) playLines(0);
   // Only start narration when a new step arrives; replay and toggle use explicit handlers.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step?.node.id, step?.version, hasGesture]);
