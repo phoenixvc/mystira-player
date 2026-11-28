@@ -332,6 +332,7 @@ export class LocalEngine implements Engine {
       case 'hotspots': return answer.kind === 'hotspot' && interaction.spots.some((spot) => spot.id === answer.hotspotId);
       case 'sequence': return answer.kind === 'sequence' && answer.itemIds.length === interaction.items.length && new Set(answer.itemIds).size === interaction.items.length && answer.itemIds.every((id) => interaction.items.some((item) => item.id === id));
       case 'inspect': return answer.kind === 'inspect' && answer.partIds.length >= (interaction.minMarks ?? 1) && new Set(answer.partIds).size === answer.partIds.length && answer.partIds.every((id) => interaction.document.parts.some((part) => part.id === id));
+      case 'roll': return false; // Legacy rolls are resolved only by an authorized host engine.
       case 'pattern': return answer.kind === 'pattern';
       case 'keypad': return answer.kind === 'keypad';
       case 'count': return answer.kind === 'count';

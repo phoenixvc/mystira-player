@@ -13,6 +13,24 @@ const first: Step = {
 const second: Step = { ...first, version: '2', canGoBack: true, progress: { done: 1, total: 2 }, node: { ...first.node, id: 'hall', title: 'In the hall' } };
 
 describe('Player', () => {
+  it('asks the host to roll once, displays its resolved outcome, then continues without deciding success', async () => {
+    const ready: Step = { ...first, node: { ...first.node, lines: [], interaction: { type: 'roll', state: 'ready', target: 3 } } };
+    const resolved: Step = { ...ready, version: '2', node: { ...ready.node, interaction: { type: 'roll', state: 'resolved', target: 3, result: { value: 2, success: false, message: 'A gentle miss.' } } } };
+    const respond = vi.fn().mockResolvedValueOnce(resolved).mockResolvedValueOnce(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(ready), resumeSession: vi.fn(), respond };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
+    const roll = await screen.findByRole('button', { name: 'Roll' });
+    fireEvent.click(roll);
+    fireEvent.click(roll);
+    await waitFor(() => expect(respond).toHaveBeenCalledTimes(1));
+    expect(respond).toHaveBeenCalledWith('s1', expect.objectContaining({ nodeId: 'gate', version: '1', answer: { kind: 'roll' }, answerRequestId: expect.any(String) }), expect.anything());
+    const next = await screen.findByRole('button', { name: 'Continue adventure' });
+    expect(screen.getByText('A gentle miss.')).toBeTruthy();
+    expect(document.activeElement).toBe(next);
+    fireEvent.click(next);
+    await waitFor(() => expect(respond).toHaveBeenCalledTimes(2));
+    expect(respond).toHaveBeenLastCalledWith('s1', expect.objectContaining({ nodeId: 'gate', version: '2', answer: { kind: 'continue' } }), expect.anything());
+  });
   const inspectParts = [
     { id: 'sender', role: 'sender' as const, text: 'coinz4u.example' },
     { id: 'link', role: 'link' as const, text: 'Enter a password' },
