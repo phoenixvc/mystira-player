@@ -276,10 +276,16 @@ Every interaction runs in one of three modes, decided by the node, not by the ty
 
 Practice feedback ladder: wrong try *n* plays `onWrong[n-1]` if present, else `hint`, else the built-in "Not yet. Try again." It comes with a gentle shake and a low tone, never a red cross or a failure sound. After `revealAfter` wrong tries the correct target pulses, and the child still taps it.
 
+Spec 2 adds optional choice/hotspot practice outcomes keyed by the submitted stable ID. A matching wrong-ID `onWrong` takes precedence over the per-try ladder above; it still counts toward `revealAfter`. A correct choice may have `onCorrect` with an optional replacement image and required explanatory line. The player holds the correct answer, shows the image and line, waits for narration to finish or an explicit skip, then enables Next; Next submits once with `wrongTries`. This is the specific exception to the general rule that interactions remain usable during narration: the child can skip this line and proceed. With narration off, unavailable or failed, text is shown and Next becomes available immediately. This contract is frozen in the Spec 2 design; implementation remains in that spec's open tasks.
+
 ### Core interactions
 
 ```ts
-type Feedback = { hint: Narration; onWrong?: Narration[]; revealAfter?: number };   // default 3
+type Feedback = { hint?: Narration; onWrong?: Narration[]; revealAfter?: number };   // default 3
+type WrongPracticeOutcome = { onWrong: Narration };
+type CorrectChoiceOutcome = { onCorrect: { image?: { imageUrl: string; alt: string }; line: Narration } };
+type ChoicePracticeOutcomes = Record<string, WrongPracticeOutcome | CorrectChoiceOutcome>;
+type HotspotPracticeOutcomes = Record<string, WrongPracticeOutcome>; // keyed by stable object ID
 
 type PartRole = "sender" | "heading" | "text" | "link" | "button" | "image" | "price" | "footer";
 
@@ -288,11 +294,11 @@ type Interaction =
   | { type: "choices";
       options: { id: string; label: string; imageUrl?: string; alt?: string;
                  icon?: "next" | "retry" | "look" }[];                  // 2 to 4
-      local?: { correctId: string; feedback?: Feedback } }
+      local?: { correctId: string; feedback?: Feedback; outcomes?: ChoicePracticeOutcomes } }
   | { type: "hotspots";
       spots: { id: string; region: Region; label: string;
                reveal?: { text: string; imageUrl?: string; alt?: string } }[];   // 2 to 6
-      local?: { correctId: string; feedback?: Feedback } }
+      local?: { correctId: string; feedback?: Feedback; outcomes?: HotspotPracticeOutcomes } }
   | { type: "sequence";
       items: { id: string; label: string; imageUrl?: string; alt?: string }[];  // 3 to 5, already shuffled by the engine
       local?: { order: string[]; feedback?: Feedback } }

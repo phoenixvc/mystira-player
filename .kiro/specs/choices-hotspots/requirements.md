@@ -21,6 +21,7 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 5. WHERE a choice has no local block, THE Player SHALL accept selection as open mode and leave correctness to the Engine.
 6. WHERE a practice choice has authored feedback for the selected choice ID, THE Player SHALL use that choice-specific feedback for a wrong selection before the shared feedback fallback.
 7. WHERE a correct practice choice has an authored scene-image change and explanatory line, THE Player SHALL show that image and present the line before offering Next; it SHALL NOT advance the scene on the selection alone.
+8. A replacement image SHALL have authored alt text. WHEN narration is enabled, Next SHALL follow narration completion or an explicit skip; WHEN narration is disabled, unavailable or fails, the text SHALL remain available and Next SHALL not wait for audio.
 
 ### Requirement CH2: Hotspot interactions
 
@@ -84,6 +85,7 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 6. Choice- or object-specific wrong feedback SHALL be looked up by stable submitted ID. If absent, the existing per-try onWrong, hint, and built-in fallback order SHALL apply.
 7. An optional correct-selection scene-image change and explanatory line SHALL occur only after local practice judgment succeeds. The current scene SHALL remain active until that line is presented and the child activates Next. If no correct-selection presentation is authored, existing correct-answer progression SHALL apply.
 8. Check mode SHALL neither expose answer-keyed outcome data to the renderer nor use practice-local outcome presentation; correctness and scoring remain Engine-owned.
+9. Next after a correct-selection presentation SHALL submit the held answer once with its wrong-try count and preserve the same answerRequestId on retry. Scene auto-advance SHALL NOT bypass that presentation.
 
 ### Requirement CH6: Check confirmation
 
