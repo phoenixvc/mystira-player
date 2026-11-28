@@ -5,6 +5,7 @@
 | Status | First demo slice implemented; teaching content needs Afrikaans-speaker and educator review |
 | Date | 28 November 2026 |
 | First content | The Mummy's Party, English and Afrikaans, opening and first fire-safety lesson piece |
+| Technical spec | [Spec 8: bilingual learning layers](../.kiro/specs/bilingual-learning/requirements.md) |
 
 ## Purpose
 

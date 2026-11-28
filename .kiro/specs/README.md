@@ -9,7 +9,7 @@ The core interaction scope is divided into four Kiro specs, matching the product
 | 3 | sequence | Sequence schema, Engine contract and renderer; open/practice/check behavior using Spec 2 shared machinery. |
 | 4 | inspect | Fictional mock message/page/sign content, inspect schema, Engine contract and renderer; open/practice/check behavior using Spec 2 shared machinery. |
 
-Pattern, keypad and count are the approved post-core product target under [PRD 07](../../docs/prd-07-seven-interactions.md) and [Spec 7](seven-interactions/requirements.md). The current contest gate remains the four core types, with inspect cuttable under the primary PRD.
+Pattern, keypad and count are the approved post-core product target under [PRD 07](../../docs/prd-07-seven-interactions.md) and [Spec 7](seven-interactions/requirements.md). [Spec 8](bilingual-learning/requirements.md) turns [PRD 08](../../docs/prd-08-bilingual-learning.md) into optional bilingual learning layers that do not add interaction types or change Engine answers. Both plans begin with a task 0 review and contract freeze. The current contest gate remains the four core types, with inspect cuttable under the primary PRD.
 
 ## Supporting specs outside the four interaction families
 
