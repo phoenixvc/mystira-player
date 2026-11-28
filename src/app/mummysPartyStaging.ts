@@ -13,10 +13,10 @@ const positions: Record<string, Pick<StageLayer, 'left' | 'bottom' | 'width' | '
   'plugs-two': { left: 12, bottom: 24, width: 7 },
   'smoke-alarm': { left: 65, bottom: 82, width: 5 },
   'meet-here-sign': { left: 80, bottom: 52, width: 10 },
-  'arrow-left': { left: 30, bottom: 15, width: 11 },
-  'arrow-right': { left: 61, bottom: 15, width: 11 },
-  'fire-engine': { left: 80, bottom: 8, width: 19 },
-  'fire-poster': { left: 65, bottom: 43, width: 13 },
+  'arrow-left': { left: 28, bottom: 2, width: 11 },
+  'arrow-right': { left: 65, bottom: 2, width: 11 },
+  'fire-engine': { left: 5, bottom: 3, width: 34 },
+  'fire-poster': { left: 6, bottom: 32, width: 12 },
   'potion-boilover': { left: 42, bottom: 10, width: 14 },
   'bag-of-sweets': { left: 42, bottom: 5, width: 10 },
   'blackened-pan': { left: 45, bottom: 8, width: 10 },
@@ -44,6 +44,7 @@ export function stageMummysParty(scene: SceneYaml): SceneStaging {
       const position = { ...positions[name]! };
       if (name === 'sofa' && /sofa (?:pushed away|clear of)/.test(pieces)) position.left = 54;
       if (name === 'paper-bats' && /paper-bats (?:moved from the lamp to|on) the wall/.test(pieces)) { position.left = 31; position.bottom = 68; }
+      if (name === 'fire-poster' && /shown large, close up/.test(pieces)) { position.left = 37; position.bottom = 10; position.width = 26; }
       return { id: name, imageUrl: `${mediaRoot}${pathForPiece(name)}`, alt: '', ...position, ...(name.startsWith('smoke-') ? { overlay: true } : {}) };
     });
   for (const member of scene.cast ?? []) {

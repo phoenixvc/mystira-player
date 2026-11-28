@@ -19,8 +19,8 @@ const piecePositions: Record<string, { left: number; bottom: number; width: numb
   'paper-bats': { left: 16, bottom: 55, width: 10 }, sofa: { left: 70, bottom: 12, width: 24 },
   'plugs-six': { left: 12, bottom: 24, width: 7 }, 'plugs-two': { left: 12, bottom: 24, width: 7 },
   'smoke-alarm': { left: 63, bottom: 82, width: 7 }, 'meet-here-sign': { left: 60, bottom: 39, width: 13 },
-  'arrow-left': { left: 29, bottom: 25, width: 11 }, 'arrow-right': { left: 61, bottom: 25, width: 11 },
-  'fire-engine': { left: 80, bottom: 8, width: 19 }, 'fire-poster': { left: 65, bottom: 44, width: 12 },
+  'arrow-left': { left: 28, bottom: 2, width: 11 }, 'arrow-right': { left: 65, bottom: 2, width: 11 },
+  'fire-engine': { left: 5, bottom: 3, width: 34 }, 'fire-poster': { left: 6, bottom: 32, width: 12 },
   'potion-boilover': { left: 45, bottom: 10, width: 15 }, 'bag-of-sweets': { left: 45, bottom: 2, width: 11 },
   'blackened-pan': { left: 42, bottom: 8, width: 12 }, 'smoke-door': { left: 0, bottom: 0, width: 100 },
   'smoke-ceiling': { left: 0, bottom: 0, width: 100 },
@@ -48,7 +48,7 @@ const draftScenes: Scene[] = draft.scenes.map((scene) => {
       const left = member.slot === 'left' ? 8.5 : member.slot === 'right' ? 64.5 : 36.5;
       return [{ path, alt: character.id, left, bottom: 1, width: 27 }];
     }),
-    props: usedPieces.filter((name) => !name.startsWith('smoke-') && !(scene.id === 'max_s1_03' && name === 'sofa')).map((name) => ({ path: pathForPiece(name), alt: name.replaceAll('-', ' '), ...piecePositions[name]! })),
+    props: usedPieces.filter((name) => !name.startsWith('smoke-') && !(scene.id === 'max_s1_03' && name === 'sofa')).map((name) => ({ path: pathForPiece(name), alt: name.replaceAll('-', ' '), ...piecePositions[name]!, ...(name === 'fire-poster' && /shown large, close up/.test(pieces) ? { left: 37, bottom: 10, width: 26 } : {}) })),
     smoke: smokeName ? pathForPiece(smokeName) : undefined,
   };
 });

@@ -59,13 +59,15 @@ describe("Mummy's Party draft", () => {
     const garden = stageMummysParty(closing);
     expect(party.layers?.some((layer) => layer.id === 'ghost-glow' && layer.imageUrl.endsWith('ghost-pointing-glow.svg'))).toBe(true);
     expect(party.layers?.some((layer) => layer.id === 'sofa' && layer.left >= 70)).toBe(true);
-    expect(garden.layers?.find((layer) => layer.id === 'fire-engine')?.left).toBe(80);
+    expect(garden.layers?.find((layer) => layer.id === 'fire-engine')?.left).toBe(5);
     expect(party.imageForCast?.('/mummys-party/characters/ghost.png', 'worried')).toBe('/mummys-party/poses/ghost/ghost-worried.png');
     expect(party.layers?.find((layer) => layer.id === 'ghost-glow')?.left).toBe(8.5);
     const smoky = stageMummysParty(story.scenes.find((scene) => scene.id === 'zoe_s3_08')!);
     expect(smoky.layers?.find((layer) => layer.id === 'smoke-ceiling')?.overlay).toBe(true);
     const shop = stageMummysParty(story.scenes.find((scene) => scene.id === 'q3')!);
     expect(shop.layers?.some((layer) => layer.id === 'smoke-alarm')).toBe(false);
+    expect(shop.layers?.find((layer) => layer.id === 'fire-poster')?.left).toBe(6);
+    expect(stageMummysParty(story.scenes.find((scene) => scene.id === 'q1_find')!).layers?.find((layer) => layer.id === 'fire-poster')?.width).toBe(26);
   });
 
   it('completes the separate assessment with all three first answers correct', async () => {
