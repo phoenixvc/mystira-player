@@ -61,6 +61,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
   const autoAdvanced = useRef<string | undefined>(undefined);
   const narrationStartedFor = useRef<string | undefined>(undefined);
   const reactionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const rollContinue = useRef<HTMLButtonElement>(null);
 
   const stopMedia = useCallback(() => {
     generation.current += 1;
@@ -135,6 +136,10 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
     setKeyImageFailed(false);
     autoAdvanced.current = undefined;
   }, [step?.node.id, step?.version, stopMedia]);
+
+  useEffect(() => {
+    if (step?.node.interaction.type === 'roll' && step.node.interaction.state === 'resolved') rollContinue.current?.focus();
+  }, [step]);
 
   const answer = useCallback(async (value: Answer, submittedWrongTries?: number) => {
     if (!step || busyRef.current) return;
@@ -381,6 +386,10 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
         : (held?.image?.imageUrl ?? node.media.imageUrl) && !imageFailed ? <img className={styles.media} src={held?.image?.imageUrl ?? node.media.imageUrl} alt={held?.image?.alt ?? node.media.alt ?? ''} onError={() => setImageFailed(true)} />
           : <div className={styles.mediaFallback} role="img" aria-label={imageFailed ? held?.image?.alt ?? node.media.alt ?? 'Scene image unavailable' : 'Scene artwork'}>✦</div>}
       {characters.map((character) => <button className={`${styles.character} ${styles[character.position]} ${reaction === character.id ? styles.reaction : ''}`} key={character.id} type="button" disabled={!character.reactions?.length} aria-label={`${character.alt}${character.reactions?.length ? ', react' : ''}`} onClick={() => { setReaction(character.id); playReaction(); if (reactionTimer.current) clearTimeout(reactionTimer.current); reactionTimer.current = setTimeout(() => setReaction(undefined), 450); }}><img src={character.imageUrl} alt="" /></button>)}
+      {node.interaction.type === 'roll' && <div className={`${styles.rollPanel} ${node.interaction.state === 'resolved' ? styles.rollResolved : ''}`} role="region" aria-label="Roll challenge" tabIndex={0}>
+        {node.interaction.state === 'ready' ? <><p>Time to test your luck!</p>{node.interaction.target && <p>Roll target <strong>{node.interaction.target}</strong> or higher</p>}<button type="button" disabled={busy} onClick={() => void answer({ kind: 'roll' })}>Roll</button></>
+          : node.interaction.result && <div role="status"><p>You rolled <strong>{node.interaction.result.value}</strong>{node.interaction.target && <> vs {node.interaction.target}</>}</p><p>{node.interaction.result.message}</p></div>}
+      </div>}
       {node.overlays.map((overlay) => <span className={styles.overlayRegion} key={overlay.id}><span className={styles.overlay} tabIndex={0} style={{ left: `${overlay.anchor.x * 100}%`, top: `${overlay.anchor.y * 100}%`, transform: `translate(-${overlay.anchor.x * 100}%, -${overlay.anchor.y * 100}%)`, maxWidth: overlay.maxWidth ? `${overlay.maxWidth * 100}%` : undefined }}>{overlay.text}</span></span>)}
       {node.interaction.type === 'hotspots' && !held && node.interaction.spots.map((spot) => <button key={spot.id} type="button" className={`${styles.hotspot} ${reveal && node.interaction.type === 'hotspots' && node.interaction.local?.correctId === spot.id ? styles.revealed : ''}`} style={spot.region.shape === 'rect' ? { left: `${spot.region.x * 100}%`, top: `${spot.region.y * 100}%`, width: `${spot.region.w * 100}%`, height: `${spot.region.h * 100}%` } : { left: `${(spot.region.x - spot.region.r) * 100}%`, top: `${(spot.region.y - spot.region.r) * 100}%`, width: `${spot.region.r * 200}%`, height: `${spot.region.r * 200}%`, borderRadius: '50%' }} aria-label={spot.label} aria-pressed={selected?.kind === 'hotspot' && selected.hotspotId === spot.id} disabled={busy} onClick={() => choose({ kind: 'hotspot', hotspotId: spot.id })}><span>{spot.label}</span></button>)}
       {held?.spot && <div className={styles.hotspotReveal} role="status" style={held.spot.region.shape === 'rect' ? { left: `${held.spot.region.x * 100}%`, top: `${held.spot.region.y * 100}%` } : { left: `${held.spot.region.x * 100}%`, top: `${held.spot.region.y * 100}%` }}>{held.spot.imageUrl && <img src={held.spot.imageUrl} alt={held.spot.alt ?? held.spot.text} />}<p>{held.spot.text}</p></div>}
@@ -410,7 +419,8 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
         : held ? <button className={styles.next} type="button" disabled={busy || !heldReady} onClick={() => void answer(held.answer, wrongTries)}>Next</button>
         : node.type === 'check' ? <button className={styles.next} type="button" disabled={busy || !selected} onClick={() => { if (selected) void answer(selected); }}>That's my answer</button>
           : node.interaction.type === 'continue' ? <button className={styles.next} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Next</button>
-            : node.interaction.type !== 'choices' && node.interaction.type !== 'hotspots' && node.interaction.type !== 'sequence' && node.interaction.type !== 'inspect' ? <p role="status">This interaction is not available in the core preview yet.</p> : null}
+            : node.interaction.type === 'roll' && node.interaction.state === 'resolved' ? <button ref={rollContinue} className={styles.next} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Continue adventure</button>
+              : node.interaction.type !== 'roll' && node.interaction.type !== 'choices' && node.interaction.type !== 'hotspots' && node.interaction.type !== 'sequence' && node.interaction.type !== 'inspect' ? <p role="status">This interaction is not available in the core preview yet.</p> : null}
     </div>
     {notesEnabled && (isDemoMode || grownUpAuthorized) && node.rationale && <aside className={styles.notes}><h2>Grown-up note</h2><p>{node.title}</p><p>{node.rationale.differs ? 'Different for each child' : 'Same for every child'}</p><p>{node.rationale.text}</p></aside>}
     {error && <p role="alert" className={styles.error}>{error}</p>}

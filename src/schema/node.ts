@@ -16,6 +16,10 @@ export type ResearchNode = z.infer<typeof ResearchNodeSchema>;
 export type ResultNode = z.infer<typeof ResultNodeSchema>;
 
 function addNodeInvariants(node: Node, ctx: z.RefinementCtx): void {
+  if (node.interaction.type === 'roll') {
+    if (node.interaction.state === 'resolved' && !node.interaction.result) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'result'], message: 'Resolved roll needs a result' });
+    if (node.interaction.state === 'ready' && node.interaction.result) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['interaction', 'result'], message: 'Ready roll cannot carry a result' });
+  }
   const slots = new Set<string>();
   for (const character of node.characters) {
     if (slots.has(character.position)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['characters'], message: `Duplicate character slot: ${character.position}` });

@@ -21,8 +21,8 @@ All items are open. Spec 5 follows the four Kiroween specs and is the gate for r
   - Requirements: 3
 
 - [ ] 4. Add the roll capability.
-  - [ ] 4.1 Extend the interaction/answer/node schemas with ready and resolved roll states behind an explicit capability flag.
-  - [ ] 4.2 Render roll, returned outcome, Continue, focus movement, and reduced-motion fallback.
+  - [x] 4.1 Extend the interaction/answer/node schemas with ready and resolved roll states behind an explicit capability flag. `src/schema/node.test.ts` covers validation and gating.
+  - [x] 4.2 Render roll, returned outcome, Continue, focus movement, and reduced-motion fallback. `src/player/Player.test.tsx` covers the ready-to-resolved flow; reduced-motion CSS keeps the static outcome visible.
   - [ ] 4.3 Map the existing roll computation and success/failure navigation into the host engine, including malformed-branch fallback.
   - [ ] 4.4 Test stable request IDs, retry, remount after resolution, and no double roll or branch navigation.
   - Requirements: 4
