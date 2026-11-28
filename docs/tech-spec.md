@@ -519,7 +519,7 @@ Events (`CustomEvent`, `bubbles` and `composed`):
 | Component | Vitest + Testing Library | Each core interaction in open, practice and check mode; the feedback ladder and reveal; "Nothing here" on a hotspot miss; "That's my answer"; Undo and Done; inspect with `minMarks: 0`; keyboard operation; dialogue with speech mocked and stopped by a tap; research flow; notes panel visibility rules; error screens. |
 | Contract | Vitest + MSW | `RemoteEngine` against recorded responses including 401, 409 and network failure. |
 | Element | Playwright, plain HTML harness page | Mount, unmount, remount; events and their `detail`; slot content; no style leakage; host-assigned engine used; no network requests from the element; speech cancelled on unmount. |
-| E2E | Playwright | Submission gate: reviewed Fire Door fire-safety lesson for ages 6 to 9, common check for both invented children, a deliberate wrong answer, reviewed research, unscored follow-up, result and key; fixed support, pace and piece order. Pumpkin Gate remains a second lesson fixture. Axe on each delivered node and interaction type. This gate is planned, not yet passed. |
+| E2E | Playwright | Submission gate: reviewed Fire Door fire-safety lesson for ages 6 to 9, common check for both invented children, a deliberate wrong answer, reviewed research, unscored follow-up, and result; fixed support, pace and piece order. Verify the key only if PR-08 remains in scope. Pumpkin Gate remains a second lesson fixture. Axe on each delivered node and interaction type. This gate is planned, not yet passed. |
 
 ## 16. CI/CD
 

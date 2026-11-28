@@ -156,7 +156,7 @@ Priorities: **P0** required for submission, **P1** strongly wanted, **P2** only 
 3. The child enters the Fire Door and helps make the mummy's party safe. The approved lesson pieces present the same facts in reviewed forms while support, pace and piece order stay fixed.
 4. If two reviewed method variants are ready, the judge switches between invented demo children to compare them; the notes panel explains the difference.
 5. The common check presents the same questions, formats and order to both children. A wrong scored first answer leads to a reviewed research source and unscored follow-up practice.
-6. The door is solved and the key is added to the ring.
+6. The door is solved. If PR-08 remains in scope, its key is added to the ring.
 
 ### Demo content
 
@@ -198,11 +198,11 @@ All demo text, pictures and audio in this repository are public to read and run,
 
 | Criterion | How the entry earns it |
 |---|---|
-| Impact | The demo shows the same facts and check presented in two different forms, and a mistake leading to research. Whether a form improves learning is untested. |
+| Impact | The demo shows the approved fire-safety method, the common check, and a mistake leading to research. If two reviewed variants are ready, it also compares two forms of the same facts. Whether either form improves learning is untested. |
 | Use of Kiro | Spec-first build in Kiro: steering files, four specs generated from these docs (the core plus one per interaction group), agent hooks that validate content and contrast, documented in the write-up. |
 | Design | A polished Manor theme on a real theme system; narrated, accessible, reduced-motion-aware UI. |
-| Idea | An open player paired with a private engine; one manor, one lesson, two children, two ways in. |
-| Video | Under three minutes: the manor, the same piece taught two ways side by side, a wrong answer turning into research, a glimpse of Kiro specs and hooks. |
+| Idea | An open player paired with a private engine; one manor and one approved lesson, with two reviewed teaching methods if both are ready. |
+| Video | Under three minutes: the manor, an approved lesson piece, a wrong answer turning into research, and a glimpse of Kiro specs and hooks. Compare two teaching methods if both reviewed variants are ready. |
 
 ### Release checklist
 
