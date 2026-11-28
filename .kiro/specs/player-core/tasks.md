@@ -17,21 +17,22 @@ Tasks are grouped by implementation boundary. Checked items are present in the c
   - [x] 2.2 Add the root module entry and local runtime configuration.
   - [x] 2.3 Configure Vitest and verify the build and test command.
   - Requirements: 1
-- [ ] 3. Complete runtime schemas and Engine contracts.
+- [x] 3. Complete runtime schemas and Engine contracts.
   - [x] 3.1 Define core Engine, Step, answer, player and error types without childId.
   - [x] 3.2 Add base node schemas, character-slot validation and enabled-interaction validation.
-  - [ ] 3.3 Complete the Story YAML 2.1 schema against the JSON schema.
+  - [x] 3.3 Complete the Story YAML 2.1 schema against the JSON schema.
   - [x] 3.4 Add core schema, required-field and round-trip coverage.
-  - [ ] 3.5 Run the core node and story round-trip properties.
+  - [x] 3.5 Run the core node and story round-trip properties.
   - Requirements: 2–4
-- [ ] 4. Complete the continue-only LocalEngine path.
+- [x] 4. Complete the continue-only LocalEngine path.
   - [x] 4.1 Compile supported basic scenes with narrator fallback.
   - [x] 4.2 Select the configured profile version and expose the chosen scene.
   - [x] 4.3 Map core scene fields, including music.
-  - [ ] 4.4 Complete generic session safety; practice/check answers belong to Spec 2.
+  - [x] 4.4 Complete generic session safety; practice/check answers belong to Spec 2.
   - [x] 4.5 Verify idempotency, stale-version conflicts and previous-scene navigation.
   - [x] 4.6 Complete start-node selection, failed-answer history and session end.
-  - [ ] 4.7 Add compiler/session property tests.
+  - [x] 4.7 Add compiler/session property tests.
+  - [x] 4.8 Let a `child_chooses` profile select a lesson piece from engine-provided starts.
   - Requirements: 5, 6, 8
 - [x] 5. Build the engine-agnostic scene player and navigation.
   - [x] 5.1 Add the player root and render nodes from the Engine interface.
@@ -49,10 +50,11 @@ Tasks are grouped by implementation boundary. Checked items are present in the c
   - [x] 6.4 Test visibility, density and cleanup.
   - Requirements: 16–18
 - [ ] 7. Add demo controls and the Manor visual system.
-  - [ ] 7.1 Add local-demo profile/entry-point switches and notes toggle.
+  - [x] 7.1 Add local-demo profile switch and notes toggle outside the player.
   - [x] 7.2 Implement theme tokens, Manor theme and CSS Modules.
   - [x] 7.3 Verify contrast and reduced-motion styling.
-  - [ ] 7.4 Test demo visibility, controls and contrast.
+  - [x] 7.4 Test demo visibility, controls and contrast.
+  - [ ] 7.5 Enable assessment and follow-up entry points when Spec 2 supplies their nodes.
   - Requirements: 19–20
 - [x] 8. Implement configurable scene auto-advance.
   - [x] 8.1 Finalize the content field and update JSON schema, Zod schema and docs.
@@ -60,7 +62,7 @@ Tasks are grouped by implementation boundary. Checked items are present in the c
   - [x] 8.3 Test enabled, disabled, non-continue and unavailable-audio cases.
   - Requirements: 21
 - [ ] 9. Run the core acceptance pass.
-  - [ ] 9.1 Validate core Manor content against the final schema.
+  - [x] 9.1 Validate core Manor content against the final schema.
   - [x] 9.2 Run typecheck, core tests, build and accessibility harness.
   - [ ] 9.3 Confirm every core requirement has implementation and verification evidence.
   - Requirements: 1–12, 16–21

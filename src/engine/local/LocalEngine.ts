@@ -36,6 +36,15 @@ export class LocalEngine implements Engine {
     return piece.scenes?.[0] ?? (piece.versions?.find((version) => version.id === selected) ?? piece.versions?.[0])?.scenes[0];
   }
 
+  /** Demo-only piece choices; the engine resolves each profile's version. */
+  demoPiecesForProfile(profileId: string): { id: string; title: string; startSceneId: string }[] {
+    const profile = this.story.demo?.profiles.find((candidate) => candidate.id === profileId);
+    if (profile?.order !== 'child_chooses') return [];
+    return this.pieceSceneIds(profileId).flatMap((piece) => piece.sceneIds[0]
+      ? [{ id: piece.id, title: piece.title, startSceneId: piece.sceneIds[0] }]
+      : []);
+  }
+
   async startSession(request: StartSessionRequest): Promise<Step> {
     const expectedActivityId = this.story.lesson?.id ?? this.story.title;
     if (request.activityId !== expectedActivityId) throw new EngineError('notFound', `Activity '${request.activityId}' was not found.`);
@@ -44,8 +53,14 @@ export class LocalEngine implements Engine {
     if (!profileId) throw new EngineError('notFound', 'This local story has no demo profile.');
     const profile = this.story.demo?.profiles.find((candidate) => candidate.id === profileId);
     if (this.story.demo && !profile) throw new EngineError('notFound', `Demo profile '${profileId}' was not found.`);
-    const sceneIds = this.getSceneIds(profileId);
-    if (sceneIds.length === 0) throw new EngineError('unsupported', 'This story has no playable lesson scenes yet.');
+    if (profile?.order === 'child_chooses' && this.story.lesson && !request.startNodeId) {
+      throw new EngineError('unsupported', 'Choose a lesson piece before starting this profile.');
+    }
+    const sceneIds = this.getSceneIds(profileId, request.startNodeId);
+    if (sceneIds.length === 0) {
+      if (request.startNodeId) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
+      throw new EngineError('unsupported', 'This story has no playable lesson scenes yet.');
+    }
     const startIndex = request.startNodeId === undefined ? 0 : sceneIds.indexOf(request.startNodeId);
     if (startIndex < 0) throw new EngineError('notFound', `Start scene '${request.startNodeId}' is not available for this profile.`);
     const players = request.players.length > 0 ? request.players : [{ type: 'Guest' as const, displayName: profile?.display_name ?? 'Guest' }];
@@ -98,17 +113,26 @@ export class LocalEngine implements Engine {
     return next;
   }
 
-  private getSceneIds(profileId: string): string[] {
+  private pieceSceneIds(profileId: string): { id: string; title: string; sceneIds: string[] }[] {
     const lesson = this.story.lesson;
-    if (!lesson) return this.story.scenes.map((scene) => scene.id);
+    if (!lesson) return [];
     const profile = this.story.demo?.profiles.find((candidate) => candidate.id === profileId);
-    const ids = lesson.pieces.flatMap((piece) => {
-      if (piece.scenes) return piece.scenes;
+    return lesson.pieces.map((piece) => {
+      if (piece.scenes) return { id: piece.id, title: piece.title, sceneIds: piece.scenes };
       const chosenVersion = profile?.versions?.[piece.id];
       const version = piece.versions?.find((entry) => entry.id === chosenVersion) ?? piece.versions?.[0];
-      return version?.scenes ?? [];
+      return { id: piece.id, title: piece.title, sceneIds: version?.scenes ?? [] };
     });
-    return ids;
+  }
+
+  private getSceneIds(profileId: string, startNodeId?: string): string[] {
+    if (!this.story.lesson) return this.story.scenes.map((scene) => scene.id);
+    const pieces = this.pieceSceneIds(profileId);
+    const profile = this.story.demo?.profiles.find((candidate) => candidate.id === profileId);
+    if (profile?.order === 'child_chooses') {
+      return pieces.find((piece) => piece.sceneIds.includes(startNodeId ?? ''))?.sceneIds ?? [];
+    }
+    return pieces.flatMap((piece) => piece.sceneIds);
   }
 
   private nextSceneIndex(session: Session, answer: Answer): number {
@@ -126,6 +150,10 @@ export class LocalEngine implements Engine {
     if (target) {
       const targetIndex = session.sceneIds.indexOf(target);
       if (targetIndex < 0) {
+        const profile = this.story.demo?.profiles.find((candidate) => candidate.id === session.profileId);
+        if (profile?.order === 'child_chooses' && this.pieceSceneIds(session.profileId).some((piece) => piece.sceneIds.includes(target))) {
+          return session.sceneIds.length;
+        }
         throw new EngineError('unsupported', `Scene '${scene.id}' points to unavailable scene '${target}'.`);
       }
       return targetIndex;
@@ -134,7 +162,8 @@ export class LocalEngine implements Engine {
       throw new EngineError('unsupported', `Navigation for '${answer.kind}' is not implemented yet.`);
     }
     if (session.index + 1 < session.sceneIds.length && this.story.lesson) return session.index + 1;
-    if (this.story.lesson?.checks?.length && session.index + 1 >= session.sceneIds.length) {
+    const profile = this.story.demo?.profiles.find((candidate) => candidate.id === session.profileId);
+    if (this.story.lesson?.checks?.length && profile?.order !== 'child_chooses' && session.index + 1 >= session.sceneIds.length) {
       throw new EngineError('unsupported', 'The lesson check requires the choices/hotspots spec; it cannot be skipped.');
     }
     return session.sceneIds.length;
@@ -154,8 +183,9 @@ export class LocalEngine implements Engine {
 
   private toStep(session: Session): Step {
     if (session.index === session.sceneIds.length) {
+      const profile = this.story.demo?.profiles.find((candidate) => candidate.id === session.profileId);
       const end: Node = {
-        type: 'result', id: 'story-end', title: 'The End', media: {}, characters: [], speakers: [], lines: [], overlays: [],
+        type: 'result', id: 'story-end', title: profile?.order === 'child_chooses' ? 'Piece complete' : 'The End', media: {}, characters: [], speakers: [], lines: [], overlays: [],
         correctFirstTry: 0, total: 0, interaction: { type: 'continue' },
       };
       return { sessionId: session.id, version: String(session.version), ageGroupId: session.ageGroupId,

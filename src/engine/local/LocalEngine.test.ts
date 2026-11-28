@@ -140,4 +140,58 @@ describe('LocalEngine', () => {
     expect((await start(engine, 'base-profile')).node.rationale?.differs).toBe(true);
     expect((await start(engine, 'alternate-profile')).node.rationale?.differs).toBe(true);
   });
+
+  it('preserves replay, conflict, progress and Back invariants across linear path lengths', async () => {
+    for (let length = 1; length <= 12; length += 1) {
+      const linear: StoryYaml = {
+        ...story, lesson: undefined,
+        scenes: Array.from({ length }, (_, index) => ({
+          ...story.scenes[0]!, id: `scene-${index}`, title: `Scene ${index}`,
+          next_scene: index + 1 < length ? `scene-${index + 1}` : null,
+        })),
+      };
+      const engine = new LocalEngine(linear);
+      let current = await engine.startSession({ activityId: 'Demo', players: [{ type: 'Profile', profileId: 'base-profile' }] });
+      for (let index = 0; index < length; index += 1) {
+        const submission = { answerRequestId: `length-${length}-step-${index}`, version: current.version, nodeId: current.node.id, answer: { kind: 'continue' as const } };
+        const next = await engine.respond(current.sessionId, submission);
+        expect(next.progress).toEqual({ done: index + 1, total: length });
+        expect(await engine.respond(current.sessionId, submission)).toBe(next);
+        expect(await engine.resumeSession(current.sessionId)).toEqual(next);
+        await expect(engine.respond(current.sessionId, { ...submission, answerRequestId: `stale-${index}`, nodeId: next.node.id }))
+          .rejects.toMatchObject({ kind: 'conflict', currentStep: next });
+        current = next;
+      }
+      expect(current.node.type).toBe('result');
+      const back = await engine.respond(current.sessionId, { answerRequestId: `back-${length}`, version: current.version, nodeId: current.node.id, answer: { kind: 'back' } });
+      expect(back.node.id).toBe(`scene-${length - 1}`);
+    }
+  });
+
+  it('lets a child-chooses profile select lesson pieces without forcing fixed order', async () => {
+    const choosing: StoryYaml = {
+      ...story,
+      scenes: story.scenes.map((scene) => scene.id === 'opening' ? { ...scene, next_scene: 'alternate' } : scene),
+      lesson: { id: 'lesson', title: 'Lesson', pieces: [
+        { id: 'first', title: 'First piece', scenes: ['opening'] },
+        { id: 'second', title: 'Second piece', scenes: ['alternate'] },
+      ], checks: [{ id: 'assessment', questions: [{ id: 'q1', scene: 'choice', answer: { branch: 'yes' } }] }] },
+      demo: { profiles: [{ id: 'chooser', display_name: 'Chooser', order: 'child_chooses' }] },
+    };
+    const engine = new LocalEngine(choosing);
+    expect(engine.demoPiecesForProfile('chooser')).toEqual([
+      { id: 'first', title: 'First piece', startSceneId: 'opening' },
+      { id: 'second', title: 'Second piece', startSceneId: 'alternate' },
+    ]);
+    await expect(start(engine, 'chooser')).rejects.toMatchObject({ kind: 'unsupported', message: expect.stringContaining('Choose a lesson piece') });
+    const secondFirst = await engine.startSession({ activityId: 'lesson', players: [{ type: 'Profile', profileId: 'chooser' }], startNodeId: 'alternate' });
+    expect(secondFirst.node.id).toBe('alternate');
+    const secondEnd = await engine.respond(secondFirst.sessionId, { answerRequestId: 'second-end', version: secondFirst.version, nodeId: secondFirst.node.id, answer: { kind: 'continue' } });
+    expect(secondEnd.node.type).toBe('result');
+    expect(secondEnd.node.title).toBe('Piece complete');
+    const firstNext = await engine.startSession({ activityId: 'lesson', players: [{ type: 'Profile', profileId: 'chooser' }], startNodeId: 'opening' });
+    expect(firstNext.node.id).toBe('opening');
+    const firstEnd = await engine.respond(firstNext.sessionId, { answerRequestId: 'first-end', version: firstNext.version, nodeId: firstNext.node.id, answer: { kind: 'continue' } });
+    expect(firstEnd.node.type).toBe('result');
+  });
 });

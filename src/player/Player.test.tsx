@@ -128,7 +128,7 @@ describe('Player', () => {
   });
 
   it('keeps the end view usable when restarting the story fails', async () => {
-    const ended: Step = { ...first, progress: { done: 2, total: 2 }, node: { ...first.node, type: 'result', id: 'story-end', correctFirstTry: 0, total: 0 } };
+    const ended: Step = { ...first, progress: { done: 2, total: 2 }, node: { ...first.node, type: 'result', id: 'story-end', title: 'The End', correctFirstTry: 0, total: 0 } };
     const engine: Engine = {
       startSession: vi.fn().mockResolvedValueOnce(ended).mockRejectedValueOnce(new Error('Story unavailable')),
       resumeSession: vi.fn(), respond: vi.fn(),

@@ -1047,7 +1047,7 @@ Choices, hotspots, sequence, inspect, practice-local data, assessment checks, re
 
 #### Per-profile selection (Requirement 6)
 
-The engine reads the active profile's named version for each piece. Fixed order follows lesson order; child_chooses order is exposed as an engine-controlled choice. Per-piece rationale comes from demo and is attached to the node. Profile-specific decisions remain inside the engine.
+The engine reads the active profile's named version for each piece. Fixed order follows lesson order. For a `child_chooses` demo profile, LocalEngine exposes the profile-specific piece starts to the standalone shell; the child selects a piece before starting. Each selected piece is one session, ending before a fixed cross-piece link. The shell can then start another chosen piece. Per-piece rationale comes from demo and is attached to the node. Profile-specific decisions remain inside the engine. Assessment entry points remain a Spec 2 dependency.
 
 #### Generic session control (Requirement 8)
 

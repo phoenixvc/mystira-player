@@ -9,8 +9,10 @@ export function compileScene(scene: SceneYaml, story: StoryYaml, enabled: Intera
   if (scene.type === 'roll' || scene.type === 'special' || (scene.media.stage3d != null && scene.media.image == null && scene.media.video == null)) {
     throw new EngineError('unsupported', `Scene '${scene.id}' uses an unsupported 3D or special presentation.`);
   }
-  if (scene.interaction?.kind !== undefined) {
-    throw new EngineError('unsupported', `Scene '${scene.id}' interaction '${String(scene.interaction.kind)}' is not implemented yet.`);
+  const interactionKind = typeof scene.interaction === 'object' && scene.interaction !== null && 'kind' in scene.interaction
+    ? scene.interaction.kind : undefined;
+  if (interactionKind !== undefined) {
+    throw new EngineError('unsupported', `Scene '${scene.id}' interaction '${String(interactionKind)}' is not implemented yet.`);
   }
 
   const cast = (scene.cast ?? []).flatMap((member) => {

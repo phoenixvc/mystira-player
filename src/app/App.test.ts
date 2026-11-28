@@ -24,7 +24,7 @@ describe('core preview', () => {
       resumeSession: vi.fn().mockResolvedValue(step),
       respond,
     };
-    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id) => id });
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id) => id, piecesForProfile: () => [] });
 
     render(React.createElement(App));
     const startButton = screen.getByRole('button', { name: 'Start preview' });
@@ -43,12 +43,38 @@ describe('core preview', () => {
     const other = { ...step, sessionId: 'second', node: { ...step.node, id: 'other-scene', title: 'Other scene' } };
     const startSession = vi.fn().mockResolvedValueOnce(step).mockResolvedValueOnce(other);
     const engine: Engine = { listProfiles: vi.fn().mockResolvedValue([{ profileId: 'a', displayName: 'A' }, { profileId: 'b', displayName: 'B' }]), startSession, resumeSession: vi.fn(), respond: vi.fn() };
-    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id, profileId) => id === 'base-scene' && profileId === 'b' ? 'other-scene' : undefined });
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id, profileId) => id === 'base-scene' && profileId === 'b' ? 'other-scene' : undefined, piecesForProfile: () => [] });
     render(React.createElement(App));
     fireEvent.click(await screen.findByRole('button', { name: 'Start preview' }));
     await screen.findByRole('heading', { name: 'Base scene' });
     fireEvent.change(screen.getByLabelText('Child'), { target: { value: 'b' } });
     await screen.findByRole('heading', { name: 'Other scene' });
     expect(startSession).toHaveBeenLastCalledWith(expect.objectContaining({ players: [{ type: 'Profile', profileId: 'b' }], startNodeId: 'other-scene' }), expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  });
+
+  it('keeps demo controls outside the player and toggles grown-up notes', async () => {
+    const step: Step = {
+      sessionId: 'session', version: '1', ageGroupId: '6-9', players: [],
+      node: { type: 'scene', id: 'scene', title: 'Scene', media: {}, characters: [], speakers: [], lines: [], overlays: [], rationale: { differs: false, text: 'A note for grown-ups.' }, interaction: { type: 'continue' } },
+    };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(step), resumeSession: vi.fn(), respond: vi.fn() };
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: true, sceneForProfile: (id) => id, piecesForProfile: () => [] });
+    render(React.createElement(App));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start preview' }));
+    await screen.findByRole('heading', { name: 'Scene' });
+    const controls = screen.getByRole('complementary', { name: 'Demo controls' });
+    expect(screen.getByRole('region', { name: 'Story player' }).contains(controls)).toBe(false);
+    expect(screen.getByRole('option', { name: 'Assessment · Spec 2' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.queryByText('A note for grown-ups.')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Grown-up notes'));
+    expect(screen.getByText('A note for grown-ups.')).toBeTruthy();
+  });
+
+  it('hides demo controls when the host is not in demo mode', async () => {
+    const engine: Engine = { startSession: vi.fn(), resumeSession: vi.fn(), respond: vi.fn() };
+    vi.mocked(loadLocalDemo).mockResolvedValue({ engine, activityId: 'demo', isDemoMode: false, sceneForProfile: () => undefined, piecesForProfile: () => [] });
+    render(React.createElement(App));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Start preview' }).hasAttribute('disabled')).toBe(false));
+    expect(screen.queryByRole('complementary', { name: 'Demo controls' })).toBeNull();
   });
 });

@@ -200,7 +200,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
   const node = step.node;
   if (node.type === 'result' && step.progress?.done === step.progress?.total) {
     return <section className={styles.player} aria-label="Story complete" style={themeStyle(theme)}>
-      <h1>The End</h1><p>You made it through the Manor.</p>
+      <h1>{node.title ?? 'The End'}</h1><p>You reached the end of this path.</p>
       <div className={styles.actions}>
         {step.canGoBack && <button type="button" disabled={busy} onClick={() => void answer({ kind: 'back' })}>Back</button>}
         <button type="button" disabled={busy} onClick={() => void playAgain()}>Play again</button>
