@@ -103,6 +103,8 @@
 .immersive .task { position:relative; z-index:5; margin-top:-5.5rem; margin-bottom:0; padding:1rem 1.25rem .45rem; border-radius:1rem 1rem 0 0; background:color-mix(in srgb,var(--mp-surface) 94%,transparent); box-shadow:0 6px 24px #0008; }
 .immersive .taskReplay { min-width:2.2rem; min-height:2.2rem; margin-left:.65rem; padding:.1rem .35rem; vertical-align:middle; border-radius:50%; font-size:1.15rem; }
 .immersive .sceneFrame:has(.choices) .task { margin-top:-9rem; }
+.immersive .stage:has(.hotspot) + .task { margin-top:.55rem; }
+.immersive .stage:has(.hotspot) + .dialogue { margin-top:.55rem; }
 .immersive .task + .dialogue { margin-top:0; padding:.75rem 1.25rem 1rem; border:0; border-left:5px solid var(--mp-accent); border-radius:0 0 1rem 1rem; background:color-mix(in srgb,var(--mp-surface) 94%,transparent); }
 .immersive .sceneFrame > .choices { position:relative; z-index:5; width:min(90%,880px); justify-content:center; margin-top:.75rem; margin-bottom:.75rem; }
 .immersive .banner { position:relative; z-index:5; width:96%; margin-top:.7rem; padding:.55rem .85rem; font-size:.9rem; }
@@ -120,5 +122,9 @@
   .immersive .task,.immersive .sceneFrame:has(.choices) .task { margin-top:.55rem; }
   .immersive .dialogue,.immersive .stage + .dialogue { width:100%; margin-top:.55rem; }
   .immersive .task,.immersive .choices,.immersive .sequence,.immersive .inspect,.immersive .banner,.immersive .feedback,.immersive .actions,.immersive .notes { width:100%; }
+}
+@media (max-height:600px) and (min-width:701px) {
+  .immersive .task,.immersive .sceneFrame:has(.choices) .task { margin-top:.55rem; }
+  .immersive .stage + .dialogue { margin-top:.55rem; }
 }
 @media (prefers-reduced-motion:reduce) { .immersive .choices button,.immersive .choices button::after { transition:none; } .immersive .choices button:hover:not(:disabled),.immersive .choices button:focus-visible { transform:none; } }

@@ -53,6 +53,10 @@ describe("Mummy's Party draft", () => {
     expect(where.objects?.find((object) => object.id === 'cat')?.geometry?.bounds?.[0]).toBeGreaterThan(.35);
     expect(where.objects?.find((object) => object.id === 'witch')?.geometry?.bounds?.[0]).toBeGreaterThan(.64);
     expect(where.objects?.find((object) => object.id === 'poster')?.geometry?.bounds?.[1]).toBeGreaterThan(.35);
+    const backDoor = story.scenes.find((scene) => scene.id === 'spot_backdoor')!;
+    const umbrella = backDoor.objects!.find((object) => object.id === 'brolly')!.geometry!.bounds!;
+    const sofa = backDoor.objects!.find((object) => object.id === 'sofa')!.geometry!.bounds!;
+    expect(sofa[0]! + sofa[2]!).toBeLessThanOrEqual(umbrella[0]!);
   });
   it('has real art, cast poses, and staged pieces for every authored scene', () => {
     const missing: string[] = [];

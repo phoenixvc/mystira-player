@@ -250,9 +250,15 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
     if (from === 0 && step.node.task?.audioUrl) {
       const guide = new Audio(step.node.task.audioUrl);
       audio.current = guide;
-      guide.onended = () => play(0);
-      guide.onerror = () => play(0);
-      void guide.play().catch(() => play(0));
+      let guideSettled = false;
+      const startLines = () => {
+        if (guideSettled) return;
+        guideSettled = true;
+        play(0);
+      };
+      guide.onended = startLines;
+      guide.onerror = startLines;
+      void guide.play().catch(startLines);
     } else play(from);
   }, [answer, step, stopMedia, muted, locale]);
 
