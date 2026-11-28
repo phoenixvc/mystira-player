@@ -87,6 +87,25 @@ describe('Story YAML foundation schema', () => {
     expect(StoryYamlSchema.parse(parse(stringify(inspect)))).toEqual(inspect);
   });
 
+  it('rejects malformed inspect authoring and accepts all document kinds and roles', () => {
+    const authored = parse(pumpkinGate);
+    const scene = authored.scenes.find((candidate: { id: string }) => candidate.id === 'what_do_they_want');
+    const original = scene.interaction;
+    for (const kind of ['message', 'page', 'sign']) {
+      scene.interaction = { ...original, document: { ...original.document, kind, parts: ['sender', 'heading', 'text', 'link', 'button', 'image', 'price', 'footer'].map((role) => ({ id: role, role, text: role })) }, min_marks: 8 };
+      expect(StoryYamlSchema.safeParse(authored).success).toBe(true);
+    }
+    scene.interaction = original;
+    const reject = (change: (part: Record<string, unknown>) => void) => { const copy = structuredClone(original); change(copy); scene.interaction = copy; expect(StoryYamlSchema.safeParse(authored).success).toBe(false); };
+    reject((copy) => { (copy.document as typeof original.document).parts[1].id = 'sender'; });
+    reject((copy) => { copy.min_marks = 5; });
+    reject((copy) => { (copy.document as typeof original.document).parts = (copy.document as typeof original.document).parts.slice(0, 2); });
+    reject((copy) => { (copy.document as typeof original.document).parts[0].role = 'unknown'; });
+    reject((copy) => { (copy.document as typeof original.document).parts[0].image = '/sender.png'; });
+    scene.interaction = { ...original, document: { ...original.document, parts: [{ ...original.document.parts[0], image: '/sender.png', alt: 'Fictional sender' }, ...original.document.parts.slice(1)] } };
+    expect(StoryYamlSchema.safeParse(authored).success).toBe(true);
+  });
+
   it('preserves opaque engine fields through YAML round trips across generated values', () => {
     for (let seed = 0; seed < 24; seed += 1) {
       const authored = parse(corePreview);

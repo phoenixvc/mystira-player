@@ -175,7 +175,7 @@ Choices and tap targets already exist in the format. The two interactions that d
     practice: { answer: { parts: [link, price] }, hint: { text: "What do they want you to give them?" } }
 ```
 
-Inspect documents use invented names, brands and `*.example` domains only.
+Inspect documents use invented names, brands and `*.example` domains only. Their `link` and `button` parts are inert text to mark, never navigation or credential forms. Parts need unique IDs and nonblank text; any part image needs nonblank `alt` text. `min_marks` defaults to 1 and cannot exceed the part count. A practice answer must name unique part IDs and meet that minimum. With `min_marks: 0`, an empty answer is valid and the player offers an explicit “Nothing is wrong” action.
 
 ## 5. Tap targets (hotspots)
 
