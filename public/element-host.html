@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mystira Player host example</title>
+  <style>body{margin:0;background:#eee;color:#222;font:1rem system-ui}main{max-width:1100px;margin:auto;padding:1rem}mystira-player{height:min(90vh,850px);border:4px solid #5a3d85}button{padding:.7rem 1rem;margin:.5rem 0}</style>
+</head>
+<body>
+  <main>
+    <h1>Plain HTML host example</h1>
+    <p>The host owns this heading, session and controls. The player renders inside its bordered box.</p>
+    <button id="start" type="button">Start</button>
+    <button id="resume" type="button">Resume</button>
+    <label><input id="mute" type="checkbox" /> Mute player</label>
+    <p id="host-status" role="status">Waiting</p>
+    <mystira-player theme="mystira-light" music="host" locale="en" notes="off"><p slot="end-cta">Host end action</p></mystira-player>
+  </main>
+  <script type="module">
+    import '/mystira-player.js';
+    const player = document.querySelector('mystira-player');
+    const status = document.querySelector('#host-status');
+    const scene = { type:'scene', id:'welcome', title:'Welcome', media:{}, characters:[], speakers:[], lines:[{speakerId:'narrator',text:'The host supplies this scene.'}], overlays:[], interaction:{type:'continue'} };
+    const end = { ...scene, type:'result', id:'end', title:'The End', correctFirstTry:0, total:0 };
+    let version = 1;
+    player.engine = {
+      async startSession() { version = 1; return { sessionId:'example-session', version:String(version), ageGroupId:'6-9', players:[], node:scene }; },
+      async resumeSession() { return { sessionId:'example-session', version:String(version), ageGroupId:'6-9', players:[], node:version > 1 ? end : scene }; },
+      async respond() { version += 1; return { sessionId:'example-session', version:String(version), ageGroupId:'6-9', players:[], node:end }; },
+    };
+    document.querySelector('#start').addEventListener('click', () => player.start({ activityId:'example', players:[] }));
+    document.querySelector('#resume').addEventListener('click', () => player.resume('example-session'));
+    document.querySelector('#mute').addEventListener('change', (event) => { player.muted = event.target.checked; });
+    player.addEventListener('mp-node-enter', (event) => { status.textContent = `Host saw node ${event.detail.nodeId}`; });
+  </script>
+</body>
+</html>

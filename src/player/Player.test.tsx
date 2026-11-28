@@ -378,7 +378,7 @@ describe('Player', () => {
     act(() => played[0]!.onended?.());
     expect(screen.getByText('Second.')).toBeTruthy();
     expect(played).toHaveLength(2);
-    fireEvent.pointerDown(window);
+    fireEvent.pointerDown(screen.getByRole('region', { name: 'Story player' }));
     expect(played).toHaveLength(2);
     expect(screen.getByText('Second.')).toBeTruthy();
   });
@@ -395,9 +395,9 @@ describe('Player', () => {
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
     await screen.findByRole('heading', { name: 'At the gate' });
     expect(played).toHaveLength(0);
-    fireEvent.pointerDown(window);
+    fireEvent.pointerDown(screen.getByRole('region', { name: 'Story player' }));
     await waitFor(() => expect(played).toEqual(['/welcome.mp3']));
-    fireEvent.keyDown(window);
+    fireEvent.keyDown(screen.getByRole('region', { name: 'Story player' }));
     expect(played).toHaveLength(1);
   });
 

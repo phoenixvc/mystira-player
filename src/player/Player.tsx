@@ -10,20 +10,29 @@ import { InspectView } from './InspectView';
 
 type Props = {
   engine: Engine;
-  startRequest: StartSessionRequest;
+  startRequest?: StartSessionRequest;
+  resumeSessionId?: string;
   notesEnabled?: boolean;
   isDemoMode?: boolean;
   grownUpAuthorized?: boolean;
   onStep?: (step: Step) => void;
+  onAnswer?: (sessionId: string, nodeId: string, answerKind: Answer['kind']) => void;
+  onError?: (kind: EngineError['kind'], retryable: boolean) => void;
   theme?: PlayerTheme;
+  inheritTheme?: boolean;
+  muted?: boolean;
   initialGesture?: boolean;
 };
 
 const slots = ['left', 'center', 'right'] as const;
 
-export function Player({ engine, startRequest, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, theme = manorTheme, initialGesture = false }: Props) {
+export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false }: Props) {
   const onStepRef = useRef(onStep);
   onStepRef.current = onStep;
+  const onAnswerRef = useRef(onAnswer);
+  onAnswerRef.current = onAnswer;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
   const [step, setStep] = useState<Step>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -70,6 +79,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
   }, []);
 
   const playReaction = useCallback((frequency = 520) => {
+    if (muted) return;
     const AudioContextType = window.AudioContext;
     if (!AudioContextType) return;
     const context = new AudioContextType();
@@ -83,14 +93,9 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     tone.start();
     tone.stop(context.currentTime + 0.12);
     tone.onended = () => { void context.close(); };
-  }, []);
+  }, [muted]);
 
-  useEffect(() => {
-    const markGesture = () => setHasGesture(true);
-    window.addEventListener('pointerdown', markGesture, { once: true });
-    window.addEventListener('keydown', markGesture, { once: true });
-    return () => { window.removeEventListener('pointerdown', markGesture); window.removeEventListener('keydown', markGesture); };
-  }, []);
+  useEffect(() => { if (muted) stopMedia(); }, [muted, stopMedia]);
 
   useEffect(() => {
     let active = true;
@@ -102,13 +107,16 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     busyRef.current = true;
     request.current = undefined;
     const controller = beginRequest();
-    engine.startSession(startRequest, { signal: controller.signal }).then((next) => {
+    const pending = resumeSessionId ? engine.resumeSession(resumeSessionId, { signal: controller.signal })
+      : startRequest ? engine.startSession(startRequest, { signal: controller.signal })
+        : Promise.reject(new EngineError('notFound', 'A start request or session ID is required.'));
+    pending.then((next) => {
       if (active) { setStep(next); onStepRef.current?.(next); }
     }).catch((cause: unknown) => {
-      if (active) setError(cause instanceof Error ? cause.message : 'Could not start the story.');
+      if (active) { setError(cause instanceof Error ? cause.message : 'Could not start the story.'); onErrorRef.current?.(cause instanceof EngineError ? cause.kind : 'server', cause instanceof EngineError && cause.kind === 'network'); }
     }).finally(() => { if (inFlight.current === controller) inFlight.current = undefined; if (active) { setBusy(false); busyRef.current = false; } });
     return () => { active = false; requestGeneration.current += 1; inFlight.current?.abort(); controller.abort(); stopMedia(); };
-  }, [engine, startRequest, stopMedia, beginRequest]);
+  }, [engine, startRequest, resumeSessionId, stopMedia, beginRequest]);
 
   useEffect(() => {
     stopMedia();
@@ -141,6 +149,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     }
     const controller = beginRequest();
     try {
+      onAnswerRef.current?.(step.sessionId, step.node.id, value.kind);
       const next = await engine.respond(step.sessionId, {
         answerRequestId: request.current.id, version: step.version, nodeId: step.node.id,
         answer: value, playerId: step.activePlayerId,
@@ -154,12 +163,12 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       if (cause instanceof EngineError && cause.kind === 'conflict' && cause.currentStep) {
         setStep(cause.currentStep);
         onStepRef.current?.(cause.currentStep);
-      } else setError(cause instanceof Error ? cause.message : 'Could not change scenes.');
+      } else { setError(cause instanceof Error ? cause.message : 'Could not change scenes.'); onErrorRef.current?.(cause instanceof EngineError ? cause.kind : 'server', cause instanceof EngineError && cause.kind === 'network'); }
     } finally { if (inFlight.current === controller) inFlight.current = undefined; if (token === requestGeneration.current) { busyRef.current = false; setBusy(false); } }
   }, [engine, step, stopMedia, beginRequest]);
 
   const playAgain = useCallback(async () => {
-    if (busyRef.current) return;
+    if (busyRef.current || !startRequest) return;
     requestGeneration.current += 1;
     stopMedia();
     const token = requestGeneration.current;
@@ -174,12 +183,12 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       setStep(next);
       onStepRef.current?.(next);
     } catch (cause) {
-      if (token === requestGeneration.current) setError(cause instanceof Error ? cause.message : 'Could not restart the story.');
+      if (token === requestGeneration.current) { setError(cause instanceof Error ? cause.message : 'Could not restart the story.'); onErrorRef.current?.(cause instanceof EngineError ? cause.kind : 'server', cause instanceof EngineError && cause.kind === 'network'); }
     } finally { if (inFlight.current === controller) inFlight.current = undefined; if (token === requestGeneration.current) { busyRef.current = false; setBusy(false); } }
   }, [engine, startRequest, stopMedia, beginRequest]);
 
   const playLines = useCallback((from: number) => {
-    if (!step) return;
+    if (!step || muted) return;
     narrationStartedFor.current = `${step.sessionId}:${step.node.id}:${step.version}`;
     stopMedia();
     const token = generation.current;
@@ -217,7 +226,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       } else speech();
     };
     play(from);
-  }, [answer, step, stopMedia]);
+  }, [answer, step, stopMedia, muted]);
 
   const choose = useCallback((value: Extract<Answer, { kind: 'choice' | 'hotspot' }>) => {
     if (!step || busyRef.current || held) return;
@@ -332,21 +341,21 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     const defaultOn = step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9';
     if (narration === undefined) setNarration(defaultOn);
     const key = `${step.sessionId}:${step.node.id}:${step.version}`;
-    if ((narration ?? defaultOn) && step.node.lines.length && (!['1-2', '3-5'].includes(step.ageGroupId) || hasGesture) && narrationStartedFor.current !== key) playLines(0);
+    if (!muted && (narration ?? defaultOn) && step.node.lines.length && (!['1-2', '3-5'].includes(step.ageGroupId) || hasGesture) && narrationStartedFor.current !== key) playLines(0);
   // Only start narration when a new step arrives; replay and toggle use explicit handlers.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step?.node.id, step?.version, hasGesture]);
 
-  if (!step) return <section className={styles.player} aria-label="Story player">{error ? <p role="alert">{error}</p> : <p role="status">Loading story…</p>}</section>;
+  if (!step) return <section className={styles.player} aria-label="Story player" onPointerDownCapture={() => setHasGesture(true)} onKeyDownCapture={() => setHasGesture(true)}>{error ? <p role="alert">{error}</p> : <p role="status">Loading story…</p>}</section>;
   const node = step.node;
   const inspectParts = node.interaction.type === 'inspect' ? node.interaction.document.parts : [];
   if (node.type === 'result' && node.id === 'story-end') {
-    return <section className={styles.player} aria-label="Story complete" style={themeStyle(theme)}>
+    return <section className={styles.player} aria-label="Story complete" style={inheritTheme ? undefined : themeStyle(theme)} onPointerDownCapture={() => setHasGesture(true)} onKeyDownCapture={() => setHasGesture(true)}>
       <h1>{node.title ?? 'The End'}</h1><p>You reached the end of this path.</p>
       {node.total > 0 && <p>{node.correctFirstTry} of {node.total} correct on the first try</p>}
       <div className={styles.actions}>
         {step.canGoBack && <button type="button" disabled={busy} onClick={() => void answer({ kind: 'back' })}>Back</button>}
-        <button type="button" disabled={busy} onClick={() => void playAgain()}>Play again</button>
+        {startRequest && <button type="button" disabled={busy} onClick={() => void playAgain()}>Play again</button>}
       </div>
       {error && <p role="alert" className={styles.error}>{error}</p>}
     </section>;
@@ -361,14 +370,14 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
     assigned.add(position);
     return { ...character, position };
   });
-  return <section className={`${styles.player} ${young ? styles.young : ''}`} aria-label="Story player" style={{ ...themeStyle(theme), '--mp-min-target': `${minTarget}px` } as CSSProperties}>
+  return <section className={`${styles.player} ${young ? styles.young : ''}`} aria-label="Story player" style={{ ...(inheritTheme ? {} : themeStyle(theme)), '--mp-min-target': `${minTarget}px` } as CSSProperties} onPointerDownCapture={() => setHasGesture(true)} onKeyDownCapture={() => setHasGesture(true)}>
     <header className={styles.header}>
       <p className={styles.kicker}>Mystira · The Manor</p>
       <h1>{node.title ?? 'Story scene'}</h1>
       {step.progress && <p className={styles.progress}>{node.type === 'result' ? 'Result' : `Scene ${step.progress.done + 1} of ${step.progress.total}`}</p>}
     </header>
     <div className={styles.stage} key={`${node.id}:${step.version}`} onClick={(event) => { if (node.interaction.type === 'hotspots' && !held && !(event.target as HTMLElement).closest('button')) setFeedback('Nothing here'); }}>
-      {node.media.video && !held?.image ? <video ref={video} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
+      {node.media.video && !held?.image ? <video ref={video} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline muted={muted} onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
         : (held?.image?.imageUrl ?? node.media.imageUrl) && !imageFailed ? <img className={styles.media} src={held?.image?.imageUrl ?? node.media.imageUrl} alt={held?.image?.alt ?? node.media.alt ?? ''} onError={() => setImageFailed(true)} />
           : <div className={styles.mediaFallback} role="img" aria-label={imageFailed ? held?.image?.alt ?? node.media.alt ?? 'Scene image unavailable' : 'Scene artwork'}>✦</div>}
       {characters.map((character) => <button className={`${styles.character} ${styles[character.position]} ${reaction === character.id ? styles.reaction : ''}`} key={character.id} type="button" disabled={!character.reactions?.length} aria-label={`${character.alt}${character.reactions?.length ? ', react' : ''}`} onClick={() => { setReaction(character.id); playReaction(); if (reactionTimer.current) clearTimeout(reactionTimer.current); reactionTimer.current = setTimeout(() => setReaction(undefined), 450); }}><img src={character.imageUrl} alt="" /></button>)}
@@ -397,7 +406,7 @@ export function Player({ engine, startRequest, notesEnabled = false, isDemoMode 
       <button type="button" disabled={busy || !step.canGoBack} hidden={!step.canGoBack} onClick={() => void answer({ kind: 'back' })}>Back</button>
       <button type="button" aria-pressed={narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')} onClick={() => { const next = !(narration ?? (step.ageGroupId === '1-2' || step.ageGroupId === '3-5' || step.ageGroupId === '6-9')); setNarration(next); stopMedia(); if (!next && held) setHeldReady(true); if (next && !held) playLines(lineIndex); }}>{narration ? 'Narration on' : 'Narration off'}</button>
       <button type="button" disabled={!!held} onClick={() => playLines(lineIndex)}>Replay line</button>
-      {node.type === 'result' ? <button className={styles.next} type="button" disabled={busy} onClick={() => void playAgain()}>Play again</button>
+      {node.type === 'result' ? startRequest && <button className={styles.next} type="button" disabled={busy} onClick={() => void playAgain()}>Play again</button>
         : held ? <button className={styles.next} type="button" disabled={busy || !heldReady} onClick={() => void answer(held.answer, wrongTries)}>Next</button>
         : node.type === 'check' ? <button className={styles.next} type="button" disabled={busy || !selected} onClick={() => { if (selected) void answer(selected); }}>That's my answer</button>
           : node.interaction.type === 'continue' ? <button className={styles.next} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>Next</button>
