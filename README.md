@@ -25,6 +25,10 @@ An open-source player for Mystira stories, lessons and assessments, designed for
 
 All names and children in demo content are invented.
 
+## Mummy's Party media preview
+
+Run `pnpm dev` and open `http://127.0.0.1:5173/?media=mummys-party` to browse the 77 draft YAML scenes or rough sample arrangements of the supplied backgrounds, characters, pieces, smoke, and opening/closing videos. This checks media loading and approximate layering; it is not a playable fire-safety lesson. Each ghost PNG is displayed over its same-size `-glow.svg` companion. The assets came from the **Media** section of the [Mummy's Party Notion page](https://app.notion.com/p/4237ad2bc5d681b4a68ee4d341d683e6); the outer `.zip.zip` contains the 61-file asset ZIP and two contact sheets. The YAML and notes supplied separately are copied under `content/manor/`. Their `assets/` paths are mapped by this preview to `public/mummys-party/`. The voice-only fire-service character has `image: null` because the referenced `operator.webp` was not supplied.
+
 ## Built with
 
 - [Kiro](https://kiro.dev): specs, steering and hooks (see [docs/kiro-writeup.md](docs/kiro-writeup.md)).
