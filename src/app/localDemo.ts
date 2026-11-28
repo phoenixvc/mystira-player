@@ -8,6 +8,7 @@ import { StoryYamlSchema } from '../schema/story-yaml';
 import { stageMummysParty } from './mummysPartyStaging';
 import { attachMummysPartyVoices } from './mummysPartyVoices';
 import { applyMummysPartyAfrikaans } from './mummysPartyAfrikaans';
+import { createMummysPartyLanguagePair, type LanguagePairLookup } from './mummysPartyLanguageStudy';
 
 const ConfigSchema = z.object({
   mode: z.literal('local'),
@@ -25,16 +26,18 @@ function resolveMummyMedia<T>(value: T): T {
   return value;
 }
 
-export async function loadLocalDemo(kind: 'pumpkin-gate' | 'mummys-party' = 'pumpkin-gate', locale: 'en' | 'af' = 'en'): Promise<{ engine: Engine; activityId: string; isDemoMode: boolean; fullLesson?: boolean; sceneForProfile: (sceneId: string, profileId: string) => string | undefined; piecesForProfile: (profileId: string) => { id: string; title: string; startSceneId: string }[]; assessment?: { engine: Engine; activityId: string; profiles: { profileId: string; displayName: string }[]; sequenceProfiles: { profileId: string; displayName: string }[]; inspectProfiles: { profileId: string; displayName: string }[]; entries: { practice?: string; assessment?: string; followUp?: string; sequence?: string; inspect?: string } } }> {
+export async function loadLocalDemo(kind: 'pumpkin-gate' | 'mummys-party' = 'pumpkin-gate', locale: 'en' | 'af' = 'en'): Promise<{ engine: Engine; activityId: string; isDemoMode: boolean; fullLesson?: boolean; languagePair?: LanguagePairLookup; sceneForProfile: (sceneId: string, profileId: string) => string | undefined; piecesForProfile: (profileId: string) => { id: string; title: string; startSceneId: string }[]; assessment?: { engine: Engine; activityId: string; profiles: { profileId: string; displayName: string }[]; sequenceProfiles: { profileId: string; displayName: string }[]; inspectProfiles: { profileId: string; displayName: string }[]; entries: { practice?: string; assessment?: string; followUp?: string; sequence?: string; inspect?: string } } }> {
   const response = await fetch(`${import.meta.env.BASE_URL}config.json`);
   if (!response.ok) throw new Error(`Could not load player configuration (${response.status}).`);
   const config = ConfigSchema.parse(await response.json());
   const required = ['choices', 'hotspots', 'sequence', 'inspect'] as const;
   const fullLesson = required.every((kind) => config.interactions.enabled.includes(kind));
   let story = StoryYamlSchema.parse(parse(fullLesson ? pumpkinGate : corePreview));
+  let languagePair: LanguagePairLookup | undefined;
   if (kind === 'mummys-party') {
     const raw = (await import('../../content/manor/fire-door.story.yaml?raw')).default;
     const authored = StoryYamlSchema.parse(parse(raw));
+    languagePair = createMummysPartyLanguagePair(authored);
     const localized = locale === 'af' ? applyMummysPartyAfrikaans(authored) : authored;
     story = StoryYamlSchema.parse(resolveMummyMedia(attachMummysPartyVoices(localized, locale)));
   }
@@ -48,6 +51,6 @@ export async function loadLocalDemo(kind: 'pumpkin-gate' | 'mummys-party' = 'pum
   const sequenceEntry = sequenceAvailable ? assessmentEngine?.demoSequenceEntry() : undefined;
   const inspectEntry = inspectAvailable ? assessmentEngine?.demoInspectEntry() : undefined;
   const inspectProfileIds = new Set(assessmentEngine?.demoInspectProfileIds() ?? []);
-  return { engine, activityId: story.lesson?.id ?? story.title, isDemoMode: config.demo, fullLesson, sceneForProfile: (sceneId, profileId) => engine.demoSceneForProfile(sceneId, profileId), piecesForProfile: (profileId) => engine.demoPiecesForProfile(profileId),
+  return { engine, activityId: story.lesson?.id ?? story.title, isDemoMode: config.demo, fullLesson, languagePair, sceneForProfile: (sceneId, profileId) => engine.demoSceneForProfile(sceneId, profileId), piecesForProfile: (profileId) => engine.demoPiecesForProfile(profileId),
     ...(assessment && assessmentEngine ? { assessment: { engine: assessmentEngine, activityId: assessment.lesson?.id ?? assessment.title, profiles: assessmentProfiles, sequenceProfiles: assessmentProfiles.filter((profile) => !!sequenceEntry && assessmentEngine.demoSceneForProfile(sequenceEntry, profile.profileId) === sequenceEntry), inspectProfiles: assessmentProfiles.filter((profile) => inspectProfileIds.has(profile.profileId)), entries: { ...(choicesAvailable ? { practice: assessmentEngine.demoPracticeEntry(), ...assessmentEngine.demoAssessmentEntries() } : {}), ...(sequenceEntry ? { sequence: sequenceEntry } : {}), ...(inspectEntry ? { inspect: inspectEntry } : {}) } } } : {}) };
 }

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Player } from './Player';
 import type { Engine, Step } from '../engine/types';
+import type { LanguagePair } from './LanguageExplorer';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
@@ -13,6 +14,31 @@ const first: Step = {
 const second: Step = { ...first, version: '2', canGoBack: true, progress: { done: 1, total: 2 }, node: { ...first.node, id: 'hall', title: 'In the hall' } };
 
 describe('Player', () => {
+  it('keeps language replay separate from the story engine answer', async () => {
+    const pair: LanguagePair = { sceneId: 'gate', lineIndex: 0, en: { text: 'Welcome.', audioUrl: '/en.mp3' }, af: { text: 'Welkom.', audioUrl: '/af.mp3' }, links: [] };
+    const respond = vi.fn().mockResolvedValue(second);
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(first), resumeSession: vi.fn(), respond };
+    const played: string[] = [];
+    const paused: string[] = [];
+    vi.stubGlobal('Audio', class {
+      constructor(public src: string) { played.push(src); }
+      pause = vi.fn(() => { paused.push(this.src); });
+      play = vi.fn().mockResolvedValue(undefined);
+    });
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} languagePair={() => pair} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Compare English and Afrikaans' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hoor Afrikaans weer' }));
+    expect(played).toContain('/af.mp3');
+    expect(respond).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Replay line' }));
+    expect(paused).toContain('/af.mp3');
+    expect(screen.getByRole('button', { name: 'Hoor Afrikaans weer' }).getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(screen.getByRole('button', { name: 'Hoor Afrikaans weer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Narration on' }));
+    expect(paused.filter((src) => src === '/af.mp3')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await waitFor(() => expect(respond).toHaveBeenCalledOnce());
+  });
   it('shows a generic story ending without a score or submission control', async () => {
     const terminal: Step = { ...first, node: { ...first.node, type: 'terminal', title: 'The story ends', interaction: { type: 'terminal' }, lines: [{ speakerId: 'narrator', text: 'Everyone is safe.' }] } };
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(terminal), resumeSession: vi.fn(), respond: vi.fn() };
@@ -194,7 +220,9 @@ describe('Player', () => {
     const respond = vi.fn().mockResolvedValue(second);
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(hotspot), resumeSession: vi.fn(), respond };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} />);
-    fireEvent.click(await screen.findByRole('button', { name: 'The dog' }));
+    const dog = await screen.findByRole('button', { name: 'The dog' });
+    await waitFor(() => expect(dog.hasAttribute('disabled')).toBe(false));
+    fireEvent.click(dog);
     expect(await screen.findByText('Not yet. Try again.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'The crow' }).getAttribute('class')).toContain('revealed');
     expect(screen.getByRole('button', { name: 'The dog' }).getAttribute('class')).not.toContain('revealed');

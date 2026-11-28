@@ -3,13 +3,14 @@ import { Player } from '../player/Player';
 import type { Engine, Profile, StartSessionRequest, Step } from '../engine/types';
 import { loadLocalDemo } from './localDemo';
 import styles from './App.module.css';
+import type { LanguagePairLookup } from './mummysPartyLanguageStudy';
 
 export function App() {
   const search = new URLSearchParams(window.location.search);
   const mummyParty = search.get('story') === 'mummys-party';
   const locale = mummyParty && search.get('lang') === 'af' ? 'af' : 'en';
   const afrikaans = locale === 'af';
-  const [demo, setDemo] = useState<{ engine: Engine; activityId: string; isDemoMode?: boolean; fullLesson?: boolean; sceneForProfile?: (sceneId: string, profileId: string) => string | undefined; piecesForProfile?: (profileId: string) => { id: string; title: string; startSceneId: string }[]; assessment?: { engine: Engine; activityId: string; profiles: Profile[]; sequenceProfiles: Profile[]; inspectProfiles: Profile[]; entries: { practice?: string; assessment?: string; followUp?: string; sequence?: string; inspect?: string } } }>();
+  const [demo, setDemo] = useState<{ engine: Engine; activityId: string; isDemoMode?: boolean; fullLesson?: boolean; languagePair?: LanguagePairLookup; sceneForProfile?: (sceneId: string, profileId: string) => string | undefined; piecesForProfile?: (profileId: string) => { id: string; title: string; startSceneId: string }[]; assessment?: { engine: Engine; activityId: string; profiles: Profile[]; sequenceProfiles: Profile[]; inspectProfiles: Profile[]; entries: { practice?: string; assessment?: string; followUp?: string; sequence?: string; inspect?: string } } }>();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [profileId, setProfileId] = useState<string>();
   const [entryPoint, setEntryPoint] = useState('lesson');
@@ -60,6 +61,6 @@ export function App() {
       {afrikaans && <p>Hierdie voorskou dek die eerste les. Die openingsvideo se klank is nog Engels; die Afrikaanse onderskrif wys hieronder.</p>}
       <button type="button" disabled={!demo || (pieceChoices.length > 0 && !startNodeId && !mummyParty)} onClick={() => setStarted(true)}>{afrikaans ? 'Begin die les' : demo?.fullLesson ? 'Start lesson' : 'Start preview'}</button>
       {error && <p role="alert">{error}</p>}
-    </section> : demo && activeEngine && startRequest && <Player key={sessionKey} engine={activeEngine} startRequest={startRequest} locale={locale} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} initialGesture slotGuide={mummyParty} onStep={(step) => { setCurrentStep(step); if (entryPoint === 'lesson' && step.node.id === 'story-end' && startNodeId) { const piece = pieceChoices.find((item) => item.startSceneId === startNodeId); if (piece) setCompletedPieces((done) => done.includes(piece.id) ? done : [...done, piece.id]); } }} />}
+    </section> : demo && activeEngine && startRequest && <Player key={sessionKey} engine={activeEngine} startRequest={startRequest} locale={locale} languagePair={demo.languagePair} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} initialGesture slotGuide={mummyParty} onStep={(step) => { setCurrentStep(step); if (entryPoint === 'lesson' && step.node.id === 'story-end' && startNodeId) { const piece = pieceChoices.find((item) => item.startSceneId === startNodeId); if (piece) setCompletedPieces((done) => done.includes(piece.id) ? done : [...done, piece.id]); } }} />}
   </main>;
 }

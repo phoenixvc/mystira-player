@@ -54,7 +54,7 @@ Required on every scene: `id`, `title`, `type`, `active_character` (may be `null
 | `music_palette` | host only |
 | `scenes[]`: `id`, `title`, `type`, `description`, `next_scene`, `active_character` | **used** |
 | `scenes[].media`: `image`, `audio`, `video` | **used**: background, narration audio, video |
-| `scenes[].narration_timestamps` | **used**: read-along highlight |
+| `scenes[].narration_timestamps` | **schema-validated, not yet rendered**: future read-along highlight (PRD 08) |
 | `scenes[].music` (`profile` and the rest) | **used**: `profile` is passed to the host as a hint |
 | `scenes[].auto_advance` | **used**: optional boolean; after dialogue audio finishes on a continue scene, move to the next scene while keeping Next visible. Without available audio, wait for a tap. |
 | `scenes[].branches[]`: `choice`, `next_scene`, `id` | **used**: one choice button per branch |

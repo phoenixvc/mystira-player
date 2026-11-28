@@ -7,6 +7,7 @@ import { practiceFeedback } from './feedbackLadder';
 import type { Region } from '../schema/node';
 import { SequenceView } from './SequenceView';
 import { InspectView } from './InspectView';
+import { LanguageExplorer, type LanguagePair } from './LanguageExplorer';
 
 type Props = {
   engine: Engine;
@@ -24,11 +25,12 @@ type Props = {
   initialGesture?: boolean;
   slotGuide?: boolean;
   locale?: 'en' | 'af';
+  languagePair?: (sceneId: string, lineIndex: number, currentText: string) => LanguagePair | undefined;
 };
 
 const slots = ['left', 'center', 'right'] as const;
 
-export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false, slotGuide = false, locale = 'en' }: Props) {
+export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false, slotGuide = false, locale = 'en', languagePair }: Props) {
   const afrikaans = locale === 'af';
   const onStepRef = useRef(onStep);
   onStepRef.current = onStep;
@@ -55,6 +57,8 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
   const [imageFailed, setImageFailed] = useState(false);
   const [keyImageFailed, setKeyImageFailed] = useState(false);
   const audio = useRef<HTMLAudioElement | undefined>(undefined);
+  const comparisonStop = useRef<(() => void) | undefined>(undefined);
+  const registerComparisonStop = useCallback((stop: (() => void) | undefined) => { comparisonStop.current = stop; }, []);
   const video = useRef<HTMLVideoElement>(null);
   const lastVideo = useRef<HTMLVideoElement>(null);
   const attachVideo = useCallback((element: HTMLVideoElement | null) => {
@@ -75,6 +79,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
     generation.current += 1;
     audio.current?.pause();
     audio.current = undefined;
+    comparisonStop.current?.();
     if (pauseVideo) (video.current ?? lastVideo.current)?.pause();
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
     if (reactionTimer.current) clearTimeout(reactionTimer.current);
@@ -379,6 +384,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
   const minTarget = step.ageGroupId === '1-2' || step.ageGroupId === '3-5' ? 64 : step.ageGroupId === '6-9' ? 48 : 44;
   const young = step.ageGroupId === '1-2' || step.ageGroupId === '3-5';
   const currentLine = node.lines[lineIndex];
+  const comparison = !node.media.video && currentLine ? languagePair?.(node.id, lineIndex, currentLine.text) : undefined;
   const speaker = node.speakers.find((item) => item.id === currentLine?.speakerId);
   const assigned = new Set<string>();
   const characters = node.characters.slice(0, 3).map((character) => {
@@ -422,6 +428,7 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
       {currentLine && !(node.type === 'check' && currentLine.text === node.question.text) && <><div className={styles.speaker}>{speaker?.avatarUrl && <img src={speaker.avatarUrl} alt="" />}<strong style={{ color: speaker?.colour }}>{speaker?.name ?? (afrikaans ? 'Verteller' : 'Narrator')}</strong></div><p>{currentLine.text}</p></>}
       {node.lines.length > 1 && <div className={styles.lineControls}><span>{afrikaans ? 'Sin' : 'Line'} {lineIndex + 1} {afrikaans ? 'van' : 'of'} {node.lines.length}</span><button type="button" disabled={!!held || lineIndex >= node.lines.length - 1} onClick={() => { if (!node.media.video) stopMedia(); setLineIndex((index) => index + 1); }}>{afrikaans ? 'Wys volgende sin' : 'Show next line'}</button></div>}
     </div>
+    {comparison && <LanguageExplorer key={`${node.id}:${lineIndex}`} pair={comparison} locale={locale} muted={muted} onExplore={() => stopMedia()} registerStop={registerComparisonStop} />}
     {node.type === 'result' && <aside className={styles.feedback} aria-label="Lesson result">{node.total > 0 && <p>{node.correctFirstTry} of {node.total} correct on the first try</p>}{node.key && <div className={styles.resultKey}>{node.key.iconUrl && !keyImageFailed ? <img src={node.key.iconUrl} alt="" onError={() => setKeyImageFailed(true)} /> : <span aria-hidden="true">✦</span>}<strong>{node.key.label}</strong></div>}</aside>}
     {node.type !== 'terminal' && <div className={styles.actions}>
       <button type="button" disabled={busy || !step.canGoBack} hidden={!step.canGoBack} onClick={() => void answer({ kind: 'back' })}>{afrikaans ? 'Terug' : 'Back'}</button>
