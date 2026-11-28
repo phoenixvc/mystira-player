@@ -17,11 +17,130 @@
       "file": "ghost-5fc025d58db05551977a.mp3"
     },
     {
+      "sceneId": "spot_corner",
+      "lineIndex": -1,
+      "speaker": "ghost",
+      "text": "The corner with the lamp",
+      "file": "ghost-c0386937270a37dd854f.mp3"
+    },
+    {
       "sceneId": "spot_corner_after",
       "lineIndex": 0,
       "speaker": "ghost",
       "text": "Paper burns fast. Keep it far away from hot lamps.",
       "file": "ghost-02ee237743e9daa411d8.mp3"
+    },
+    {
+      "sceneId": "spot_backdoor",
+      "lineIndex": -1,
+      "speaker": "ghost",
+      "text": "The back door",
+      "file": "ghost-39c019f57ff73f1689e3.mp3"
+    },
+    {
+      "sceneId": "spot_backdoor_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Fine. Smaller dance floor.",
+      "file": "mummy-466ef99d6650639e6f9b.mp3"
+    },
+    {
+      "sceneId": "spot_backdoor_after",
+      "lineIndex": 1,
+      "speaker": "ghost",
+      "text": "A blocked door traps us inside. Doors must stay clear.",
+      "file": "ghost-7005f45a8422aef631fe.mp3"
+    },
+    {
+      "sceneId": "spot_lights",
+      "lineIndex": -1,
+      "speaker": "ghost",
+      "text": "The wall with the party lights",
+      "file": "ghost-b38128499319fa92283f.mp3"
+    },
+    {
+      "sceneId": "spot_lights_after",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Too many plugs make a socket hot. Fewer plugs are safer.",
+      "file": "ghost-f271776ba55a11a0ac5e.mp3"
+    },
+    {
+      "sceneId": "zoe_s1_02",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Four hazards, all fixed. That is the first step: looking for fire hazards.",
+      "file": "ghost-8b48646ef2b921f4f133.mp3"
+    },
+    {
+      "sceneId": "max_s1_01",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "The mummy cannot see the fire hazards. Tell him what to do.",
+      "file": "ghost-32dbbda3814593c546f3.mp3"
+    },
+    {
+      "sceneId": "max_s1_01",
+      "lineIndex": 1,
+      "speaker": "mummy",
+      "text": "Look at my lantern. A real candle!",
+      "file": "mummy-d313c91e43232c60b2ef.mp3"
+    },
+    {
+      "sceneId": "max_s1_01_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Same glow and no flame. Much safer!",
+      "file": "mummy-0b541096283cadbac11b.mp3"
+    },
+    {
+      "sceneId": "max_s1_02",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "My paper bats are on the lamp. So cosy!",
+      "file": "mummy-0f103cec5c2804baae44.mp3"
+    },
+    {
+      "sceneId": "max_s1_02_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "On the wall! Paper burns fast near hot lamps.",
+      "file": "mummy-ae88840d49f7391453d0.mp3"
+    },
+    {
+      "sceneId": "max_s1_03",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "The sofa is against the back door. More dance floor!",
+      "file": "mummy-3576a0a7a150a4701c3f.mp3"
+    },
+    {
+      "sceneId": "max_s1_03_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Fine. Smaller dance floor, but a clear door.",
+      "file": "mummy-2d6f0e52dcd8730e4d36.mp3"
+    },
+    {
+      "sceneId": "max_s1_04",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Six plugs in one socket. So many lights!",
+      "file": "mummy-c7db6db2ff79faca2ada.mp3"
+    },
+    {
+      "sceneId": "max_s1_04_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Fewer plugs, cooler socket. Much safer.",
+      "file": "mummy-d42f883e0263a4d14ca4.mp3"
+    },
+    {
+      "sceneId": "max_s1_05",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Four hazards, and you fixed every one. That is the first step: looking for fire hazards.",
+      "file": "ghost-397a2ea453766bfdc5b4.mp3"
     }
   ]
 }

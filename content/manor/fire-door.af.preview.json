@@ -1,0 +1,136 @@
+{
+  "title": "Die Mummie se Partytjie",
+  "description": "Soek brandgevare en maak die partytjie veilig.",
+  "pieces": { "opening": "Die partytjie", "spot_it": "Soek die gevare" },
+  "scenes": {
+    "opening_video": {
+      "title": "Die openingsvideo",
+      "description": "Die mummie stoot die bank teen die agterdeur, en die klein spookie sien moeilikheid.",
+      "lines": ["Ag nee. Ag nee, nee, nee. Hierdie partytjie is vol brandgevare. Kan jy dit veilig maak?"]
+    },
+    "spot_table": {
+      "title": "Die partytjietafel",
+      "description": "Die partytjietafel",
+      "lines": ["'n Brandgevaar kan 'n brand veroorsaak of ons binne vaskeer."],
+      "task": "Soek die brandgevaar op die tafel. Tik daarop.",
+      "objects": {
+        "sweets": ["Die bak lekkers", "Net lekker lekkers."],
+        "cookies": ["Die spinnekopkoekies", "Net grillerige koekies."],
+        "punch": ["Die vrugtedrank", "Dis net 'n drankie."],
+        "lantern": ["Die pampoenlantern", "'n Regte kers! Een stamp en dit val om."]
+      }
+    },
+    "spot_table_after": {
+      "title": "Wat verander",
+      "description": "Die spookie vervang die kers met 'n battery-kers.",
+      "lines": ["Batterykerse is veiliger as regte kerse. Dieselfde lig, geen vlam nie."]
+    },
+    "spot_corner": {
+      "title": "Die hoek met die lamp",
+      "description": "Die hoek met die lamp",
+      "task": "Soek die brandgevaar in hierdie hoek. Tik daarop.",
+      "objects": {
+        "chair": ["Die leunstoel", "Net 'n gemaklike stoel."],
+        "balloons": ["Die ballonne", "Net ballonne wat kan bars."],
+        "lamp": ["Die lamp met die papiervlermuise", "Papiervlermuise op 'n warm lamp!"]
+      }
+    },
+    "spot_corner_after": {
+      "title": "Wat verander",
+      "description": "Die spookie skuif die vlermuise na die muur.",
+      "lines": ["Papier brand vinnig. Hou dit ver van warm lampe af."]
+    },
+    "spot_backdoor": {
+      "title": "Die agterdeur",
+      "description": "Die agterdeur",
+      "task": "Soek die brandgevaar by die agterdeur. Tik daarop.",
+      "objects": {
+        "coats": ["Die jasse aan die hake", "Net grillerige jasse."],
+        "brolly": ["Die sambreelstaander", "Net sambrele vir reënerige dae."],
+        "sofa": ["Die bank", "Die bank versper die deur!"]
+      }
+    },
+    "spot_backdoor_after": {
+      "title": "Wat verander",
+      "description": "Die mummie kom in en skuif die bank terug.",
+      "lines": ["Nou goed. Minder plek om te dans.", "'n Versperde deur kan ons binne vaskeer. Hou deure oop en vry."]
+    },
+    "spot_lights": {
+      "title": "Die muur met die partytjieliggies",
+      "description": "Die muur met die partytjieliggies",
+      "task": "Soek die brandgevaar by die liggies. Tik daarop.",
+      "objects": {
+        "rug": ["Die mat", "Net 'n sagte mat."],
+        "broom": ["Die besem", "Net 'n hekserige besem."],
+        "socket": ["Die kragpunt", "Ses proppe in een kragpunt!"]
+      }
+    },
+    "spot_lights_after": {
+      "title": "Wat verander",
+      "description": "Die spookie trek proppe uit totdat net twee oorbly.",
+      "lines": ["Te veel proppe maak 'n kragpunt warm. Minder proppe is veiliger."]
+    },
+    "zoe_s1_02": {
+      "title": "Die kamer is nou veilig",
+      "description": "Die kamer is nou veilig",
+      "lines": ["Vier brandgevare, almal reggemaak. Die eerste stap is om brandgevare raak te sien."]
+    },
+    "max_s1_01": {
+      "title": "Die mummie hou die pampoenlantern op",
+      "description": "Die mummie hou die pampoenlantern op",
+      "lines": ["Die mummie sien nie die brandgevare raak nie. Sê vir hom wat om te doen.", "Kyk na my lantern. 'n Regte kers!"],
+      "task": "Wat moet hy doen? Kies een.",
+      "choices": { "max_s1_01_b": "Sit nog kerse by", "max_s1_01_a": "Gebruik 'n battery-kers", "max_s1_01_c": "Gebruik 'n kleiner kers" },
+      "onWrong": ["Hmm. Daar is steeds 'n vlam."]
+    },
+    "max_s1_01_after": {
+      "title": "Wat verander",
+      "description": "Die mummie vervang die kers met 'n battery-kers.",
+      "lines": ["Dieselfde lig en geen vlam nie. Baie veiliger!"]
+    },
+    "max_s1_02": {
+      "title": "Die mummie wys na die lamp",
+      "description": "Die mummie wys na die lamp",
+      "lines": ["My papiervlermuise sit op die lamp. So gesellig!"],
+      "task": "Wat moet hy doen? Kies een.",
+      "choices": { "max_s1_02_a": "Skuif hulle na die muur", "max_s1_02_b": "Sit nog vlermuise by", "max_s1_02_c": "Gebruik 'n rooi gloeilamp" },
+      "onWrong": ["Hmm. Die vlermuise is steeds op die warm lamp."]
+    },
+    "max_s1_02_after": {
+      "title": "Wat verander",
+      "description": "Die mummie plak die vlermuise teen die muur.",
+      "lines": ["Teen die muur! Papier brand vinnig naby warm lampe."]
+    },
+    "max_s1_03": {
+      "title": "Die mummie leun teen die bank",
+      "description": "Die mummie leun teen die bank",
+      "lines": ["Die bank staan teen die agterdeur. Meer plek om te dans!"],
+      "task": "Wat moet hy doen? Kies een.",
+      "choices": { "max_s1_03_b": "Sit ook 'n stoel by", "max_s1_03_c": "Sit kussings by", "max_s1_03_a": "Skuif die bank weg" },
+      "onWrong": ["Hmm. Die deur is steeds versper."]
+    },
+    "max_s1_03_after": {
+      "title": "Wat verander",
+      "description": "Die mummie skuif die bank terug.",
+      "lines": ["Nou goed. Minder plek om te dans, maar die deur is oop."]
+    },
+    "max_s1_04": {
+      "title": "Die mummie wys die partytjieliggies",
+      "description": "Die mummie wys die partytjieliggies",
+      "lines": ["Ses proppe in een kragpunt. Soveel liggies!"],
+      "task": "Wat moet hy doen? Kies een.",
+      "choices": { "max_s1_04_b": "Sit nog een by", "max_s1_04_a": "Trek van die liggies uit", "max_s1_04_c": "Steek dit met 'n mat weg" },
+      "onWrong": ["Hmm. Daar is steeds te veel proppe in die kragpunt."]
+    },
+    "max_s1_04_after": {
+      "title": "Wat verander",
+      "description": "Die mummie trek proppe uit totdat net twee oorbly.",
+      "lines": ["Minder proppe, 'n koeler kragpunt. Baie veiliger."]
+    },
+    "max_s1_05": {
+      "title": "Die kamer is nou veilig",
+      "description": "Die kamer is nou veilig",
+      "lines": ["Vier brandgevare, en jy het almal reggemaak. Die eerste stap is om brandgevare raak te sien."]
+    }
+  }
+}

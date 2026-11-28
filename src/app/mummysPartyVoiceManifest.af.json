@@ -1,0 +1,146 @@
+{
+  "locale": "af",
+  "model": "eleven_v3",
+  "lines": [
+    {
+      "sceneId": "spot_table",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "'n Brandgevaar kan 'n brand veroorsaak of ons binne vaskeer.",
+      "file": "ghost-84cdf7fba2370d8f3b71.mp3"
+    },
+    {
+      "sceneId": "spot_table_after",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Batterykerse is veiliger as regte kerse. Dieselfde lig, geen vlam nie.",
+      "file": "ghost-b9f660e27701b739caf4.mp3"
+    },
+    {
+      "sceneId": "spot_corner",
+      "lineIndex": -1,
+      "speaker": "ghost",
+      "text": "Die hoek met die lamp",
+      "file": "ghost-d98bed64be7e77dcb040.mp3"
+    },
+    {
+      "sceneId": "spot_corner_after",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Papier brand vinnig. Hou dit ver van warm lampe af.",
+      "file": "ghost-428f5b2e2426d6710111.mp3"
+    },
+    {
+      "sceneId": "spot_backdoor",
+      "lineIndex": -1,
+      "speaker": "ghost",
+      "text": "Die agterdeur",
+      "file": "ghost-55d90e95b32916380f60.mp3"
+    },
+    {
+      "sceneId": "spot_backdoor_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Nou goed. Minder plek om te dans.",
+      "file": "mummy-b1976b038d5d1810fc33.mp3"
+    },
+    {
+      "sceneId": "spot_backdoor_after",
+      "lineIndex": 1,
+      "speaker": "ghost",
+      "text": "'n Versperde deur kan ons binne vaskeer. Hou deure oop en vry.",
+      "file": "ghost-d0d938f1b61bc3c8f5d4.mp3"
+    },
+    {
+      "sceneId": "spot_lights",
+      "lineIndex": -1,
+      "speaker": "ghost",
+      "text": "Die muur met die partytjieliggies",
+      "file": "ghost-1beeeabfd90d60587bb0.mp3"
+    },
+    {
+      "sceneId": "spot_lights_after",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Te veel proppe maak 'n kragpunt warm. Minder proppe is veiliger.",
+      "file": "ghost-d9584f5f94bdf2d04dab.mp3"
+    },
+    {
+      "sceneId": "zoe_s1_02",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Vier brandgevare, almal reggemaak. Die eerste stap is om brandgevare raak te sien.",
+      "file": "ghost-02fcc2af84ad6c1a6da0.mp3"
+    },
+    {
+      "sceneId": "max_s1_01",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Die mummie sien nie die brandgevare raak nie. Sê vir hom wat om te doen.",
+      "file": "ghost-1fed553765de4b7636d1.mp3"
+    },
+    {
+      "sceneId": "max_s1_01",
+      "lineIndex": 1,
+      "speaker": "mummy",
+      "text": "Kyk na my lantern. 'n Regte kers!",
+      "file": "mummy-ac795567545589ef9cde.mp3"
+    },
+    {
+      "sceneId": "max_s1_01_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Dieselfde lig en geen vlam nie. Baie veiliger!",
+      "file": "mummy-be39b253643cce70e171.mp3"
+    },
+    {
+      "sceneId": "max_s1_02",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "My papiervlermuise sit op die lamp. So gesellig!",
+      "file": "mummy-d969cc4579bca9a6a7d0.mp3"
+    },
+    {
+      "sceneId": "max_s1_02_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Teen die muur! Papier brand vinnig naby warm lampe.",
+      "file": "mummy-3be75f7000b57ac8a7af.mp3"
+    },
+    {
+      "sceneId": "max_s1_03",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Die bank staan teen die agterdeur. Meer plek om te dans!",
+      "file": "mummy-792605d4fd1e79dd64f0.mp3"
+    },
+    {
+      "sceneId": "max_s1_03_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Nou goed. Minder plek om te dans, maar die deur is oop.",
+      "file": "mummy-347cb54a0490e12765e1.mp3"
+    },
+    {
+      "sceneId": "max_s1_04",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Ses proppe in een kragpunt. Soveel liggies!",
+      "file": "mummy-9a13c8596a3793a18df4.mp3"
+    },
+    {
+      "sceneId": "max_s1_04_after",
+      "lineIndex": 0,
+      "speaker": "mummy",
+      "text": "Minder proppe, 'n koeler kragpunt. Baie veiliger.",
+      "file": "mummy-4ecdf15b918a5ff0c2ce.mp3"
+    },
+    {
+      "sceneId": "max_s1_05",
+      "lineIndex": 0,
+      "speaker": "ghost",
+      "text": "Vier brandgevare, en jy het almal reggemaak. Die eerste stap is om brandgevare raak te sien.",
+      "file": "ghost-d1a5eadc669a05b37dff.mp3"
+    }
+  ]
+}

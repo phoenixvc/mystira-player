@@ -7,7 +7,7 @@ describe('Mummy’s Party voice manifest', () => {
       { speaker: 'ghost', text: 'Stay outside.' },
       { speaker: 'mummy', text: 'What now?', audio: 'authored.mp3' },
     ] }] };
-    attachMummysPartyVoices(story, [
+    attachMummysPartyVoices(story, 'en', [
       { sceneId: 'first', lineIndex: 0, speaker: 'ghost', text: 'Stay outside.', file: 'ghost-good.mp3' },
       { sceneId: 'first', lineIndex: 0, speaker: 'ghost', text: 'Old wording.', file: 'ghost-stale.mp3' },
       { sceneId: 'first', lineIndex: 1, speaker: 'mummy', text: 'What now?', file: 'mummy.mp3' },
@@ -17,7 +17,12 @@ describe('Mummy’s Party voice manifest', () => {
   });
   it('keeps video dialogue as captions and leaves its audio to the video', () => {
     const story = { scenes: [{ id: 'opening_video', media: { video: 'assets/opening_video.mp4' }, lines: [{ speaker: 'ghost', text: 'Can you make it safe?' }] }] };
-    attachMummysPartyVoices(story, [{ sceneId: 'opening_video', lineIndex: 0, speaker: 'ghost', text: 'Can you make it safe?', file: 'unused.mp3' }]);
+    attachMummysPartyVoices(story, 'en', [{ sceneId: 'opening_video', lineIndex: 0, speaker: 'ghost', text: 'Can you make it safe?', file: 'unused.mp3' }]);
     expect(story.scenes[0]?.lines[0]).toEqual({ speaker: 'ghost', text: 'Can you make it safe?' });
+  });
+  it('attaches narration to a scene whose authored dialogue is empty', () => {
+    const story = { scenes: [{ id: 'spot_corner', active_character: 'ghost', description: 'Die hoek met die lamp', media: { video: null, audio: null }, lines: [] }] };
+    attachMummysPartyVoices(story, 'af', [{ sceneId: 'spot_corner', lineIndex: -1, speaker: 'ghost', text: 'Die hoek met die lamp', file: 'ghost-corner.mp3' }]);
+    expect(story.scenes[0]?.media.audio).toBe('assets/audio/af/ghost-corner.mp3');
   });
 });
