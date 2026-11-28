@@ -59,6 +59,8 @@ describe("Mummy's Party draft", () => {
     const garden = stageMummysParty(closing);
     expect(party.layers?.some((layer) => layer.id === 'ghost-glow' && layer.imageUrl.endsWith('ghost-pointing-glow.svg'))).toBe(true);
     expect(party.layers?.some((layer) => layer.id === 'sofa' && layer.left >= 70)).toBe(true);
+    expect(party.layers?.find((layer) => layer.id === 'pumpkin-lantern')?.left).toBe(35);
+    expect(spot.objects?.find((object) => object.id === 'lantern')?.geometry?.bounds?.[0]).toBe(0.35);
     expect(garden.layers?.find((layer) => layer.id === 'fire-engine')?.left).toBe(5);
     expect(party.imageForCast?.('/mummys-party/characters/ghost.png', 'worried')).toBe('/mummys-party/poses/ghost/ghost-worried.png');
     expect(party.layers?.find((layer) => layer.id === 'ghost-glow')?.left).toBe(8.5);
@@ -68,11 +70,14 @@ describe("Mummy's Party draft", () => {
     expect(shop.layers?.some((layer) => layer.id === 'smoke-alarm')).toBe(false);
     expect(shop.layers?.find((layer) => layer.id === 'fire-poster')?.left).toBe(6);
     expect(stageMummysParty(story.scenes.find((scene) => scene.id === 'q1_find')!).layers?.find((layer) => layer.id === 'fire-poster')?.width).toBe(26);
+    expect(stageMummysParty(story.scenes.find((scene) => scene.id === 'max_s1_02_after')!).layers?.find((layer) => layer.id === 'paper-bats')?.left).toBe(31);
   });
 
   it('completes the separate assessment with all three first answers correct', async () => {
     const engine = new LocalEngine(story, ['choices', 'hotspots', 'sequence', 'inspect']);
     let step = await engine.startSession({ activityId: 'fire_door', players: [{ type: 'Profile', profileId: 'demo_zoe' }], startNodeId: 'assessment' });
+    expect(step.node.id).toBe('assessment_intro');
+    step = await engine.respond(step.sessionId, { answerRequestId: 'assessment-intro', version: step.version, nodeId: step.node.id, answer: { kind: 'continue' } });
     expect(step.node.id).toBe('q1');
     for (const question of story.lesson!.checks!.flatMap((check) => check.questions)) {
       expect(step.node.id).toBe(question.scene);

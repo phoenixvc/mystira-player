@@ -7,7 +7,7 @@ const root = `${import.meta.env.BASE_URL}mummys-party/`;
 const asset = (path: string) => `${root}${path}`;
 
 type PlacedImage = { path: string; alt: string; left: number; bottom: number; width: number };
-type Scene = { id?: string; title: string; background: string; description: string; cast: PlacedImage[]; props: PlacedImage[]; smoke?: string; video?: string };
+type Scene = { id?: string; title: string; background: string; description: string; cast: PlacedImage[]; props: PlacedImage[]; smoke?: string[]; video?: string };
 
 type DraftScene = { id: string; title: string; description: string; media: { image: string | null; video: string | null }; cast?: { character_id: string; slot: string; pose?: string }[]; metadata?: { creative_instruction?: string | null } };
 type DraftStory = { characters: { id: string; image: string | null }[]; scenes: DraftScene[] };
@@ -33,7 +33,7 @@ const draftScenes: Scene[] = draft.scenes.map((scene) => {
     .filter((name) => !(name === 'smoke-alarm' && /(?:party-room|pootions-shop)\.jpg$/.test(scene.media.image ?? '')));
   const pathForPiece = (name: string) => name.startsWith('smoke-') ? `effects/${name}.png` :
     name.startsWith('arrow-') || name === 'meet-here-sign' ? `svg/${name}.svg` : `pieces/${name}.png`;
-  const smokeName = usedPieces.find((name) => name.startsWith('smoke-'));
+  const smokeNames = usedPieces.filter((name) => name.startsWith('smoke-'));
   return {
     id: scene.id,
     title: scene.title,
@@ -49,7 +49,7 @@ const draftScenes: Scene[] = draft.scenes.map((scene) => {
       return [{ path, alt: character.id, left, bottom: 1, width: 27 }];
     }),
     props: usedPieces.filter((name) => !name.startsWith('smoke-') && !(scene.id === 'max_s1_03' && name === 'sofa')).map((name) => ({ path: pathForPiece(name), alt: name.replaceAll('-', ' '), ...piecePositions[name]!, ...(name === 'fire-poster' && /shown large, close up/.test(pieces) ? { left: 37, bottom: 10, width: 26 } : {}) })),
-    smoke: smokeName ? pathForPiece(smokeName) : undefined,
+    smoke: smokeNames.map(pathForPiece),
   };
 });
 
@@ -82,13 +82,13 @@ const scenes: Scene[] = [
     { path: 'characters/vampire.png', alt: 'Vampire', left: 35, bottom: 2, width: 17 },
     { path: 'characters/skeleton.png', alt: 'Skeleton', left: 64, bottom: 2, width: 17 },
   ], props: [] },
-  { title: 'Smoke alarm', background: 'backgrounds/party-room-full.jpg', description: 'Smoke is layered over the room.', smoke: 'effects/smoke-ceiling.png', cast: [
+  { title: 'Smoke alarm', background: 'backgrounds/party-room-full.jpg', description: 'Smoke is layered over the room.', smoke: ['effects/smoke-ceiling.png'], cast: [
     { path: 'poses/ghost/ghost-waving.png', alt: 'Ghost waving', left: 11, bottom: 4, width: 17 },
     { path: 'poses/mummy/mummy-crawling.png', alt: 'Mummy crawling', left: 56, bottom: 0, width: 25 },
   ], props: [
     { path: 'pieces/blackened-pan.png', alt: 'Burnt pan', left: 45, bottom: 10, width: 12 },
   ] },
-  { title: 'Get out', background: 'backgrounds/front-garden.jpg', description: 'The guests meet outside.', smoke: 'effects/smoke-door.png', cast: [
+  { title: 'Get out', background: 'backgrounds/front-garden.jpg', description: 'The guests meet outside.', smoke: ['effects/smoke-door.png'], cast: [
     { path: 'poses/vampire/vampire-crawling.png', alt: 'Vampire crawling', left: 17, bottom: 2, width: 20 },
     { path: 'poses/skeleton/skeleton-crawling.png', alt: 'Skeleton crawling', left: 43, bottom: 2, width: 20 },
     { path: 'poses/ghost/ghost-pleased.png', alt: 'Pleased ghost', left: 75, bottom: 4, width: 15 },
@@ -147,7 +147,7 @@ export function MummysPartyMediaPreview() {
     <header className={styles.header}>
       <div><p className={styles.kicker}>Mystira Player · media preview</p><h1>The Mummy’s Party</h1>
         <p>Browse the 77 draft scenes or rough sample arrangements. Positions are temporary.</p></div>
-      <a href="/">Back to player</a>
+      <a href={import.meta.env.BASE_URL}>Back to player</a>
     </header>
     <section className={styles.preview} aria-label="Sample scene">
       <div className={styles.sourceControls}>
@@ -158,7 +158,7 @@ export function MummysPartyMediaPreview() {
         <img className={styles.background} src={asset(scene.background)} alt={scene.description} />
         {scene.video && <video className={styles.stageVideo} controls preload="metadata" poster={asset(scene.background)} src={asset(scene.video)} />}
         {scene.props.map((item) => <Placed key={item.path} item={item} />)}
-        {scene.smoke && showSmoke && <img className={styles.smoke} src={asset(scene.smoke)} alt="" aria-hidden="true" />}
+        {showSmoke && scene.smoke?.map((path) => <img key={path} className={styles.smoke} src={asset(path)} alt="" aria-hidden="true" />)}
         {scene.cast.map((item) => <Placed key={item.path} item={item} />)}
       </div>
       <div className={styles.nav}>
@@ -166,7 +166,7 @@ export function MummysPartyMediaPreview() {
         <div><strong>{scene.title}</strong><span>{index + 1} of {activeScenes.length} · {scene.description}</span></div>
         <button type="button" onClick={() => setIndex((index + 1) % activeScenes.length)} aria-label="Next scene">→</button>
       </div>
-      {scene.smoke && <label className={styles.toggle}><input type="checkbox" checked={showSmoke} onChange={(event) => setShowSmoke(event.target.checked)} /> Show smoke overlay</label>}
+      {!!scene.smoke?.length && <label className={styles.toggle}><input type="checkbox" checked={showSmoke} onChange={(event) => setShowSmoke(event.target.checked)} /> Show smoke overlay</label>}
       {source === 'samples' && <div className={styles.scenes}>{scenes.map((item, i) => <button key={item.title} type="button" aria-pressed={i === index} onClick={() => setIndex(i)}>{item.title}</button>)}</div>}
     </section>
     <section className={styles.videos} aria-label="Opening and closing videos">

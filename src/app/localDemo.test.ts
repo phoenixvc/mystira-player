@@ -77,4 +77,12 @@ describe('local demo bootstrap', () => {
     const step = await demo.assessment!.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_max' }], startNodeId: demo.assessment!.entries.inspect });
     expect(step.node.interaction.type).toBe('inspect');
   });
+
+  it('keeps Mummy’s Party assessment entries on the same story with partial capabilities', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots'] } }) }));
+    const demo = await loadLocalDemo('mummys-party');
+    expect(demo.assessment?.engine).toBe(demo.engine);
+    const step = await demo.assessment!.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_zoe' }], startNodeId: demo.assessment!.entries.assessment });
+    expect(step.node.id).toBe('assessment_intro');
+  });
 });

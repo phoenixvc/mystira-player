@@ -11,9 +11,9 @@ Every screen on the page shows the fix and a line before Next. In the YAML each 
 ## 2. Stretch screens, written in their fallback form
 
 - `spot_table`, `spot_corner`, `spot_backdoor`, `spot_lights`: STRETCH count: one screen of the whole room, find all four. Fallback used here: four tap screens.
-- `zoe_s3_11`: STRETCH keypad: dial 112 and tap Call. Wrong numbers ring Spider, then Witch’s Poo-tions, then the ghost says “It is 1, 1, 2.” Fallback used here: choices with three numbers.
+- `zoe_s3_11`: STRETCH keypad: dial 112 and tap Call in this European setting. Wrong numbers ring Spider, then Witch’s Poo-tions, then the ghost says “It is 1, 1, 2.” Fallback used here: choices with three numbers. Other regions need their local emergency number before release.
 - `max_s3_12`: STRETCH pattern: watch the path light up, then tap it: along the wall, past the sofa, past the coats, the back door. Wrong tiles: the hall door, the fireplace, the cupboard. Fallback used here: choices.
-- `max_s3_14`: STRETCH keypad: dial 112 and tap Call. Wrong numbers ring Spider, then Witch’s Poo-tions, then the ghost says “It is 1, 1, 2.” Fallback used here: choices with three numbers.
+- `max_s3_14`: STRETCH keypad: dial 112 and tap Call in this European setting. Wrong numbers ring Spider, then Witch’s Poo-tions, then the ghost says “It is 1, 1, 2.” Fallback used here: choices with three numbers. Other regions need their local emergency number before release.
 
 ## 3. A wrong line for each button
 

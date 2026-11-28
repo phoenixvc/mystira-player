@@ -43,7 +43,7 @@ export function stageMummysParty(scene: SceneYaml): SceneStaging {
     .map((name) => {
       const position = { ...positions[name]! };
       if (name === 'sofa' && /sofa (?:pushed away|clear of)/.test(pieces)) position.left = 54;
-      if (name === 'paper-bats' && /paper-bats (?:moved from the lamp to|on) the wall/.test(pieces)) { position.left = 31; position.bottom = 68; }
+      if (name === 'paper-bats' && /paper-bats (?:moved (?:from the lamp )?to|on) the wall/.test(pieces)) { position.left = 31; position.bottom = 68; }
       if (name === 'fire-poster' && /shown large, close up/.test(pieces)) { position.left = 37; position.bottom = 10; position.width = 26; }
       return { id: name, imageUrl: `${mediaRoot}${pathForPiece(name)}`, alt: '', ...position, ...(name.startsWith('smoke-') ? { overlay: true } : {}) };
     });

@@ -98,7 +98,8 @@ export class LocalEngine implements Engine {
       const kind = this.story.scenes.find((scene) => scene.id === id)?.interaction?.kind;
       return kind !== undefined && !this.enabled.includes(kind);
     }) : -1;
-    const sceneIds = assessmentEntry ? availableSceneIds.slice(assessmentIndex) : isolatedInspectPreview
+    const introSceneId = request.startNodeId === 'assessment' && this.story.scenes.some((scene) => scene.id === 'assessment_intro') ? 'assessment_intro' : undefined;
+    const sceneIds = assessmentEntry ? [...(introSceneId ? [introSceneId] : []), ...availableSceneIds.slice(assessmentIndex)] : isolatedInspectPreview
       ? this.pieceSceneIds(profileId).find((piece) => piece.sceneIds.includes(startNodeId!))?.sceneIds ?? [] : practicePreview
       ? availableSceneIds.slice(0, firstUnsupported < 0 ? availableSceneIds.length : firstUnsupported) : availableSceneIds;
     if (sceneIds.length === 0) {

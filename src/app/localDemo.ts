@@ -36,8 +36,8 @@ export async function loadLocalDemo(kind: 'pumpkin-gate' | 'mummys-party' = 'pum
   const choicesAvailable = config.interactions.enabled.includes('choices') && config.interactions.enabled.includes('hotspots');
   const sequenceAvailable = config.interactions.enabled.includes('sequence');
   const inspectAvailable = config.interactions.enabled.includes('inspect');
-  const assessment = choicesAvailable || sequenceAvailable || inspectAvailable ? fullLesson ? story : StoryYamlSchema.parse(parse(pumpkinGate)) : undefined;
-  const assessmentEngine = assessment ? fullLesson ? engine : new LocalEngine(assessment, config.interactions.enabled) : undefined;
+  const assessment = choicesAvailable || sequenceAvailable || inspectAvailable ? kind === 'mummys-party' || fullLesson ? story : StoryYamlSchema.parse(parse(pumpkinGate)) : undefined;
+  const assessmentEngine = assessment ? assessment === story ? engine : new LocalEngine(assessment, config.interactions.enabled) : undefined;
   const assessmentProfiles = assessmentEngine ? await assessmentEngine.listProfiles() : [];
   const sequenceEntry = sequenceAvailable ? assessmentEngine?.demoSequenceEntry() : undefined;
   const inspectEntry = inspectAvailable ? assessmentEngine?.demoInspectEntry() : undefined;

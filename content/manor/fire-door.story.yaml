@@ -179,7 +179,7 @@ characters:
     age: 40
     traits:
     - friendly
-    backstory: The voice that answers 112.
+    backstory: The voice that answers 112 in this European setting.
 scenes:
 - id: opening_video
   title: The opening video
@@ -243,9 +243,9 @@ scenes:
     label: The pumpkin lantern
     geometry:
       bounds:
-      - 0.735
+      - 0.35
       - 0.55
-      - 0.205
+      - 0.07
       - 0.3
     reveal:
       text: A real candle! One bump and it tips.
@@ -895,13 +895,13 @@ scenes:
 - id: zoe_s2_05_after
   title: What changes
   type: narrative
-  description: 'The phone screen fills up with big numbers: FIRE SERVICE 112.'
+  description: 'The phone screen fills up with big numbers: EMERGENCY 112 (EU).'
   active_character: null
   lines:
   - speaker: ghost
-    text: The fire service is 112. Remember it!
+    text: Here in Europe, 112 calls the emergency services, including the fire service. Remember it!
   - speaker: ghost
-    text: We call 112 from outside, and we say where the fire is.
+    text: From outside, we call 112 here in Europe and say where the fire is. Elsewhere, use your local emergency number.
   next_scene: zoe_s2_06
   difficulty: null
   cast:
@@ -914,7 +914,7 @@ scenes:
     video: null
   branches: []
   metadata:
-    creative_instruction: 'We see: The phone screen fills up with big numbers: FIRE SERVICE 112. Pieces: meet-here-sign on the lamp post; FIRE SERVICE 112 on the phone screen in the ghost-phone pose.'
+    creative_instruction: 'We see: The phone screen fills up with big numbers: EMERGENCY 112 (EU). Pieces: meet-here-sign on the lamp post; EMERGENCY 112 (EU) on the phone screen in the ghost-phone pose.'
 - id: zoe_s2_06
   title: The lamp post
   type: narrative
@@ -922,7 +922,7 @@ scenes:
   active_character: ghost
   lines:
   - speaker: ghost
-    text: 'Two ways out, a meeting place, and 112 for the fire service. That is the second step: making a plan before anything goes wrong.'
+    text: 'Two ways out, a meeting place, and the emergency number for where you live. Here in Europe, that number is 112. That is the second step: making a plan before anything goes wrong.'
   next_scene: null
   difficulty: null
   cast:
@@ -1053,7 +1053,7 @@ scenes:
   active_character: null
   lines:
   - speaker: ghost
-    text: Smoke floats up. The clean air is down low.
+    text: Smoke rises. Stay low and keep moving to the exit. The air near the floor can still be dangerous.
   next_scene: zoe_s3_09
   difficulty: null
   cast:
@@ -1214,7 +1214,7 @@ scenes:
   - speaker: mummy
     text: Everybody is here! Quick, call the fire service!
   task:
-    text: Which number? Tap one.
+    text: Here in Europe, which emergency number? Tap one.
   next_scene: null
   difficulty: null
   cast:
@@ -1828,11 +1828,11 @@ scenes:
 - id: max_s2_09_after
   title: What changes
   type: narrative
-  description: 'The mummy writes in big numbers: “Call the fire service, 112, from outside.”'
+  description: 'The mummy writes in big numbers: “In Europe, call 112 from outside.”'
   active_character: null
   lines:
   - speaker: mummy
-    text: The fire service puts out fires. Their number is 112.
+    text: Here in Europe, 112 reaches emergency services, including the fire service. Elsewhere, use your local emergency number.
   next_scene: max_s2_10
   difficulty: null
   cast:
@@ -1845,7 +1845,7 @@ scenes:
     video: null
   branches: []
   metadata:
-    creative_instruction: 'We see: The mummy writes in big numbers: “Call the fire service, 112, from outside.” Pieces: the poster with the new line written on it in big numbers.'
+    creative_instruction: 'We see: The mummy writes in big numbers: “In Europe, call 112 from outside.” Pieces: the poster with the new line written on it in big numbers.'
 - id: max_s2_10
   title: The finished sign
   type: narrative
@@ -1879,7 +1879,7 @@ scenes:
   - speaker: narrator
     text: BEEP! BEEP! BEEP!
   - speaker: ghost
-    text: Smoke floats up. The clean air is down low.
+    text: Smoke rises. Stay low and keep moving to the exit. The air near the floor can still be dangerous.
   - speaker: ghost
     text: They are all looking at you. Give them the order.
   task:
@@ -2098,7 +2098,7 @@ scenes:
   - speaker: mummy
     text: Quick! What is the number? I cannot remember!
   task:
-    text: Which number? Tap one.
+    text: Here in Europe, which emergency number? Tap one.
   next_scene: null
   difficulty: null
   cast:
@@ -2972,7 +2972,7 @@ scenes:
   description: The room, with grey smoke across the top.
   active_character: ghost
   task:
-    text: Where is the clean air? Tap it.
+    text: If you must escape through smoke, where should you stay low? Tap it.
   objects:
   - id: ceiling
     label: Up by the ceiling
@@ -2993,7 +2993,7 @@ scenes:
       - 0.43
       - 0.3
     reveal:
-      text: No smoke down here!
+      text: Stay low and move to the exit. Air near the floor can still be dangerous.
   next_scene: null
   difficulty: null
   media:
@@ -3051,7 +3051,7 @@ scenes:
       - 0.28
       - 0.3
     reveal:
-      text: Smoke? Get low. The clean air is down by the floor.
+      text: Smoke? Stay low and move to the exit. Air near the floor can still be dangerous.
   - id: rhide
     label: “Never hide.”
     geometry:
