@@ -1,0 +1,6 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/mummys-party/*", "/icons/*", "/*.{png,jpg,jpeg,webp,gif,css,js,ico,svg,mp3,mp4,webmanifest,json}"]
+  }
+}
