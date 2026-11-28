@@ -54,6 +54,8 @@ The next Spec 1 work is on `feat/player-core-shell`, based on the merged PR #13 
 
 The source pass reached 74 Vitest tests, typecheck and build. A connected browser pass observed the desktop and narrow layouts, both continue scenes and the end view. Mobile Lighthouse accessibility scored 100 on the landing page and an active scene. Running `scripts/check-content.py` through `uv` with `jsonschema` and `pyyaml` reported zero problems for both Manor stories. A draft Codex review was triggered with `@codex review`; it found that media controls could invalidate a pending navigation response and a rejected audio play promise could start cancelled fallback speech. Playback and request generations are now separate, fallback speech checks the playback generation, and the player aborts an optional Engine request signal on unmount or session switch. Regression tests cover both findings, abort, video cleanup, density, a late response after a story switch, and a failed restart.
 
+The [core acceptance evidence](../.kiro/specs/player-core/verification.md) maps each requirement to the implementation and observed checks. It records Requirement 19.3 as partial: the demo shows disabled assessment and follow-up choices until Spec 2 compiles those nodes. Task 9.3 stays open while that requirement is unverified. A second draft Codex review was requested after the schema and child-chosen piece changes.
+
 ## MCP
 
 - **context7** and **playwright** (committed in `.kiro/settings/mcp.json`, launched with `cmd /c npx` because Windows cannot run `npx` directly): current library documentation, and browser control so the agent can open and inspect the running player.
