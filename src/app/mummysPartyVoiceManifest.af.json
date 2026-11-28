@@ -4,6 +4,13 @@
   "lines": [
     {
       "sceneId": "spot_table",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Soek die brandgevaar op die tafel. Tik daarop.",
+      "file": "guide-5bfda999b3111c97a84e.mp3"
+    },
+    {
+      "sceneId": "spot_table",
       "lineIndex": 0,
       "speaker": "ghost",
       "text": "'n Brandgevaar kan 'n brand veroorsaak of ons binne vaskeer.",
@@ -18,6 +25,13 @@
     },
     {
       "sceneId": "spot_corner",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Soek die brandgevaar in hierdie hoek. Tik daarop.",
+      "file": "guide-fa55137a20799adfc8ff.mp3"
+    },
+    {
+      "sceneId": "spot_corner",
       "lineIndex": -1,
       "speaker": "ghost",
       "text": "Die hoek met die lamp",
@@ -29,6 +43,13 @@
       "speaker": "ghost",
       "text": "Papier brand vinnig. Hou dit ver van warm lampe af.",
       "file": "ghost-428f5b2e2426d6710111.mp3"
+    },
+    {
+      "sceneId": "spot_backdoor",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Soek die brandgevaar by die agterdeur. Tik daarop.",
+      "file": "guide-a083299f8d521dbfa108.mp3"
     },
     {
       "sceneId": "spot_backdoor",
@@ -53,6 +74,13 @@
     },
     {
       "sceneId": "spot_lights",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Soek die brandgevaar by die liggies. Tik daarop.",
+      "file": "guide-cb177316a234643a06b8.mp3"
+    },
+    {
+      "sceneId": "spot_lights",
       "lineIndex": -1,
       "speaker": "ghost",
       "text": "Die muur met die partytjieliggies",
@@ -71,6 +99,13 @@
       "speaker": "ghost",
       "text": "Vier brandgevare, almal reggemaak. Die eerste stap is om brandgevare raak te sien.",
       "file": "ghost-02fcc2af84ad6c1a6da0.mp3"
+    },
+    {
+      "sceneId": "max_s1_01",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Wat moet hy doen? Kies een.",
+      "file": "guide-788571cca9f2e0c75474.mp3"
     },
     {
       "sceneId": "max_s1_01",
@@ -95,6 +130,13 @@
     },
     {
       "sceneId": "max_s1_02",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Wat moet hy doen? Kies een.",
+      "file": "guide-788571cca9f2e0c75474.mp3"
+    },
+    {
+      "sceneId": "max_s1_02",
       "lineIndex": 0,
       "speaker": "mummy",
       "text": "My papiervlermuise sit op die lamp. So gesellig!",
@@ -109,6 +151,13 @@
     },
     {
       "sceneId": "max_s1_03",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Wat moet hy doen? Kies een.",
+      "file": "guide-788571cca9f2e0c75474.mp3"
+    },
+    {
+      "sceneId": "max_s1_03",
       "lineIndex": 0,
       "speaker": "mummy",
       "text": "Die bank staan teen die agterdeur. Meer plek om te dans!",
@@ -120,6 +169,13 @@
       "speaker": "mummy",
       "text": "Nou goed. Minder plek om te dans, maar die deur is oop.",
       "file": "mummy-347cb54a0490e12765e1.mp3"
+    },
+    {
+      "sceneId": "max_s1_04",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Wat moet hy doen? Kies een.",
+      "file": "guide-788571cca9f2e0c75474.mp3"
     },
     {
       "sceneId": "max_s1_04",

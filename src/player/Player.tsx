@@ -24,13 +24,15 @@ type Props = {
   muted?: boolean;
   initialGesture?: boolean;
   slotGuide?: boolean;
+  immersive?: boolean;
+  hotspotAsChoices?: (sceneId: string) => boolean;
   locale?: 'en' | 'af';
   languagePair?: (sceneId: string, lineIndex: number, currentText: string) => LanguagePair | undefined;
 };
 
 const slots = ['left', 'center', 'right'] as const;
 
-export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false, slotGuide = false, locale = 'en', languagePair }: Props) {
+export function Player({ engine, startRequest, resumeSessionId, notesEnabled = false, isDemoMode = false, grownUpAuthorized = false, onStep, onAnswer, onError, theme = manorTheme, inheritTheme = false, muted = false, initialGesture = false, slotGuide = false, immersive = false, hotspotAsChoices, locale = 'en', languagePair }: Props) {
   const afrikaans = locale === 'af';
   const onStepRef = useRef(onStep);
   onStepRef.current = onStep;
@@ -245,8 +247,22 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
         void sound.play().catch(speech);
       } else speech();
     };
-    play(from);
+    if (from === 0 && step.node.task?.audioUrl) {
+      const guide = new Audio(step.node.task.audioUrl);
+      audio.current = guide;
+      guide.onended = () => play(0);
+      guide.onerror = () => play(0);
+      void guide.play().catch(() => play(0));
+    } else play(from);
   }, [answer, step, stopMedia, muted, locale]);
+
+  const playInstruction = useCallback(() => {
+    if (!step?.node.task?.audioUrl || muted) return;
+    stopMedia();
+    const guide = new Audio(step.node.task.audioUrl);
+    audio.current = guide;
+    void guide.play().catch(() => {});
+  }, [step, muted, stopMedia]);
 
   const choose = useCallback((value: Extract<Answer, { kind: 'choice' | 'hotspot' }>) => {
     if (!step || busyRef.current || held) return;
@@ -392,13 +408,14 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
     assigned.add(position);
     return { ...character, position };
   });
-  return <section className={`${styles.player} ${young ? styles.young : ''}`} aria-label="Story player" style={{ ...(inheritTheme ? {} : themeStyle(theme)), '--mp-min-target': `${minTarget}px` } as CSSProperties} onPointerDownCapture={() => setHasGesture(true)} onKeyDownCapture={() => setHasGesture(true)}>
+  return <section className={`${styles.player} ${young ? styles.young : ''} ${immersive ? styles.immersive : ''}`} aria-label="Story player" style={{ ...(inheritTheme ? {} : themeStyle(theme)), '--mp-min-target': `${minTarget}px` } as CSSProperties} onPointerDownCapture={() => setHasGesture(true)} onKeyDownCapture={() => setHasGesture(true)}>
     <header className={styles.header}>
       <p className={styles.kicker}>Mystira · The Manor</p>
       <h1>{node.title ?? 'Story scene'}</h1>
       {step.progress && <p className={styles.progress}>{node.type === 'result' ? afrikaans ? 'Uitslag' : 'Result' : `${afrikaans ? 'Toneel' : 'Scene'} ${step.progress.done + 1} ${afrikaans ? 'van' : 'of'} ${step.progress.total}`}</p>}
     </header>
-    <div className={`${styles.stage} ${slotGuide ? styles.slotGuide : ''}`} key={`${node.id}:${step.version}`} onClick={(event) => { if (node.interaction.type === 'hotspots' && !held && !(event.target as HTMLElement).closest('button')) setFeedback(afrikaans ? 'Niks hier nie.' : 'Nothing here'); }}>
+    <div className={styles.sceneFrame}>
+    <div className={`${styles.stage} ${slotGuide ? styles.slotGuide : ''}`} key={`${node.id}:${step.version}`} onClick={(event) => { if (node.interaction.type === 'hotspots' && !hotspotAsChoices?.(node.id) && !held && !(event.target as HTMLElement).closest('button')) setFeedback(afrikaans ? 'Niks hier nie.' : 'Nothing here'); }}>
       {node.media.video && !held?.image ? <video ref={attachVideo} src={node.media.video.url} poster={node.media.video.posterUrl} controls playsInline muted={muted} onEnded={() => { if (node.media.video?.onEnd === 'advance' && node.interaction.type === 'continue') void answer({ kind: 'continue' }); }} />
         : (held?.image?.imageUrl ?? node.media.imageUrl) && !imageFailed ? <img className={styles.media} src={held?.image?.imageUrl ?? node.media.imageUrl} alt={held?.image?.alt ?? node.media.alt ?? ''} onError={() => setImageFailed(true)} />
           : <div className={styles.mediaFallback} role="img" aria-label={imageFailed ? held?.image?.alt ?? node.media.alt ?? 'Scene image unavailable' : 'Scene artwork'}>✦</div>}
@@ -409,26 +426,28 @@ export function Player({ engine, startRequest, resumeSessionId, notesEnabled = f
           : node.interaction.result && <div role="status"><p>You rolled <strong>{node.interaction.result.value}</strong>{node.interaction.target && <> vs {node.interaction.target}</>}</p><p>{node.interaction.result.message}</p></div>}
       </div>}
       {node.overlays.map((overlay) => <span className={styles.overlayRegion} key={overlay.id}><span className={styles.overlay} tabIndex={0} style={{ left: `${overlay.anchor.x * 100}%`, top: `${overlay.anchor.y * 100}%`, transform: `translate(-${overlay.anchor.x * 100}%, -${overlay.anchor.y * 100}%)`, maxWidth: overlay.maxWidth ? `${overlay.maxWidth * 100}%` : undefined }}>{overlay.text}</span></span>)}
-      {node.interaction.type === 'hotspots' && !held && node.interaction.spots.map((spot) => <button key={spot.id} type="button" className={`${styles.hotspot} ${reveal && node.interaction.type === 'hotspots' && node.interaction.local?.correctId === spot.id ? styles.revealed : ''}`} style={spot.region.shape === 'rect' ? { left: `${spot.region.x * 100}%`, top: `${spot.region.y * 100}%`, width: `${spot.region.w * 100}%`, height: `${spot.region.h * 100}%` } : { left: `${(spot.region.x - spot.region.r) * 100}%`, top: `${(spot.region.y - spot.region.r) * 100}%`, width: `${spot.region.r * 200}%`, height: `${spot.region.r * 200}%`, borderRadius: '50%' }} aria-label={spot.label} aria-pressed={selected?.kind === 'hotspot' && selected.hotspotId === spot.id} disabled={busy} onClick={() => choose({ kind: 'hotspot', hotspotId: spot.id })}><span>{spot.label}</span></button>)}
+      {node.interaction.type === 'hotspots' && !hotspotAsChoices?.(node.id) && !held && node.interaction.spots.map((spot) => <button key={spot.id} type="button" className={`${styles.hotspot} ${reveal && node.interaction.type === 'hotspots' && node.interaction.local?.correctId === spot.id ? styles.revealed : ''}`} style={spot.region.shape === 'rect' ? { left: `${spot.region.x * 100}%`, top: `${spot.region.y * 100}%`, width: `${spot.region.w * 100}%`, height: `${spot.region.h * 100}%` } : { left: `${(spot.region.x - spot.region.r) * 100}%`, top: `${(spot.region.y - spot.region.r) * 100}%`, width: `${spot.region.r * 200}%`, height: `${spot.region.r * 200}%`, borderRadius: '50%' }} aria-label={spot.label} aria-pressed={selected?.kind === 'hotspot' && selected.hotspotId === spot.id} disabled={busy} onClick={() => choose({ kind: 'hotspot', hotspotId: spot.id })}><span>{spot.label}</span></button>)}
       {held?.spot && <div className={styles.hotspotReveal} role="status" style={held.spot.region.shape === 'rect' ? { left: `${held.spot.region.x * 100}%`, top: `${held.spot.region.y * 100}%` } : { left: `${held.spot.region.x * 100}%`, top: `${held.spot.region.y * 100}%` }}>{held.spot.imageUrl && <img src={held.spot.imageUrl} alt={held.spot.alt ?? held.spot.text} />}<p>{held.spot.text}</p></div>}
       {node.media.video?.skippable && node.interaction.type === 'continue' && <button className={styles.skip} type="button" disabled={busy} onClick={() => void answer({ kind: 'continue' })}>{afrikaans ? 'Slaan video oor' : 'Skip video'}</button>}
     </div>
     {node.type === 'check' && <p role="status" className={styles.banner}>{node.attempt === 1 ? 'Only the first try counts' : 'This try does not count for the score'}</p>}
     {node.type === 'check' && <p className={styles.task}>{node.question.text}</p>}
     {node.type === 'research' && node.yourAnswer && <p className={styles.banner}>You chose: {node.yourAnswer}</p>}
-    {node.task && <p className={styles.task}>{node.task.text}</p>}
+    {node.task && <div className={styles.task}><span>{node.task.text}</span>{node.task.audioUrl && !muted && <button className={styles.taskReplay} type="button" onClick={playInstruction} aria-label={afrikaans ? 'Speel instruksie weer' : 'Replay instruction'}>↻</button>}</div>}
+    <div className={styles.dialogue} aria-live="polite">
+      {currentLine && !(node.type === 'check' && currentLine.text === node.question.text) && <><div className={styles.speaker}>{speaker?.avatarUrl && <img src={speaker.avatarUrl} alt="" />}<strong style={{ color: speaker?.colour }}>{speaker?.name ?? (afrikaans ? 'Verteller' : 'Narrator')}</strong></div><p>{currentLine.text}</p></>}
+      {node.lines.length > 1 && lineIndex < node.lines.length - 1 && <div className={styles.lineControls}><button type="button" disabled={!!held} onClick={() => { if (!node.media.video) stopMedia(); setLineIndex((index) => index + 1); }}>{afrikaans ? 'Volgende sin' : 'Next sentence'}</button></div>}
+    </div>
     {node.interaction.type === 'choices' && !held && <div className={`${styles.choices} ${wrongMotion ? styles.wrongMotion : ''}`} role="group" aria-label="Choices">{node.interaction.options.map((option) => <button key={option.id} type="button" className={reveal && node.interaction.type === 'choices' && node.interaction.local?.correctId === option.id ? styles.revealed : ''} aria-pressed={selected?.kind === 'choice' && selected.choiceId === option.id} disabled={busy} onClick={() => choose({ kind: 'choice', choiceId: option.id })}>{option.label}</button>)}</div>}
+    {node.interaction.type === 'hotspots' && hotspotAsChoices?.(node.id) && !held && <div className={`${styles.choices} ${wrongMotion ? styles.wrongMotion : ''}`} role="group" aria-label="Choices">{node.interaction.spots.map((spot) => <button key={spot.id} type="button" className={reveal && node.interaction.type === 'hotspots' && node.interaction.local?.correctId === spot.id ? styles.revealed : ''} aria-pressed={selected?.kind === 'hotspot' && selected.hotspotId === spot.id} disabled={busy} onClick={() => choose({ kind: 'hotspot', hotspotId: spot.id })}>{spot.label}</button>)}</div>}
     {node.interaction.type === 'sequence' && <div className={wrongMotion ? styles.wrongMotion : undefined}><SequenceView key={`${step.sessionId}:${node.id}:${step.version}`} items={node.interaction.items} disabled={busy} revealId={sequenceRevealId} onEdit={() => { stopMedia(); setSelected(undefined); setFeedback(undefined); setSequenceRevealId(undefined); }} onDone={submitSequence} /></div>}
     {node.interaction.type === 'inspect' && <div className={wrongMotion ? styles.wrongMotion : undefined}><InspectView key={`${step.sessionId}:${node.id}:${step.version}`} document={node.interaction.document} minMarks={node.interaction.minMarks ?? 1} disabled={busy} revealIds={inspectRevealIds} onEdit={() => { stopMedia(); setSelected(undefined); setFeedback(undefined); setInspectRevealIds([]); }} onDone={submitInspect} /></div>}
     {sequenceRevealId && node.interaction.type === 'sequence' && <p role="status" className={styles.feedback}>Look at {node.interaction.items.find((item) => item.id === sequenceRevealId)?.label} and try that position again.</p>}
     {inspectRevealIds.length > 0 && node.interaction.type === 'inspect' && <p role="status" className={styles.feedback}>Look again at {inspectRevealIds.map((id) => inspectParts.find((part) => part.id === id)?.text).join(', ')}.</p>}
     {feedback && <p role="status" className={styles.feedback}>{feedback}</p>}
     {held && !held.spot && <div className={styles.feedback} role="status"><p>{held.line.text}</p>{!heldReady && <button type="button" onClick={() => { stopMedia(); setHeldReady(true); }}>{afrikaans ? 'Gaan voort sonder klank' : 'Continue without audio'}</button>}</div>}
-    <div className={styles.dialogue} aria-live="polite">
-      {currentLine && !(node.type === 'check' && currentLine.text === node.question.text) && <><div className={styles.speaker}>{speaker?.avatarUrl && <img src={speaker.avatarUrl} alt="" />}<strong style={{ color: speaker?.colour }}>{speaker?.name ?? (afrikaans ? 'Verteller' : 'Narrator')}</strong></div><p>{currentLine.text}</p></>}
-      {node.lines.length > 1 && <div className={styles.lineControls}><span>{afrikaans ? 'Sin' : 'Line'} {lineIndex + 1} {afrikaans ? 'van' : 'of'} {node.lines.length}</span><button type="button" disabled={!!held || lineIndex >= node.lines.length - 1} onClick={() => { if (!node.media.video) stopMedia(); setLineIndex((index) => index + 1); }}>{afrikaans ? 'Wys volgende sin' : 'Show next line'}</button></div>}
     </div>
-    {comparison && <LanguageExplorer key={`${node.id}:${lineIndex}`} pair={comparison} locale={locale} muted={muted} onExplore={() => stopMedia()} registerStop={registerComparisonStop} />}
+    {comparison && <LanguageExplorer key={`language:${node.id}:${lineIndex}`} pair={comparison} locale={locale} muted={muted} onExplore={() => stopMedia()} registerStop={registerComparisonStop} />}
     {node.type === 'result' && <aside className={styles.feedback} aria-label="Lesson result">{node.total > 0 && <p>{node.correctFirstTry} of {node.total} correct on the first try</p>}{node.key && <div className={styles.resultKey}>{node.key.iconUrl && !keyImageFailed ? <img src={node.key.iconUrl} alt="" onError={() => setKeyImageFailed(true)} /> : <span aria-hidden="true">✦</span>}<strong>{node.key.label}</strong></div>}</aside>}
     {node.type !== 'terminal' && <div className={styles.actions}>
       <button type="button" disabled={busy || !step.canGoBack} hidden={!step.canGoBack} onClick={() => void answer({ kind: 'back' })}>{afrikaans ? 'Terug' : 'Back'}</button>

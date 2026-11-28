@@ -213,30 +213,30 @@ scenes:
     label: The bowl of sweets
     geometry:
       bounds:
-      - 0.06
-      - 0.55
-      - 0.205
-      - 0.3
+      - 0.245
+      - 0.64
+      - 0.07
+      - 0.09
     reveal:
       text: Just yummy sweets.
   - id: cookies
     label: The spider cookies
     geometry:
       bounds:
-      - 0.285
-      - 0.55
-      - 0.205
-      - 0.3
+      - 0.31
+      - 0.67
+      - 0.07
+      - 0.08
     reveal:
       text: Just spooky cookies.
   - id: punch
     label: The punch
     geometry:
       bounds:
-      - 0.51
-      - 0.55
-      - 0.205
-      - 0.3
+      - 0.405
+      - 0.6
+      - 0.08
+      - 0.14
     reveal:
       text: Punch. It is wet.
   - id: lantern
@@ -244,9 +244,9 @@ scenes:
     geometry:
       bounds:
       - 0.35
-      - 0.55
-      - 0.07
-      - 0.3
+      - 0.58
+      - 0.055
+      - 0.14
     reveal:
       text: A real candle! One bump and it tips.
   next_scene: null
@@ -318,30 +318,30 @@ scenes:
     label: The armchair
     geometry:
       bounds:
-      - 0.06
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.72
+      - 0.56
+      - 0.18
+      - 0.34
     reveal:
       text: Just a comfy chair.
   - id: balloons
     label: The balloons
     geometry:
       bounds:
-      - 0.36
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.68
+      - 0.4
+      - 0.14
+      - 0.26
     reveal:
       text: Just balloons that can pop.
   - id: lamp
     label: The lamp with the paper bats
     geometry:
       bounds:
-      - 0.66
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.14
+      - 0.33
+      - 0.095
+      - 0.42
     reveal:
       text: Paper bats on a hot lamp!
   next_scene: null
@@ -408,30 +408,30 @@ scenes:
     label: The coats on the hooks
     geometry:
       bounds:
-      - 0.06
-      - 0.55
-      - 0.28
+      - 0.83
       - 0.3
+      - 0.09
+      - 0.31
     reveal:
       text: Just creepy coats.
   - id: brolly
     label: The umbrella stand
     geometry:
       bounds:
-      - 0.36
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.875
+      - 0.53
+      - 0.07
+      - 0.25
     reveal:
       text: Just umbrellas for rainy days.
   - id: sofa
     label: The sofa
     geometry:
       bounds:
-      - 0.66
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.68
+      - 0.58
+      - 0.25
+      - 0.32
     reveal:
       text: The sofa is blocking the door!
   next_scene: null
@@ -503,30 +503,30 @@ scenes:
     label: The rug
     geometry:
       bounds:
-      - 0.06
+      - 0.23
+      - 0.78
       - 0.55
-      - 0.28
-      - 0.3
+      - 0.18
     reveal:
       text: Just a fluffy rug.
   - id: broom
     label: The broom
     geometry:
       bounds:
-      - 0.36
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.91
+      - 0.52
+      - 0.065
+      - 0.34
     reveal:
       text: Just a witchy broom.
   - id: socket
     label: The socket
     geometry:
       bounds:
-      - 0.66
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.125
+      - 0.6
+      - 0.05
+      - 0.11
     reveal:
       text: Six plugs in one socket!
   next_scene: null
@@ -619,19 +619,19 @@ scenes:
     label: The cupboard
     geometry:
       bounds:
-      - 0.06
-      - 0.55
-      - 0.205
-      - 0.3
+      - 0.68
+      - 0.29
+      - 0.19
+      - 0.43
     reveal:
       text: Just a cupboard. Never hide in a fire.
   - id: wall
     label: The wall
     geometry:
       bounds:
-      - 0.285
-      - 0.55
-      - 0.205
+      - 0.24
+      - 0.12
+      - 0.24
       - 0.3
     reveal:
       text: I can go through walls, but my friends cannot.
@@ -639,19 +639,19 @@ scenes:
     label: The back door
     geometry:
       bounds:
-      - 0.51
-      - 0.55
-      - 0.205
-      - 0.3
+      - 0.93
+      - 0.17
+      - 0.07
+      - 0.67
     reveal:
       text: The back door!
   - id: fireplace
     label: The fireplace
     geometry:
       bounds:
-      - 0.735
-      - 0.55
-      - 0.205
+      - 0.5
+      - 0.42
+      - 0.17
       - 0.3
     reveal:
       text: Just a chimney. Only smoke goes up there.
@@ -727,19 +727,19 @@ scenes:
     label: The front step
     geometry:
       bounds:
-      - 0.06
-      - 0.55
-      - 0.205
-      - 0.3
+      - 0.19
+      - 0.65
+      - 0.18
+      - 0.17
     reveal:
       text: The front step! That is too close.
   - id: bush
     label: The thorn bush
     geometry:
       bounds:
-      - 0.285
-      - 0.55
-      - 0.205
+      - 0.51
+      - 0.47
+      - 0.17
       - 0.3
     reveal:
       text: This bush is far enough, but nobody wants the thorns.
@@ -747,20 +747,20 @@ scenes:
     label: The lamp post by the front gate
     geometry:
       bounds:
-      - 0.51
-      - 0.55
-      - 0.205
-      - 0.3
+      - 0.79
+      - 0.2
+      - 0.12
+      - 0.67
     reveal:
       text: The lamp post by the gate!
   - id: hall
     label: The hall, through the open door
     geometry:
       bounds:
-      - 0.735
-      - 0.55
-      - 0.205
-      - 0.3
+      - 0.225
+      - 0.43
+      - 0.12
+      - 0.27
     reveal:
       text: Back inside? Never!
   next_scene: null
@@ -2375,10 +2375,10 @@ scenes:
     label: The shop cat
     geometry:
       bounds:
-      - 0.06
-      - 0.55
+      - 0.08
       - 0.28
-      - 0.3
+      - 0.28
+      - 0.67
     reveal:
       text: Meow. I only check if my food bowl is full.
   - id: witch
@@ -2386,19 +2386,19 @@ scenes:
     geometry:
       bounds:
       - 0.36
-      - 0.55
       - 0.28
-      - 0.3
+      - 0.28
+      - 0.67
     reveal:
       text: My table looks fine to me. But I never checked.
   - id: poster
     label: The fire safety poster on the wall
     geometry:
       bounds:
-      - 0.66
+      - 0.045
+      - 0.15
+      - 0.16
       - 0.55
-      - 0.28
-      - 0.3
     reveal:
       text: The fire service made this poster. They know!
   next_scene: null
@@ -2526,30 +2526,30 @@ scenes:
     label: The jar of frog eyes
     geometry:
       bounds:
-      - 0.06
+      - 0.22
       - 0.55
-      - 0.28
-      - 0.3
+      - 0.09
+      - 0.17
     reveal:
       text: Just goggly frog eyes.
   - id: slime
     label: The bucket of slime
     geometry:
       bounds:
-      - 0.36
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.23
+      - 0.77
+      - 0.12
+      - 0.2
     reveal:
       text: Just cold, wet slime.
   - id: papers
     label: The recipe papers
     geometry:
       bounds:
-      - 0.66
-      - 0.55
       - 0.28
-      - 0.3
+      - 0.6
+      - 0.1
+      - 0.14
     reveal:
       text: Paper, right by the burner!
   next_scene: null
@@ -2652,10 +2652,10 @@ scenes:
     label: The shop cat
     geometry:
       bounds:
-      - 0.06
-      - 0.55
+      - 0.08
       - 0.28
-      - 0.3
+      - 0.28
+      - 0.67
     reveal:
       text: Meow. Everybody meets at my food bowl.
   - id: witch
@@ -2663,19 +2663,19 @@ scenes:
     geometry:
       bounds:
       - 0.36
-      - 0.55
       - 0.28
-      - 0.3
+      - 0.28
+      - 0.67
     reveal:
       text: Where to meet? I never thought about that.
   - id: ff
     label: The firefighter outside
     geometry:
       bounds:
-      - 0.66
-      - 0.55
+      - 0.65
       - 0.28
-      - 0.3
+      - 0.28
+      - 0.67
     reveal:
       text: The firefighter! Fire is her job. She knows.
   next_scene: null
@@ -2774,30 +2774,30 @@ scenes:
     label: The till
     geometry:
       bounds:
-      - 0.06
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.69
+      - 0.67
+      - 0.23
+      - 0.25
     reveal:
       text: Inside. Right in the shop.
   - id: store
     label: The storeroom
     geometry:
       bounds:
-      - 0.36
-      - 0.55
-      - 0.28
-      - 0.3
+      - 0.77
+      - 0.22
+      - 0.18
+      - 0.32
     reveal:
       text: Inside, and full of boxes.
   - id: well
     label: The well by the gate
     geometry:
       bounds:
-      - 0.66
       - 0.55
-      - 0.28
-      - 0.3
+      - 0.01
+      - 0.15
+      - 0.22
     reveal:
       text: Outside, by the gate!
   next_scene: null
@@ -2978,20 +2978,20 @@ scenes:
     label: Up by the ceiling
     geometry:
       bounds:
-      - 0.06
-      - 0.55
-      - 0.43
-      - 0.3
+      - 0.15
+      - 0.02
+      - 0.68
+      - 0.19
     reveal:
       text: Full of smoke up here.
   - id: floor
     label: Down by the floor
     geometry:
       bounds:
-      - 0.51
-      - 0.55
-      - 0.43
-      - 0.3
+      - 0.12
+      - 0.77
+      - 0.75
+      - 0.21
     reveal:
       text: Stay low and move to the exit. Air near the floor can still be dangerous.
   next_scene: null

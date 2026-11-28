@@ -4,6 +4,13 @@
   "lines": [
     {
       "sceneId": "spot_table",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Find the hazard on the table. Tap it.",
+      "file": "guide-bf0991fb7964f8cdb37f.mp3"
+    },
+    {
+      "sceneId": "spot_table",
       "lineIndex": 0,
       "speaker": "ghost",
       "text": "A fire hazard can start a fire, or trap us inside.",
@@ -18,6 +25,13 @@
     },
     {
       "sceneId": "spot_corner",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Find the hazard in this corner. Tap it.",
+      "file": "guide-6efb16ede08dcd621064.mp3"
+    },
+    {
+      "sceneId": "spot_corner",
       "lineIndex": -1,
       "speaker": "ghost",
       "text": "The corner with the lamp",
@@ -29,6 +43,13 @@
       "speaker": "ghost",
       "text": "Paper burns fast. Keep it far away from hot lamps.",
       "file": "ghost-02ee237743e9daa411d8.mp3"
+    },
+    {
+      "sceneId": "spot_backdoor",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Find the hazard by the back door. Tap it.",
+      "file": "guide-7705cc0a9968d5fe7bec.mp3"
     },
     {
       "sceneId": "spot_backdoor",
@@ -53,6 +74,13 @@
     },
     {
       "sceneId": "spot_lights",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "Find the hazard by the lights. Tap it.",
+      "file": "guide-9402acd0454877fbb40a.mp3"
+    },
+    {
+      "sceneId": "spot_lights",
       "lineIndex": -1,
       "speaker": "ghost",
       "text": "The wall with the party lights",
@@ -71,6 +99,13 @@
       "speaker": "ghost",
       "text": "Four hazards, all fixed. That is the first step: looking for fire hazards.",
       "file": "ghost-8b48646ef2b921f4f133.mp3"
+    },
+    {
+      "sceneId": "max_s1_01",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "What should he do? Tap one.",
+      "file": "guide-7e0b9d3ee64223a1c897.mp3"
     },
     {
       "sceneId": "max_s1_01",
@@ -95,6 +130,13 @@
     },
     {
       "sceneId": "max_s1_02",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "What should he do? Tap one.",
+      "file": "guide-7e0b9d3ee64223a1c897.mp3"
+    },
+    {
+      "sceneId": "max_s1_02",
       "lineIndex": 0,
       "speaker": "mummy",
       "text": "My paper bats are on the lamp. So cosy!",
@@ -109,6 +151,13 @@
     },
     {
       "sceneId": "max_s1_03",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "What should he do? Tap one.",
+      "file": "guide-7e0b9d3ee64223a1c897.mp3"
+    },
+    {
+      "sceneId": "max_s1_03",
       "lineIndex": 0,
       "speaker": "mummy",
       "text": "The sofa is against the back door. More dance floor!",
@@ -120,6 +169,13 @@
       "speaker": "mummy",
       "text": "Fine. Smaller dance floor, but a clear door.",
       "file": "mummy-2d6f0e52dcd8730e4d36.mp3"
+    },
+    {
+      "sceneId": "max_s1_04",
+      "lineIndex": -2,
+      "speaker": "guide",
+      "text": "What should he do? Tap one.",
+      "file": "guide-7e0b9d3ee64223a1c897.mp3"
     },
     {
       "sceneId": "max_s1_04",

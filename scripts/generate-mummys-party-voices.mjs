@@ -28,12 +28,13 @@ if (locale === 'af') {
     if (!translated?.description) throw new Error(`Afrikaans description missing for ${scene.id}.`);
     scene.description = translated.description;
     scene.lines?.forEach((line, index) => { line.text = lines[index]; });
+    if (scene.task && translated.task) scene.task.text = translated.task;
   }
 }
 const entries = selectedScenes.flatMap((scene) => {
   if (scene.media?.video) return [];
-  const lines = scene.lines?.length ? scene.lines.map((line, lineIndex) => ({ ...line, lineIndex }))
-    : [{ speaker: scene.active_character, text: scene.description, lineIndex: -1 }];
+  const lines = [...(scene.task?.text ? [{ speaker: 'guide', text: scene.task.text, lineIndex: -2 }] : []), ...(scene.lines?.length ? scene.lines.map((line, lineIndex) => ({ ...line, lineIndex }))
+    : [{ speaker: scene.active_character, text: scene.description, lineIndex: -1 }])];
   return lines.flatMap((line) => {
     const voiceId = config.voices[line.speaker];
     if (!voiceId) return [];

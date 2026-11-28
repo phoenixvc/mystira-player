@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import fireDoorYaml from '../../content/manor/fire-door.story.yaml?raw';
 import { LocalEngine } from '../engine/local/LocalEngine';
 import { StoryYamlSchema } from '../schema/story-yaml';
 import type { Answer, Step } from '../engine/types';
 import { stageMummysParty } from './mummysPartyStaging';
+import { attachMummysPartyVoices } from './mummysPartyVoices';
+import { applyMummysPartyAfrikaans, firstLessonSceneIds } from './mummysPartyAfrikaans';
 
 const story = StoryYamlSchema.parse(parse(fireDoorYaml));
 
@@ -21,6 +25,38 @@ function correctAnswer(step: Step): Answer {
 }
 
 describe("Mummy's Party draft", () => {
+  it.each(['en', 'af'] as const)('attaches reusable %s guide audio to every first lesson instruction', (locale) => {
+    const localized = locale === 'af' ? applyMummysPartyAfrikaans(structuredClone(story)) : structuredClone(story);
+    const voiced = attachMummysPartyVoices(localized, locale);
+    const lessonIds = firstLessonSceneIds(story);
+    const instructions = voiced.scenes.filter((scene) => lessonIds.has(scene.id) && scene.task);
+    expect(instructions).toHaveLength(8);
+    for (const scene of instructions) {
+      expect(scene.task?.audio).toMatch(new RegExp(`^assets/audio/${locale}/guide-`));
+      expect(existsSync(resolve('public/mummys-party', scene.task!.audio!.replace('assets/', '')))).toBe(true);
+    }
+  });
+  it('has real art, cast poses, and staged pieces for every authored scene', () => {
+    const missing: string[] = [];
+    const check = (sceneId: string, url: string) => {
+      const relative = url.replace(/^assets\//, '').replace(/^\/mummys-party\//, '');
+      const file = resolve('public/mummys-party', relative.endsWith('.mp4') && !relative.startsWith('videos/') ? `videos/${relative}` : relative);
+      if (!existsSync(file)) missing.push(`${sceneId}: ${relative}`);
+    };
+    for (const scene of story.scenes) {
+      if (scene.media.image) check(scene.id, scene.media.image);
+      if (scene.media.video) check(scene.id, scene.media.video);
+      const staging = stageMummysParty(scene);
+      for (const layer of staging.layers ?? []) check(scene.id, layer.imageUrl);
+      for (const member of scene.cast ?? []) {
+        const character = story.characters.find((item) => item.id === member.character_id);
+        if (!character?.image) { missing.push(`${scene.id}: character ${member.character_id}`); continue; }
+        check(scene.id, staging.imageForCast?.(character.image, member.pose ?? undefined) ?? character.image);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
   it('loads the two child paths from the supplied story', async () => {
     const engine = new LocalEngine(story, ['choices', 'hotspots', 'sequence', 'inspect']);
     expect((await engine.listProfiles()).map((profile) => profile.displayName)).toEqual(['Zoe', 'Max']);

@@ -63,10 +63,10 @@
 .inspect .inspectRolebutton { background:color-mix(in srgb,var(--mp-accent) 16%,var(--mp-surface)); font-weight:700; }
 .inspect .inspectRoleprice { font-weight:700; }
 .inspectStatus { margin:0; }
-.hotspot { position:absolute; z-index:2; display:grid; place-items:center; overflow:hidden; border-color:transparent!important; background:transparent!important; color:transparent!important; padding:.2rem!important; font-size:clamp(.7rem,1.5vw,1rem)!important; }
+.hotspot { position:absolute; z-index:2; display:grid; place-items:center; overflow:visible; border-color:transparent!important; background:transparent!important; color:transparent!important; padding:.2rem!important; font-size:clamp(.7rem,1.5vw,1rem)!important; }
 .hotspot span { position:absolute; clip:rect(0 0 0 0); clip-path:inset(50%); width:1px; height:1px; overflow:hidden; white-space:nowrap; }
 .hotspot:hover,.hotspot:focus-visible,.hotspot.revealed { border-color:var(--mp-accent)!important; background:color-mix(in srgb,var(--mp-surface) 75%,transparent)!important; color:var(--mp-text)!important; }
-.hotspot:hover span,.hotspot:focus-visible span,.hotspot.revealed span { position:static; clip:auto; clip-path:none; width:auto; height:auto; overflow:visible; white-space:normal; }
+.hotspot:hover span,.hotspot:focus-visible span,.hotspot.revealed span { position:absolute; left:50%; bottom:calc(100% + .45rem); transform:translateX(-50%); clip:auto; clip-path:none; width:max-content; max-width:min(12rem,70vw); height:auto; overflow:visible; white-space:normal; text-align:center; line-height:1.25; padding:.45rem .65rem; border:1px solid var(--mp-accent); border-radius:.55rem; background:var(--mp-surface); color:var(--mp-text); box-shadow:0 4px 14px #000a; pointer-events:none; }
 .hotspotReveal { position:absolute; z-index:3; max-width:min(18rem,75%); min-width:8rem; padding:.65rem .8rem; border:2px solid var(--mp-accent); border-radius:.8rem; background:var(--mp-surface); color:var(--mp-text); box-shadow:0 2px 12px #000a; }
 .hotspotReveal img { display:block; max-width:100%; max-height:8rem; object-fit:contain; }
 .hotspotReveal p { margin:.25rem 0; }
@@ -78,8 +78,45 @@
 .wrongMotion { animation:gentleShake .3s ease-in-out; }
 .error { color:#fff; background:#8c2540; padding:.7rem; border-radius:.7rem; }
 .young { font-size:1.35rem; }
+.sceneFrame { display:contents; }
 @keyframes fade { from { opacity:.4; } to { opacity:1; } }
 @keyframes bounce { 50% { transform:translateY(-8px); } }
 @keyframes pulse { 50% { box-shadow:0 0 0 6px var(--mp-accent); } }
 @keyframes gentleShake { 25% { transform:translateX(-3px); } 75% { transform:translateX(3px); } }
 @media (prefers-reduced-motion:reduce) { .stage,.reaction,.revealed,.wrongMotion,.rollResolved { animation:none; } }
+
+/* Story presentation keeps the artwork at its authored 1376:768 ratio. */
+.immersive { grid-template-columns:minmax(0,1fr); justify-items:center; gap:.75rem; padding:clamp(.6rem,1.5vw,1.25rem); }
+.immersive .header { box-sizing:border-box; display:grid; grid-template-columns:auto minmax(0,1fr) auto; width:min(100%,1376px,121.8vh); align-items:center; gap:.35rem 1rem; padding:.65rem 1rem; border:1px solid color-mix(in srgb,var(--mp-accent) 28%,transparent); border-radius:.8rem; background:color-mix(in srgb,var(--mp-surface) 82%,#10091f); }
+.immersive .header h1 { min-width:0; max-width:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(1.1rem,2vw,1.55rem); }
+.immersive .kicker { width:auto; font-size:.78rem; letter-spacing:.06em; }
+.immersive .progress { font-size:.88rem; }
+.immersive .sceneFrame { display:block; width:min(100%,1376px,121.8vh); min-width:0; }
+.immersive .stage { box-sizing:border-box; width:100%; aspect-ratio:1376/768; border:0; border-radius:.8rem; box-shadow:0 0 0 1px color-mix(in srgb,var(--mp-accent) 35%,transparent),0 12px 36px #0008; }
+.immersive .stage video,.immersive .media { object-fit:cover; }
+.immersive .dialogue { box-sizing:border-box; position:relative; z-index:5; width:96%; max-width:none; margin:0 auto; padding:.8rem 1.25rem; border:1px solid color-mix(in srgb,var(--mp-accent) 22%,transparent); background:color-mix(in srgb,var(--mp-surface) 94%,#10091f); box-shadow:0 10px 32px #0007; }
+.immersive .stage + .dialogue { margin-top:-2rem; }
+.immersive .dialogue p { margin:.25rem 0; }
+.immersive .lineControls { justify-content:flex-end; }
+.immersive .task,.immersive .choices,.immersive .sequence,.immersive .inspect,.immersive .banner,.immersive .feedback,.immersive .actions,.immersive .notes { box-sizing:border-box; width:96%; max-width:none; margin-left:auto; margin-right:auto; }
+.immersive .task { position:relative; z-index:5; margin-top:-5.5rem; margin-bottom:0; padding:1rem 1.25rem .45rem; border-radius:1rem 1rem 0 0; background:color-mix(in srgb,var(--mp-surface) 94%,transparent); box-shadow:0 6px 24px #0008; }
+.immersive .taskReplay { min-width:2.2rem; min-height:2.2rem; margin-left:.65rem; padding:.1rem .35rem; vertical-align:middle; border-radius:50%; font-size:1.15rem; }
+.immersive .sceneFrame:has(.choices) .task { margin-top:-9rem; }
+.immersive .task + .dialogue { margin-top:0; padding:.75rem 1.25rem 1rem; border:0; border-left:5px solid var(--mp-accent); border-radius:0 0 1rem 1rem; background:color-mix(in srgb,var(--mp-surface) 94%,transparent); }
+.immersive .dialogue + .choices { position:relative; z-index:5; width:min(90%,880px); justify-content:center; margin-top:.75rem; margin-bottom:.75rem; }
+.immersive .choices button { flex:1 1 16rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; text-align:left; border-color:color-mix(in srgb,var(--mp-accent) 42%,transparent); background:color-mix(in srgb,var(--mp-surface) 95%,#5642a6); box-shadow:0 5px 16px #0005; transition:transform .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease; }
+.immersive .choices button::after { content:'→'; flex:none; font-size:1.5em; line-height:1; color:var(--mp-accent); transition:transform .16s ease; }
+.immersive .choices button:hover:not(:disabled),.immersive .choices button:focus-visible { transform:translateY(-3px); border-color:var(--mp-accent); background:color-mix(in srgb,var(--mp-surface) 78%,var(--mp-accent)); box-shadow:0 9px 24px #0008; }
+.immersive .choices button:hover:not(:disabled)::after,.immersive .choices button:focus-visible::after { transform:translateX(4px); }
+.immersive .choices button[aria-pressed="true"] { border-color:var(--mp-accent); background:color-mix(in srgb,var(--mp-surface) 65%,var(--mp-accent)); box-shadow:inset 0 0 0 1px var(--mp-accent),0 8px 24px #0008; }
+.immersive .actions { justify-content:center; }
+@media (max-width:700px) {
+  .immersive { padding:.5rem; gap:.55rem; }
+  .immersive .header { grid-template-columns:minmax(0,1fr) auto; padding:.55rem .7rem; }
+  .immersive .kicker { grid-column:1 / -1; width:100%; }
+  .immersive .stage { border-radius:.5rem; }
+  .immersive .task,.immersive .sceneFrame:has(.choices) .task { margin-top:.55rem; }
+  .immersive .dialogue,.immersive .stage + .dialogue { width:100%; margin-top:.55rem; }
+  .immersive .task,.immersive .choices,.immersive .sequence,.immersive .inspect,.immersive .banner,.immersive .feedback,.immersive .actions,.immersive .notes { width:100%; }
+}
+@media (prefers-reduced-motion:reduce) { .immersive .choices button,.immersive .choices button::after { transition:none; } .immersive .choices button:hover:not(:disabled),.immersive .choices button:focus-visible { transform:none; } }
