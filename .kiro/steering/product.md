@@ -27,8 +27,8 @@ It ships as a standalone SPA and as an embeddable `<mystira-player>` custom elem
 Each interaction type is real work; story length and the number of children cost little.
 
 - **Core four:** choices, hotspots (tap the picture), sequence (put in order), inspect (mark parts of a message).
-- **Stretch:** pattern, keypad, count. Never start one before the core four pass their tests.
-- **Cut order** when time is short: Fire Door and stretch types first; then preloading, extra themes, density; then key ring and progress; then inspect (its piece falls back to choices); then signed-in mode.
+- **Post-core product target:** pattern, keypad and count complete the seven-type player under [PRD 07](../../docs/prd-07-seven-interactions.md) and Spec 7. Never start one before the core four pass their tests; they are outside the contest minimum.
+- **Contest cut order** when time is short: Fire Door first; Spec 7 is outside the contest minimum. Then preloading, extra themes, density; key ring and progress; inspect (its piece falls back to choices); signed-in mode.
 - **Never cut:** the Pumpkin Gate for both children, the check with research, the notes panel, the Manor theme.
 
 ## Design principles

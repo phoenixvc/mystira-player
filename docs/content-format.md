@@ -5,7 +5,7 @@
 | Status | v1.1, final, issued to the team |
 | Date | 24 November 2026 |
 | Format | Mystira story YAML, schema version `2.1` |
-| Companion docs | [PRD](./prd.md) v0.8, [Technical Specification](./tech-spec.md) v1.5 |
+| Companion docs | [PRD](./prd.md) v0.9, [Technical Specification](./tech-spec.md) v1.6, [PRD 07](./prd-07-seven-interactions.md) |
 | Full example | [`content/manor/pumpkin-gate.story.yaml`](../content/manor/pumpkin-gate.story.yaml), validated against the schema and every rule in section 10 |
 
 > Public document. It describes how a story or lesson is written for the player. It does not describe how Mystira chooses what a child gets.
