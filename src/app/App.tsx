@@ -5,6 +5,8 @@ import { loadLocalDemo } from './localDemo';
 import styles from './App.module.css';
 import type { LanguagePairLookup } from './mummysPartyLanguageStudy';
 
+const textChoiceScenes = new Set(['zoe_s2_05', 'q1_find', 'q3_where', 'q3_verify']);
+
 export function App() {
   const search = new URLSearchParams(window.location.search);
   const mummyParty = search.get('story') === 'mummys-party';
@@ -61,6 +63,6 @@ export function App() {
       {afrikaans && <p>Hierdie voorskou dek die eerste les. Die openingsvideo se klank is nog Engels; die Afrikaanse onderskrif wys hieronder.</p>}
       <button type="button" disabled={!demo || (pieceChoices.length > 0 && !startNodeId && !mummyParty)} onClick={() => setStarted(true)}>{afrikaans ? 'Begin die les' : demo?.fullLesson ? 'Start lesson' : 'Start preview'}</button>
       {error && <p role="alert">{error}</p>}
-    </section> : demo && activeEngine && startRequest && <Player key={sessionKey} engine={activeEngine} startRequest={startRequest} locale={locale} languagePair={demo.languagePair} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} initialGesture slotGuide={mummyParty} onStep={(step) => { setCurrentStep(step); if (entryPoint === 'lesson' && step.node.id === 'story-end' && startNodeId) { const piece = pieceChoices.find((item) => item.startSceneId === startNodeId); if (piece) setCompletedPieces((done) => done.includes(piece.id) ? done : [...done, piece.id]); } }} />}
+    </section> : demo && activeEngine && startRequest && <Player key={sessionKey} engine={activeEngine} startRequest={startRequest} locale={locale} languagePair={demo.languagePair} notesEnabled={notesEnabled} isDemoMode={demo.isDemoMode} initialGesture slotGuide={mummyParty} immersive={mummyParty} hotspotAsChoices={mummyParty ? (sceneId) => textChoiceScenes.has(sceneId) : undefined} onStep={(step) => { setCurrentStep(step); if (entryPoint === 'lesson' && step.node.id === 'story-end' && startNodeId) { const piece = pieceChoices.find((item) => item.startSceneId === startNodeId); if (piece) setCompletedPieces((done) => done.includes(piece.id) ? done : [...done, piece.id]); } }} />}
   </main>;
 }

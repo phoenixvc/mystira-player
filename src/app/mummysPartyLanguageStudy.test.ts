@@ -9,9 +9,11 @@ const mummysPartyLanguagePair = createMummysPartyLanguagePair(parse(storyRaw));
 
 describe('Mummy’s Party language study', () => {
   it('pairs every recorded first-lesson line in both languages without using a stale text match', () => {
-    expect(english.lines).toHaveLength(20);
-    expect(afrikaans.lines).toHaveLength(20);
-    for (const line of english.lines) {
+    const englishDialogue = english.lines.filter((line) => line.lineIndex >= -1);
+    const afrikaansDialogue = afrikaans.lines.filter((line) => line.lineIndex >= -1);
+    expect(englishDialogue).toHaveLength(20);
+    expect(afrikaansDialogue).toHaveLength(20);
+    for (const line of englishDialogue) {
       const displayedIndex = line.lineIndex === -1 ? 0 : line.lineIndex;
       const pair = mummysPartyLanguagePair(line.sceneId, displayedIndex, line.text);
       expect(pair?.en.text).toBe(line.text);
@@ -24,10 +26,12 @@ describe('Mummy’s Party language study', () => {
   });
 
   it('offers curated meaning links in both child paths', () => {
-    expect(mummysPartyLanguagePair('spot_table_after', 0, english.lines[1]!.text)?.links.map((link) => link.af)).toContain('geen vlam nie');
+    const after = english.lines.find((line) => line.sceneId === 'spot_table_after' && line.lineIndex === 0)!;
+    expect(mummysPartyLanguagePair(after.sceneId, 0, after.text)?.links.map((link) => link.af)).toContain('geen vlam nie');
     const max = english.lines.find((line) => line.sceneId === 'max_s1_01' && line.lineIndex === 0)!;
     expect(mummysPartyLanguagePair(max.sceneId, 0, max.text)?.links.some((link) => link.en === 'fire hazards')).toBe(true);
     expect(mummysPartyLanguagePair(max.sceneId, 0, max.text)?.af.words?.length).toBeGreaterThan(0);
-    expect(mummysPartyLanguagePair('spot_table', 0, english.lines[0]!.text)?.en.words?.length).toBeGreaterThan(0);
+    const table = english.lines.find((line) => line.sceneId === 'spot_table' && line.lineIndex === 0)!;
+    expect(mummysPartyLanguagePair(table.sceneId, 0, table.text)?.en.words?.length).toBeGreaterThan(0);
   });
 });

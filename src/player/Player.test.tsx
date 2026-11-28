@@ -343,7 +343,7 @@ describe('Player', () => {
     const practice: Step = { ...first, node: { ...first.node, lines: [{ speakerId: 'narrator', text: 'First line.' }, { speakerId: 'narrator', text: 'Second line.' }], interaction: { type: 'choices', options: [{ id: 'yes', label: 'Yes' }], local: { correctId: 'yes', outcomes: { yes: { onCorrect: { line: { text: 'Explanation.', audioUrl: '/why.mp3' } } } } } } } };
     const engine: Engine = { startSession: vi.fn().mockResolvedValue(practice), resumeSession: vi.fn(), respond: vi.fn() };
     render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
-    const nextLine = await screen.findByRole('button', { name: 'Show next line' });
+    const nextLine = await screen.findByRole('button', { name: 'Next sentence' });
     expect(nextLine.hasAttribute('disabled')).toBe(false);
     fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
     expect(nextLine.hasAttribute('disabled')).toBe(true);
@@ -456,6 +456,25 @@ describe('Player', () => {
     fireEvent.pointerDown(screen.getByRole('region', { name: 'Story player' }));
     expect(played).toHaveLength(2);
     expect(screen.getByText('Second.')).toBeTruthy();
+  });
+
+  it('starts line audio once if guide audio errors and play rejects', async () => {
+    let rejectGuide!: (error: Error) => void;
+    const played: Array<{ url: string; onerror?: () => void }> = [];
+    vi.stubGlobal('Audio', class {
+      onerror?: () => void;
+      constructor(readonly url: string) { played.push(this); }
+      play() { return this.url === '/guide.mp3' ? new Promise<void>((_resolve, reject) => { rejectGuide = reject; }) : Promise.resolve(); }
+      pause() { /* stopped on cleanup */ }
+    });
+    const narrated: Step = { ...first, node: { ...first.node, type: 'scene', task: { text: 'Look at the gate.', audioUrl: '/guide.mp3' }, lines: [{ speakerId: 'narrator', text: 'Welcome.', audioUrl: '/line.mp3' }] } };
+    const engine: Engine = { startSession: vi.fn().mockResolvedValue(narrated), resumeSession: vi.fn(), respond: vi.fn() };
+    render(<Player engine={engine} startRequest={{ activityId: 'story', players: [] }} initialGesture />);
+    await screen.findByRole('heading', { name: 'At the gate' });
+    await waitFor(() => expect(played.map((item) => item.url)).toEqual(['/guide.mp3']));
+    act(() => played[0]!.onerror?.());
+    rejectGuide(new Error('Guide failed'));
+    await waitFor(() => expect(played.map((item) => item.url)).toEqual(['/guide.mp3', '/line.mp3']));
   });
 
   it('starts young-child narration once after the first gesture', async () => {
