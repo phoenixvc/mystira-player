@@ -1505,25 +1505,12 @@ export class Tones {
 
 ### 10. Demo controls (Requirement 19)
 
-#### `app/DemoControls.tsx`
+`src/app/App.tsx` owns the standalone demo controls. It reads the local demo bootstrap, offers profile and entry-point selection, and passes only the selected start request and authorized notes state into `Player`. `LocalEngine` supplies profile-specific lesson piece starts; the shell does not choose a child's version.
 
-```typescript
-interface DemoControlsProps {
-  profiles: Profile[];          // demo children
-  currentProfileId: string;
-  onSwitchProfile: (profileId: string) => void;
-  entryPoints: { id: string; label: string }[];  // lesson, assessment, follow-up assessment
-  currentEntryPoint: string;
-  onSwitchEntryPoint: (entryPointId: string) => void;
-  notesOpen: boolean;
-  onToggleNotes: () => void;
-}
-```
-
-- **Requirement 19.1**: Shown only when `config.json` has `mode: "local"` and `demo: true`. The `Player` component checks config and conditionally renders `DemoControls`.
-- **Requirement 19.2**: Child switch jumps to the same piece for the other demo child. This calls `onSwitchProfile`, which starts a new session for the other profile, attempting to land on the same piece (the engine preserves the current piece position across profile switches).
-- **Requirement 19.3**: The entry-point switch starts a session at the selected lesson, assessment or follow-up assessment entry point.
-- **Requirement 19.4**: Rendered outside the player root (in the standalone shell, not inside `<mystira-player>`), so it never appears in an embedded player.
+- **Requirement 19.1**: Controls appear only when runtime config sets `mode: "local"` and `demo: true`.
+- **Requirement 19.2**: Profile switching asks the engine for the corresponding lesson piece in the other profile and starts a new session there.
+- **Requirement 19.3**: Lesson entry works. Assessment and follow-up options are shown disabled until Spec 2 compiles their nodes; this criterion remains open.
+- **Requirement 19.4**: Controls render in the standalone shell, outside the player root.
 
 ### 11. Styling and the Manor theme (Requirement 20)
 
@@ -1929,4 +1916,4 @@ PBT is not appropriate for:
 
 ### Coverage target
 
-Every core requirement has at least one test. The five core properties cover the formal correctness guarantees. Unit and component tests cover the specific behaviours. The scaffold smoke test (Requirement 1) runs as a CI build step rather than a Vitest test.
+The current [acceptance evidence](verification.md) maps each core requirement to implementation and observed verification. Requirement 19.3 remains partial until Spec 2 supplies assessment and follow-up nodes. The current branch passes local unit/component tests, typecheck, build and browser checks; no GitHub CI job is configured for PR #14.

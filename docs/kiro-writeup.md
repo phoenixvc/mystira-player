@@ -56,7 +56,11 @@ The source pass reached 74 Vitest tests, typecheck and build. A connected browse
 
 The [core acceptance evidence](../.kiro/specs/player-core/verification.md) maps each requirement to the implementation and observed checks. It records Requirement 19.3 as partial: the demo shows disabled assessment and follow-up choices until Spec 2 compiles those nodes. Task 9.3 stays open while that requirement is unverified. A second draft Codex review was requested after the schema and child-chosen piece changes.
 
+The Spec 1 design's demo-control and coverage notes were reconciled with the actual shell boundary and verification state. They now point to `src/app/App.tsx` and the evidence map instead of describing an unbuilt control component or claiming all requirements are complete.
+
 That second review found a callout clipping issue near the stage edges. The renderer now positions each callout within an inset region and translates it by its own anchor fraction, keeping the full box inside the picture. A browser geometry check at 400 px and 280 px stage widths covered all four corners and the center; every tested box stayed at least 11 px inside the stage border. The 74-test suite, typecheck and build passed after the fix.
+
+The next exact-head review caught that a height-constrained callout could not be scrolled because its inset region ignored pointer events and it had no keyboard focus. The callout now accepts pointer events, is keyboard focusable, and uses its available width before wrapping. A 280 px browser check confirmed a tall right-edge callout stayed within the stage, received focus, and scrolled to its remaining text.
 
 ## MCP
 

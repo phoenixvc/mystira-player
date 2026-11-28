@@ -14,7 +14,8 @@
 .left { left:2%; } .center { left:36.5%; } .right { right:2%; }
 .reaction { animation:bounce .4s ease-out; }
 .overlayRegion { position:absolute; inset:8px; pointer-events:none; }
-.overlay { position:absolute; box-sizing:border-box; max-width:100%; max-height:100%; overflow:auto; background:var(--mp-overlay); color:var(--mp-text); border:1px solid var(--mp-accent); border-radius:.8rem; padding:.45rem .7rem; line-height:1.35; box-shadow:0 2px 12px #0008; }
+.overlay { position:absolute; box-sizing:border-box; width:max-content; max-width:100%; max-height:100%; overflow:auto; pointer-events:auto; background:var(--mp-overlay); color:var(--mp-text); border:1px solid var(--mp-accent); border-radius:.8rem; padding:.45rem .7rem; line-height:1.35; box-shadow:0 2px 12px #0008; }
+.overlay:focus-visible { outline:3px solid #fff; outline-offset:-3px; }
 .skip { position:absolute; top:.5rem; right:.5rem; }
 .task,.dialogue,.notes { background:var(--mp-surface); border-radius:1rem; padding:1rem 1.25rem; margin:0; max-width:960px; }
 .task { border-left:5px solid var(--mp-accent); font-weight:700; }
