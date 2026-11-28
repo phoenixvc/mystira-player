@@ -1,0 +1,24 @@
+{
+  "provenance": "Synthetic non-sensitive cases derived from Mystira App PWA Models/Scenario.cs at 7ae1335e; not captured API responses",
+  "sceneTypes": [
+    { "id": "intro", "type": "narrative", "nextSceneId": "fork" },
+    { "id": "fork", "type": "Choice", "activeCharacter": "guide", "branches": [
+      { "choice": "Follow the lantern", "nextSceneId": "roll", "compassAxis": "curiosity", "compassDirection": "positive", "compassDelta": 0.5 },
+      { "choice": "Wait by the gate", "nextSceneId": "ending" }
+    ] },
+    { "id": "roll", "type": "14", "difficulty": 9, "branches": [
+      { "choice": "Success", "nextSceneId": "ending" },
+      { "choice": "Gentle failure", "nextSceneId": "fallback" }
+    ] },
+    { "id": "bad-roll", "type": "Roll", "branches": [
+      { "choice": "Self loop", "nextSceneId": "bad-roll" },
+      { "choice": "Missing route", "nextSceneId": "" }
+    ] },
+    { "id": "ending", "type": "Special", "nextSceneId": null, "media": { "video": "video-fixture-id" } },
+    { "id": "stage", "type": "Narrative", "media": { "stage3D": { "characters": [{ "assetId": "glb-fixture-id" }] } } },
+    { "id": "model", "type": "13", "media": { "model3D": { "assetId": "glb-model-fixture-id" } } },
+    { "id": "timed", "type": "Dialogue", "narrationTimestamps": [{ "word": "Hello", "startMs": 0, "endMs": 450 }], "soundEffects": [] },
+    { "id": "unknown", "type": "99" }
+  ],
+  "session": { "id": "session-fixture", "scenarioId": "story-fixture", "currentSceneId": "fork", "isCompleted": false, "status": "InProgress", "characterAssignments": [] }
+}
