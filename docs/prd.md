@@ -2,18 +2,18 @@
 
 | | |
 |---|---|
-| Status | v0.8, final, issued to the team |
-| Date | 24 November 2026 |
+| Status | v0.9, contest scope and future seven-type target reconciled |
+| Date | 28 November 2026 |
 | Entrant | Mystira (Pty) Ltd |
 | Contest | Kiroween 2026, category: Costume Contest |
 | Submission deadline | Friday 4 December 2026, 14:00 PT (midnight going into Saturday, South African time) |
-| Companion docs | [Technical Specification](./tech-spec.md) v1.5, [Content format](./content-format.md) v1.1 |
+| Companion docs | [Technical Specification](./tech-spec.md) v1.6, [Content format](./content-format.md) v1.1, [PRD 07: Seven interaction types](./prd-07-seven-interactions.md) |
 
 > This repository is public and open source. This document describes only the player and its demo content. How Mystira decides what a child gets (story engine, personalisation rules, scoring and child-profile logic) runs in private services; it is out of scope here and is not described.
 
 ## TL;DR
 
-Mystira Player is an open-source web player for choice-based, narrated interactive content: stories, lessons and assessments, for children across all of Mystira's age groups. It renders scenes, dialogue, media, overlays and four kinds of interaction (choices, tap-the-picture, put-in-order and inspect-a-message), and it runs checks with a research flow after a wrong answer. It runs standalone or embedded in another app. Every decision (what comes next, how a piece is taught to this child, whether an answer is right) is made by an engine; for lessons and checks that engine is a server. The player renders what it is given and reports what the child did.
+Mystira Player is an open-source web player for choice-based, narrated interactive content: stories, lessons and assessments, for children across all of Mystira's age groups. The current build target renders scenes, dialogue, media, overlays and four kinds of interaction (choices, tap-the-picture, put-in-order and inspect-a-message), and runs checks with a research flow after a wrong answer. PRD 07 defines the later seven-type product target. It runs standalone or embedded in another app. Every decision (what comes next, how a piece is taught to this child, whether an answer is right) is made by an engine; for lessons and checks that engine is a server. The player renders what it is given and reports what the child did.
 
 Lessons and Assessments are the first new capability built on it, not its only purpose.
 
@@ -41,7 +41,7 @@ Mystira's current child-facing app is built in Blazor, and the lesson prototypes
 
 ### Scope rule
 
-The number of demo children and the length of the lesson cost little. Each kind of interaction costs real work. So the entry keeps to four core interaction types; anything else is a stretch goal, built only once the core is done.
+The entry targets four core interaction types. Choices, hotspots and sequence are the minimum interaction set for the Pumpkin Gate; inspect is the fourth target and may be replaced by choices under the recorded cut order. [PRD 07](./prd-07-seven-interactions.md) makes pattern, keypad and count part of the later seven-type product target after the four core types pass. It does not expand the contest submission gate.
 
 ## Non-goals
 
@@ -85,13 +85,13 @@ Priorities: **P0** required for submission, **P1** strongly wanted, **P2** only 
 
 | ID | Requirement | Priority |
 |---|---|---|
-| PR-01 | The grown-up signs in through Mystira Identity. No player-owned accounts. | P0 |
-| PR-02 | After sign-in, show the account's child profiles as a profile picker. With one profile, skip the picker. Lessons and checks always run for exactly one profile. | P0 |
+| PR-01 | The grown-up signs in through Mystira Identity. No player-owned accounts. | P1; signed-in mode may be cut from the contest entry |
+| PR-02 | After sign-in, show the account's child profiles as a profile picker. With one profile, skip the picker. Lessons and checks always run for exactly one profile. | P1; signed-in mode may be cut from the contest entry |
 | PR-03 | The home screen can be a themed hub: a picture with doors as tap regions. Each door shows its state (locked, open, solved) by shape and icon as well as colour, and is announced in narration. | P0 |
 | PR-04 | A door the engine marks as "check waiting" shows a pending indicator that uses shape and motion as well as colour. | P0 |
-| PR-05 | A "switch profile" control is always reachable from the hub. | P0 |
+| PR-05 | A "switch profile" control is always reachable from the hub. | P1 in signed-in mode; demo switching is PR-28 |
 | PR-06 | A local mode runs the bundled demo with no sign-in and no network calls. | P0 |
-| PR-07 | The player can be embedded in another app as a custom element that takes its engine from the host, never changes the host's URL, and isolates its styles. | P0 |
+| PR-07 | The player can be embedded in another app as a custom element that takes its engine from the host, never changes the host's URL, and isolates its styles. Spec 6 proves the portable two-host contract; the contest demo may ship local mode before that gate. | P1; Spec 6 acceptance |
 | PR-08 | Solving a door awards its key, shown on a key ring on the hub. | P1 |
 
 ### Teaching
@@ -102,8 +102,8 @@ Priorities: **P0** required for submission, **P1** strongly wanted, **P2** only 
 | PR-11 | Narrate every line. Use recorded audio where the content provides it; otherwise use the browser's speech synthesis, with a per-character voice (pitch and rate). Content for the Toddler (1-2) and Preschool (3-5) groups must ship recorded audio; that rule is enforced where content is authored. Interactions stay usable while a line is spoken; a tap stops the speech. | P0 |
 | PR-12 | Audio starts only after a user gesture (a "Start" tap standalone, or the host's gesture when embedded). | P0 |
 | PR-13 | Render positioned text overlays on a scene, readable on any background and scaled to the viewport. | P0 |
-| PR-14 | Core interactions: **choices** (2 to 4 buttons, with optional pictures); **hotspots** (find the right part of a picture; the regions are invisible, and a tap on nothing says "Nothing here" without counting as a wrong try); **sequence** (put 3 to 5 items in order, with Undo and Done; never submitted automatically); **inspect** (a mock message, page or sign whose parts the child marks to show what gives it away). | P0; inspect is the first core type to cut |
-| PR-14a | Stretch interactions, built only once the core is done, in this order: **pattern** (watch and repeat a short sequence of lit, labelled pads), **keypad** (enter a short number; "Call" is pretend), **count** (find every one of several things in a picture). | P2 |
+| PR-14 | Core interactions: **choices** (2 to 4 buttons, with optional pictures); **hotspots** (find the right part of a picture; the regions are invisible, and a tap on nothing says "Nothing here" without counting as a wrong try); **sequence** (put 3 to 5 items in order, with Undo and Done; never submitted automatically); **inspect** (a mock message, page or sign whose parts the child marks to show what gives it away). | P0 for choices, hotspots and sequence; P1 for inspect, the first core type to cut |
+| PR-14a | The post-core product supports **pattern**, **keypad** and **count** under [PRD 07](./prd-07-seven-interactions.md) and Spec 7. They are outside the contest minimum. | P2 for the contest; product target after the four-core gate |
 | PR-15 | In practice pieces the player gives instant feedback from data the engine sends with the piece: a wrong try plays the piece's next hint (or "Not yet. Try again.") with a gentle shake and a low tone, never a red cross. After three wrong tries (or the piece's own number) the right target pulses, and the child still taps it. | P0 |
 | PR-15a | In choice and hotspot practice, a wrong answer may have feedback specific to that answer. A correct practice choice may change the scene image and present an explanatory line before Next. The child can read the line with narration off, and narration can be skipped if it stalls. | P0 |
 | PR-16 | Show progress through a lesson in a simple, non-numeric way. | P1 |
@@ -116,7 +116,7 @@ Priorities: **P0** required for submission, **P1** strongly wanted, **P2** only 
 | ID | Requirement | Priority |
 |---|---|---|
 | PR-20 | A check question uses any interaction from PR-14 and is narrated. No timer. | P0 |
-| PR-21 | On a check the child selects an answer, then taps "That's my answer". Check answers are submitted whole to the engine. Check questions never carry their answer to the player, and give no feedback before the first answer. | P0 |
+| PR-21 | On a check the child selects an answer, then taps "That's my answer". Check answers are submitted whole to the engine. A rendered Step carries no private answer field and gives no feedback before the first answer. The public local demo bundles fictional answers in its own content and cannot claim those values are secret; production judgment remains Engine-owned. | P0 |
 | PR-22 | Mark the first try as the one that counts, and say so on screen ("Only the first try counts"). | P0 |
 | PR-23 | After a wrong answer, play the research steps the engine sends: where to look, finding it, checking it. The child's first answer can be shown next to what they found. | P0 |
 | PR-24 | After research, the child answers again; that try is marked "not scored". | P0 |
@@ -198,7 +198,7 @@ All demo text, pictures and audio in this repository are public to read and run,
 
 | Criterion | How the entry earns it |
 |---|---|
-| Impact | Every child learns the same facts and takes the same check, but is taught in the way that fits them; a mistake becomes a lesson in finding things out. |
+| Impact | The demo shows the same facts and check presented in two different forms, and a mistake leading to research. Whether a form improves learning is untested. |
 | Use of Kiro | Spec-first build in Kiro: steering files, four specs generated from these docs (the core plus one per interaction group), agent hooks that validate content and contrast, documented in the write-up. |
 | Design | A polished Manor theme on a real theme system; narrated, accessible, reduced-motion-aware UI. |
 | Idea | An open player paired with a private engine; one manor, one lesson, two children, two ways in. |
@@ -214,17 +214,17 @@ All demo text, pictures and audio in this repository are public to read and run,
 - [ ] Demo video on YouTube.
 - [ ] Submission text discloses the pre-existing private services the player can call.
 - [ ] No real children's data, names or records anywhere in the repository, video or submission.
-- [ ] All P0 requirements pass their acceptance tests.
+- [ ] All P0 requirements pass their acceptance tests. Record any cut from the target scope before submission; do not describe deferred P1 or Spec 7 work as shipped.
 
 ## Scope cut order
 
 If time runs short, cut in this order, top first:
 
-1. The Fire Door (keep it locked) and all stretch interactions (never started).
+1. The Fire Door (keep it locked) and the Spec 7 interactions (outside the contest minimum).
 2. PR-17 preloading, PR-32 neutral themes (keep one), PR-18 density.
 3. PR-08 key ring, PR-16 progress.
-4. Inspect: the "what do they want" piece falls back to choices.
-5. Signed-in mode (submit with local mode only).
+4. Inspect (P1 target): the "what do they want" piece falls back to choices.
+5. Signed-in mode (P1 target): submit with local mode only; do not show an unverified sign-in flow.
 
 Never cut: the Pumpkin Gate lesson for both children, the check with research, the notes panel or the Manor theme.
 
