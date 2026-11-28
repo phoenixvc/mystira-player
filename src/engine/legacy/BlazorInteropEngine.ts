@@ -3,7 +3,7 @@ import { EngineError, type AnswerSubmission, type Engine, type EngineErrorKind, 
 import { NodeSchema } from '../../schema/node';
 
 export interface BlazorReference {
-  invokeMethodAsync<T>(method: string, ...args: unknown[]): Promise<T>;
+  invokeMethodAsync(method: string, ...args: unknown[]): Promise<unknown>;
 }
 
 const StepSchema = z.object({
@@ -24,7 +24,7 @@ export class BlazorInteropEngine implements Engine {
   private async call(method: string, args: unknown[], options?: EngineRequestOptions): Promise<Step> {
     if (options?.signal?.aborted) throw new DOMException('Player request cancelled', 'AbortError');
     let raw: unknown;
-    try { raw = await this.host.invokeMethodAsync<unknown>(method, ...args); }
+    try { raw = await this.host.invokeMethodAsync(method, ...args); }
     catch { throw new EngineError('server', 'The story host could not complete this action.'); }
     if (options?.signal?.aborted) throw new DOMException('Player request cancelled', 'AbortError');
     const reply = ReplySchema.safeParse(raw);
