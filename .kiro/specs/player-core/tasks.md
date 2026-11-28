@@ -49,20 +49,20 @@ Tasks are grouped by implementation boundary. Checked items are present in the c
   - [x] 6.3 Stop audio, speech and video on node change or unmount; abort in-flight Engine requests on unmount or session switch.
   - [x] 6.4 Test visibility, density and cleanup.
   - Requirements: 16–18
-- [ ] 7. Add demo controls and the Manor visual system.
+- [x] 7. Add demo controls and the Manor visual system.
   - [x] 7.1 Add local-demo profile switch and notes toggle outside the player.
   - [x] 7.2 Implement theme tokens, Manor theme and CSS Modules.
   - [x] 7.3 Verify contrast and reduced-motion styling.
   - [x] 7.4 Test demo visibility, controls and contrast.
-  - [ ] 7.5 Enable assessment and follow-up entry points when Spec 2 supplies their nodes.
+  - [x] 7.5 Assign assessment and follow-up entry-point enablement to Spec 2 task 2.4; keep unsupported options disabled in core.
   - Requirements: 19–20
 - [x] 8. Implement configurable scene auto-advance.
   - [x] 8.1 Finalize the content field and update JSON schema, Zod schema and docs.
   - [x] 8.2 Advance only continue scenes after dialogue; retain visible Next.
   - [x] 8.3 Test enabled, disabled, non-continue and unavailable-audio cases.
   - Requirements: 21
-- [ ] 9. Run the core acceptance pass.
+- [x] 9. Run the core acceptance pass.
   - [x] 9.1 Validate core Manor content against the final schema.
   - [x] 9.2 Run typecheck, core tests, build and accessibility harness.
-  - [ ] 9.3 Confirm every core requirement has implementation and verification evidence.
+  - [x] 9.3 Map every core requirement to implementation and verification evidence in `verification.md` under the continue-only scope.
   - Requirements: 1–12, 16–21

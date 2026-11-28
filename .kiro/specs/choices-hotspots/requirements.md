@@ -37,7 +37,7 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 
 **User Story:** As a child, I want an assessment followed by relevant research and a result, so that I can try, learn and see what happened.
 
-**Source trace:** migrated from player-core Requirements 2.2–2.3, 5.5–5.7, 8.5–8.6 and 11.3.
+**Source trace:** migrated from player-core Requirements 2.2–2.3, 5.5–5.7, 8.5–8.6, 11.3 and the assessment/follow-up portion of 19.3.
 
 #### Acceptance Criteria
 
@@ -49,6 +49,7 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 6. Check nodes SHALL have no task line and SHALL set canGoBack to false.
 7. WHEN a check is at attempt 2, THE LocalEngine SHALL mark it unscored.
 8. Check scoring and answer judgment SHALL remain engine-owned; renderer components SHALL receive no raw answer value.
+9. WHEN the demo's assessment or follow-up assessment entry point is selected, THE Demo Controls SHALL start a session at the corresponding compiled node. THE Demo Controls SHALL enable each entry point only when its node and interaction are supported.
 
 ### Requirement CH4: Shared interaction mode
 

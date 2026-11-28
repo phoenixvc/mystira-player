@@ -1509,7 +1509,7 @@ export class Tones {
 
 - **Requirement 19.1**: Controls appear only when runtime config sets `mode: "local"` and `demo: true`.
 - **Requirement 19.2**: Profile switching asks the engine for the corresponding lesson piece in the other profile and starts a new session there.
-- **Requirement 19.3**: Lesson entry works. Assessment and follow-up options are shown disabled until Spec 2 compiles their nodes; this criterion remains open.
+- **Requirement 19.3**: Lesson entry works. Assessment and follow-up options remain disabled while their nodes or interactions are unsupported; Spec 2 task 2.4 owns enabling them.
 - **Requirement 19.4**: Controls render in the standalone shell, outside the player root.
 
 ### 11. Styling and the Manor theme (Requirement 20)
@@ -1916,4 +1916,4 @@ PBT is not appropriate for:
 
 ### Coverage target
 
-The current [acceptance evidence](verification.md) maps each core requirement to implementation and observed verification. Requirement 19.3 remains partial until Spec 2 supplies assessment and follow-up nodes. The current branch passes local unit/component tests, typecheck, build and browser checks; no GitHub CI job is configured for PR #14.
+The current [acceptance evidence](verification.md) maps each core requirement to implementation and observed verification under the continue-only boundary. Assessment and follow-up entry-point acceptance belongs to Spec 2 CH3.9. The current branch passes local unit/component tests, typecheck, build and browser checks; no GitHub CI job is configured for PR #14.

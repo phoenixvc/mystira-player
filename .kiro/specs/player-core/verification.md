@@ -1,6 +1,6 @@
 # Player core acceptance evidence
 
-This records the current branch evidence for the player-core requirements. A checked implementation task means its scoped behavior is present and verified; this table does not turn the Spec 2 dependency into a completed player-core acceptance criterion.
+This records the current branch evidence for the continue-only player-core requirements. Assessment and follow-up entry points are accepted in Spec 2 CH3.9 and task 2.4 after their nodes and interactions are supported.
 
 | Requirement | Implementation | Verification | Status |
 |---|---|---|---|
@@ -14,8 +14,8 @@ This records the current branch evidence for the player-core requirements. A che
 | 8. Session control | `src/engine/local/LocalEngine.ts` | `src/engine/local/LocalEngine.test.ts` replay, conflict, Back, failed transition and generated linear paths | Verified for supported scenes |
 | 9–12. Scene presentation and navigation | `src/player/Player.tsx`, `Player.module.css` | `src/player/Player.test.tsx`; connected desktop and narrow browser pass; edge overlay geometry at 400 px and 280 px; tall callout focus and scrolling at 280 px | Verified for continue scenes |
 | 16–18. Notes, density and lifecycle | `src/player/Player.tsx`, `Player.module.css` | `src/player/Player.test.tsx` notes, playback races, abort and cleanup; `src/app/App.test.ts` demo visibility | Verified for the local/demo and trusted-host paths |
-| 19. Demo controls | `src/app/App.tsx`, `localDemo.ts` | `src/app/App.test.ts`, `pieceChoice.test.tsx` | **Partial:** 19.3 assessment and follow-up entry points await Spec 2 node compilation; controls remain disabled |
+| 19. Demo controls | `src/app/App.tsx`, `localDemo.ts` | `src/app/App.test.ts`, `pieceChoice.test.tsx`; browser shows disabled unsupported entry points | Verified for lesson entry, profile switching and notes; Spec 2 owns enabling assessment and follow-up |
 | 20. Manor styling | `src/theme/tokens.ts`, `src/player/Player.module.css`, `src/app/App.module.css` | `src/theme/tokens.test.ts` contrast pairs; mobile Lighthouse accessibility 100 on landing and active scene | Verified for current surfaces |
 | 21. Auto-advance | `src/player/Player.tsx`, `src/schema/story-yaml.ts`, `schema/story-schema-2.1.json` | `src/player/Player.test.tsx` recorded narration and no-audio fallback; `src/schema/story-yaml.test.ts` content round trip | Verified for continue scenes |
 
-Current source pass: 74 Vitest tests pass, typecheck and build pass, and `git diff --check` is clean. The browser pass covered the core preview's two continue scenes and end view at desktop and narrow widths. It did not exercise the full Manor assessment path. Requirement 19.3 and task 7.5 remain open until Spec 2 supplies assessment and follow-up nodes. Task 9.3 remains open until that gap is verified.
+Current source pass: 74 Vitest tests pass, typecheck and build pass, and `git diff --check` is clean. The browser pass covered the core preview's two continue scenes and end view at desktop and narrow widths. It did not exercise the full Manor assessment path, which remains open in Spec 2 CH3.9 and task 2.4. This evidence closes the continue-only Spec 1 acceptance pass; it makes no claim that the assessment path works.

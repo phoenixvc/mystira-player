@@ -6,7 +6,7 @@ Spec 2 adds choice and hotspot interactions and defines shared practice/check be
 
 ## Ownership and traceability
 
-This spec owns the check-node refinements migrated from player-core Requirements 2.2–2.3; assessment/research/result compilation from Requirements 5.5–5.7; check-specific navigation and scoring from Requirements 8.5–8.6; task omission from Requirement 11.3; and shared mode/check confirmation from Requirements 13–15.
+This spec owns the check-node refinements migrated from player-core Requirements 2.2–2.3; assessment/research/result compilation from Requirements 5.5–5.7; check-specific navigation and scoring from Requirements 8.5–8.6; task omission from Requirement 11.3; assessment and follow-up demo entry points from Requirement 19.3; and shared mode/check confirmation from Requirements 13–15.
 
 ### Check schema invariants
 
@@ -17,6 +17,8 @@ Apply check refinements to the completed node union so they run after discrimina
 Choice and hotspot components consume typed runtime nodes and submit stable IDs using the core Engine respond contract. Both are gated by config interactions.enabled. Components use the shared mode classifier; correctness stays in the Engine in open and check modes. In practice, the local block supports deterministic feedback. Hotspot practice must not mark a wrong location with an explicit miss indicator.
 
 ## Assessment/research/result compilation
+
+After assessment and follow-up nodes compile, the standalone demo shell obtains their start IDs from the Engine or its local-demo adapter, rather than hard-coding scene IDs. It enables an entry point only when the target node and its interaction are supported by the current build. Selecting an enabled entry point starts a new session at that node; first-attempt and unscored follow-up rules remain Engine-owned. Core leaves these options disabled until this path is verified.
 
 **Assessment Requirement 5.5 — check scene → check node**:
 

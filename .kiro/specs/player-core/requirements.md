@@ -224,7 +224,7 @@ Mental model enforced by this spec:
 
 1. WHERE `config.json` sets `mode: local` and `demo: true`, THE Demo Controls SHALL show a child switch, an entry-point switch and a notes toggle.
 2. WHEN the child switch is used, THE Demo Controls SHALL jump to the same piece for the other demo child.
-3. WHEN the entry-point switch is used, THE Demo Controls SHALL jump to the lesson, assessment or follow-up assessment.
+3. WHEN the lesson entry point is selected, THE Demo Controls SHALL start the lesson; entry points whose nodes are not supported by the enabled interactions SHALL remain disabled. Spec 2 owns enabling assessment and follow-up assessment entry points after their nodes are compiled.
 4. THE Demo Controls SHALL render outside the player root, so the controls appear in no embedded player.
 
 ### Requirement 20: Styling and the Manor theme
