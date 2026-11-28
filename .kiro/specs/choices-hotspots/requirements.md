@@ -19,6 +19,8 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 3. WHEN a choice answer is submitted under the shared mode and check-confirmation rules, THE Player SHALL send its stable choice ID through the Engine interface.
 4. WHERE a choice carries a practice-local block, THE Player SHALL apply the shared practice rules in CH4.
 5. WHERE a choice has no local block, THE Player SHALL accept selection as open mode and leave correctness to the Engine.
+6. WHERE a practice choice has authored feedback for the selected choice ID, THE Player SHALL use that choice-specific feedback for a wrong selection before the shared feedback fallback.
+7. WHERE a correct practice choice has an authored scene-image change and explanatory line, THE Player SHALL show that image and present the line before offering Next; it SHALL NOT advance the scene on the selection alone.
 
 ### Requirement CH2: Hotspot interactions
 
@@ -32,6 +34,7 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 4. WHERE a hotspot carries a practice-local block, THE Player SHALL apply the shared practice rules in CH4.
 5. WHERE a hotspot has no local block, THE Player SHALL accept selection as open mode and leave correctness to the Engine.
 6. A wrong hotspot answer in practice mode SHALL use shared feedback; the Player SHALL NOT display a miss marker that reveals whether a location was incorrect.
+7. WHERE practice feedback is authored for a selected object ID, THE Player SHALL use it before the shared feedback fallback and SHALL keep the wrong-location rule in criterion 6.
 
 ### Requirement CH3: Assessment, research and result nodes
 
@@ -78,6 +81,9 @@ Core contracts and renderer foundations are defined by player-core. This spec do
 3. WHEN revealAfter wrong tries have occurred, THE Feedback Ladder SHALL reveal the correct target, and the child SHALL still make the final selection.
 4. WHEN the child gives the correct answer in practice mode, THE Mode Logic SHALL submit the final answer with wrongTries set to the count of wrong tries.
 5. The correct answer used for local practice judgment SHALL be provided only through the practice-local runtime contract; raw content answer fields SHALL not be copied onto renderer nodes.
+6. Choice- or object-specific wrong feedback SHALL be looked up by stable submitted ID. If absent, the existing per-try onWrong, hint, and built-in fallback order SHALL apply.
+7. An optional correct-selection scene-image change and explanatory line SHALL occur only after local practice judgment succeeds. The current scene SHALL remain active until that line is presented and the child activates Next. If no correct-selection presentation is authored, existing correct-answer progression SHALL apply.
+8. Check mode SHALL neither expose answer-keyed outcome data to the renderer nor use practice-local outcome presentation; correctness and scoring remain Engine-owned.
 
 ### Requirement CH6: Check confirmation
 
