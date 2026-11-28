@@ -472,6 +472,8 @@ Events (`CustomEvent`, `bubbles` and `composed`):
 
 ### Host obligations
 
+The current standalone element implementation and runnable plain HTML host example are documented in [Embedding the player](element-host.md). Its first slice supports host-owned music and English UI chrome; the Blazor bridge and the remaining host capabilities below are separate work.
+
 - Provide the engine (and with it auth, telemetry and persistence).
 - Own the page chrome: headers, exit controls, navigation locks; use `exitAllowed`.
 - Own background music when `music="host"`.

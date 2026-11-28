@@ -2,7 +2,7 @@
 
 # mystira-player
 
-An open-source player for Mystira stories, lessons and assessments, designed for every Mystira age group. The standalone demo now opens the five-piece Pumpkin Gate lesson for both invented profiles, with a separate assessment entry. It falls back to the continue-only core preview when one of the four core interactions is disabled. The embeddable `<mystira-player>` element and Blazor integration remain in the [Kiro task plans](.kiro/specs/README.md).
+An open-source player for Mystira stories, lessons and assessments, designed for every Mystira age group. The standalone demo opens the five-piece Pumpkin Gate lesson for both invented profiles, with a separate assessment entry. It falls back to the continue-only core preview when one of the four core interactions is disabled. The [embeddable `<mystira-player>` element](docs/element-host.md) now has a plain HTML host example; the Blazor bridge remains in the [Kiro task plans](.kiro/specs/README.md).
 
 ## Docs
 
