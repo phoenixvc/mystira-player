@@ -2,7 +2,7 @@
 
 # mystira-player
 
-An open-source player for Mystira stories, lessons and assessments, designed for every Mystira age group. The planned delivery includes a standalone app and an embeddable `<mystira-player>` element. The current foundation branch has a continue-only local preview; the full renderer, interactions, and element are still in the [Kiro task plans](.kiro/specs/README.md). Our Kiroween 2026 entry, "The Manor of Major Headaches", is being built on it.
+An open-source player for Mystira stories, lessons and assessments, designed for every Mystira age group. The standalone demo now opens the five-piece Pumpkin Gate lesson for both invented profiles, with a separate assessment entry. It falls back to the continue-only core preview when one of the four core interactions is disabled. The embeddable `<mystira-player>` element and Blazor integration remain in the [Kiro task plans](.kiro/specs/README.md).
 
 ## Docs
 

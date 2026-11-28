@@ -53,4 +53,19 @@ describe('local demo bootstrap', () => {
     const completed = await demo.assessment!.engine.respond(fixed.sessionId, { answerRequestId: 'inspect-only', version: fixed.version, nodeId: fixed.node.id, answer: { kind: 'inspect', partIds: ['link', 'price'] } });
     expect(completed.node).toMatchObject({ type: 'result', title: 'Piece complete' });
   });
+
+  it('opens the full Pumpkin Gate lesson when every core interaction is enabled', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ mode: 'local', demo: true, interactions: { enabled: ['choices', 'hotspots', 'sequence', 'inspect'] } }) }));
+    const demo = await loadLocalDemo();
+    expect(demo.fullLesson).toBe(true);
+    expect(demo.activityId).toBe('pumpkin_gate');
+    expect(demo.assessment?.engine).toBe(demo.engine);
+    expect(demo.piecesForProfile('demo_lerato')).toEqual([]);
+    expect(demo.piecesForProfile('demo_daan')).toHaveLength(5);
+    const lerato = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_lerato' }] });
+    expect(lerato.node).toMatchObject({ id: 'who_said_it', interaction: { type: 'choices' } });
+    const daanPiece = demo.piecesForProfile('demo_daan')[1]!;
+    const daan = await demo.engine.startSession({ activityId: demo.activityId, players: [{ type: 'Profile', profileId: 'demo_daan' }], startNodeId: daanPiece.startSceneId });
+    expect(daan.node).toMatchObject({ id: 'how_know_teach', interaction: { type: 'sequence' } });
+  });
 });

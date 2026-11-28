@@ -78,7 +78,7 @@ export class LocalEngine implements Engine {
     const assessmentEntry = request.startNodeId === 'assessment' || request.startNodeId === 'follow-up';
     if (assessmentEntry && !this.demoAssessmentEntries().assessment) throw new EngineError('unsupported', 'Assessment interactions are not enabled.');
     const firstCheck = this.checkQuestions()[0]?.scene;
-    const availableSceneIds = this.getSceneIds(profileId, assessmentEntry ? undefined : request.startNodeId);
+    const availableSceneIds = this.getSceneIds(profileId, assessmentEntry ? undefined : request.startNodeId, assessmentEntry);
     const assessmentIndex = availableSceneIds.indexOf(firstCheck ?? '');
     if (assessmentEntry && assessmentIndex < 0) throw new EngineError('notFound', 'The assessment start scene is unavailable.');
     const isolatedInspectPreview = !assessmentEntry && profile?.order === 'fixed' && !!request.startNodeId && request.startNodeId === this.demoInspectEntry();
@@ -183,7 +183,7 @@ export class LocalEngine implements Engine {
     });
   }
 
-  private getSceneIds(profileId: string, startNodeId?: string): string[] {
+  private getSceneIds(profileId: string, startNodeId?: string, assessment = false): string[] {
     if (!this.story.lesson) return this.story.scenes.map((scene) => scene.id);
     const pieces = this.pieceSceneIds(profileId);
     const profile = this.story.demo?.profiles.find((candidate) => candidate.id === profileId);
@@ -191,8 +191,9 @@ export class LocalEngine implements Engine {
       return pieces.find((piece) => piece.sceneIds.includes(startNodeId ?? ''))?.sceneIds ?? [];
     }
     const lessonIds = profile?.order === 'child_chooses' ? [] : pieces.flatMap((piece) => piece.sceneIds);
+    if (!assessment) return lessonIds;
     const assessmentIds = this.checkQuestions().flatMap((question) => [question.scene, ...(question.research ?? [])]);
-    return [...lessonIds, ...assessmentIds, ...(this.story.lesson.result ? [this.story.lesson.result.scene] : [])];
+    return [...assessmentIds, ...(this.story.lesson.result ? [this.story.lesson.result.scene] : [])];
   }
 
   private checkQuestions() {
